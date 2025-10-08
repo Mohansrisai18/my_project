@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Focused (when user taps inside) -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#E0E0E0"/> <!-- Light grey when focused -->
+            <corners android:radius="8dp"/>
+        </shape>
+    </item>
+
+    <!-- Default -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF"/> <!-- White default -->
+            <corners android:radius="8dp"/>
+            <stroke android:width="0dp" android:color="#BDBDBD"/> <!-- Border -->
+        </shape>
+    </item>
+
+</selector>

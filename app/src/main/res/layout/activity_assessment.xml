@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_gradient"
+    tools:context=".Task1Activity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="30dp">
+
+        <!-- Decorative quarter circle in top-right -->
+        <View
+            android:id="@+id/topRightCircle"
+            android:layout_width="94dp"
+            android:layout_height="91dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/top_right_circle" />
+
+        <!-- Back Button -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/circle_bg"
+            android:src="@drawable/ic_arrow_back"
+            android:scaleType="centerInside"
+            android:contentDescription="Back Button" />
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="80dp"
+            android:text="Lets start with quiz"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:fontFamily="sans-serif" />
+
+        <!-- Task Label -->
+        <TextView
+            android:id="@+id/taskLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/titleText"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+            android:text="Task 1"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:fontFamily="sans-serif" />
+
+        <!-- First Question Box -->
+        <LinearLayout
+            android:id="@+id/firstQuestionBox"
+            android:layout_width="300dp"
+            android:layout_height="163dp"
+            android:layout_below="@id/taskLabel"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/rounded_grey_bg"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Please repeat these numbers in the same order: 5,2,7,6,4,9"
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:fontFamily="sans-serif-medium" />
+
+            <EditText
+                android:id="@+id/firstInput"
+                android:layout_marginTop="25dp"
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:background="@drawable/edittext_bg"
+                android:gravity="center"
+                android:hint="Enter here"
+                android:layout_gravity="center"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Second Question Box -->
+        <LinearLayout
+            android:id="@+id/secondQuestionBox"
+            android:layout_width="300dp"
+            android:layout_height="163dp"
+            android:layout_below="@id/firstQuestionBox"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/rounded_grey_bg"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Please repeat these numbers in reverse order: 9,3,6,1,2,8"
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:fontFamily="sans-serif-medium" />
+
+            <EditText
+                android:id="@+id/secondInput"
+                android:layout_marginTop="25dp"
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:background="@drawable/edittext_bg"
+                android:gravity="center"
+                android:hint="Enter here"
+                android:layout_gravity="center"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Third Question Box -->
+        <LinearLayout
+            android:id="@+id/thirdQuestionBox"
+            android:layout_width="300dp"
+            android:layout_height="180dp"
+            android:layout_below="@id/secondQuestionBox"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/rounded_grey_bg"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Please repeat these words in the same order: apple, train, mirror, cloud, lemon."
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:fontFamily="sans-serif-medium" />
+
+            <EditText
+                android:id="@+id/thirdInput"
+                android:layout_marginTop="25dp"
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:background="@drawable/edittext_bg"
+                android:gravity="center"
+                android:hint="Enter here"
+                android:layout_gravity="center"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Next Button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnNext"
+            android:layout_width="296dp"
+            android:layout_height="67dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/thirdQuestionBox"
+            android:layout_marginTop="35dp"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/btn_bg"
+            android:fontFamily="sans-serif-medium"
+            android:text="Next"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </RelativeLayout>
+
+</ScrollView>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <!-- Background color of the circle -->
+    <solid android:color="#000000"/>   <!-- white, change as needed -->
+
+    <!-- Optional border (stroke) -->
+    <stroke
+        android:width="0dp"
+        android:color="#CCCCCC"/>       <!-- light gray border -->
+
+    <!-- Size is controlled by the ImageButton, so no <size> needed -->
+</shape>

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_gradient"
-    tools:context=".Task1Activity">
+    tools:context=".AssessmentDetailActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -20,12 +20,14 @@
             android:layout_alignParentEnd="true"
             android:background="@drawable/top_right_circle" />
 
-        <!-- Back Button -->
+        <!-- Back Button at Top Left -->
         <ImageButton
-            android:id="@+id/btnBack"
+            android:id="@+id/backButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
             android:background="@drawable/circle_bg"
             android:src="@drawable/ic_arrow_back"
             android:scaleType="centerInside"
@@ -71,9 +73,10 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/question1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Please repeat these numbers in the same order: 5,2,7,6,4,9"
+                android:text=""
                 android:textColor="#000000"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium" />
@@ -108,9 +111,10 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/question2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Please repeat these numbers in reverse order: 9,3,6,1,2,8"
+                android:text=""
                 android:textColor="#000000"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium" />
@@ -145,9 +149,10 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/question3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Please repeat these words in the same order: apple, train, mirror, cloud, lemon."
+                android:text=""
                 android:textColor="#000000"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium" />

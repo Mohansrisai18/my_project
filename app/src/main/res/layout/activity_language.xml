@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose Your Language"
+            android:textColor="#000000"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- RadioGroup for Language Options -->
+        <RadioGroup
+            android:id="@+id/languageOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/englishOption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="English"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:padding="10dp" />
+
+            <RadioButton
+                android:id="@+id/hindiOption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hindi"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:padding="10dp" />
+
+            <RadioButton
+                android:id="@+id/tamilOption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tamil"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:padding="10dp" />
+        </RadioGroup>
+
+        <!-- Save Button -->
+        <Button
+            android:id="@+id/saveLanguageButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="30dp"
+            android:text="Save Language"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/btn_bg"
+            android:textAllCaps="false"
+            android:textSize="16sp"/>
+    </LinearLayout>
+</ScrollView>

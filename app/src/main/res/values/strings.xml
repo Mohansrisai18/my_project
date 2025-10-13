@@ -1,4 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="gender_array">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Other</item>
+    </string-array>
+
     <string name="app_name">CogniSync</string>
     <string name="working_memory">Working Memory</string>
     <string name="present_moment">Present-Moment Awareness</string>
@@ -23,7 +30,6 @@
     <string name="focus_integration_techniques">Focus: Integration techniques</string>
     <string name="focus_emotional_control">Focus: Emotional control</string>
 
-
     <string name="get_started_arrow">Get Started</string>
     <string name="create_account">Create Account</string>
     <string name="full_name">Full Name</string>
@@ -38,16 +44,19 @@
     <string name="enter_password">enter password</string>
     <string name="sign_up">Sign up</string>
     <string name="already_have_account">Already have an account?</string>
-    <string name="log_in"> Log in</string>
+    <string name="log_in">Log in</string>
 
-    <string name="back_button">Back Button</string>
+    <string name="back">Back</string>
+    <string name="Back">Back</string>
     <string name="lets_start_with_quiz">Lets start with quiz</string>
+    <string name="back_button">Back</string>
     <string name="task_2">Task 2</string>
     <string name="rate_instruction">Rate each statement (e.g. 1 = Almost Always to 6 = Almost Never)</string>
     <string name="question_1">I find myself doing things without paying attention</string>
     <string name="question_2">I am easily distracted and lose track of what I\'m doing.</string>
+
     <string name="question_3">I could be experiencing some emotion and not be conscious of it until later</string>
-    <string name="enter_rating_hint">Enter rating (1-6)</string>
+    <string name="enter_rating_hint">Enter rating (1–6)</string>
     <string name="next">Next</string>
     <string name="task_3">Task 3</string>
     <string name="question_task3_1">How interested and engaged do you feel in your daily activities</string>
@@ -60,15 +69,13 @@
     <string name="question_task1_3">Please repeat these words in the same order: apple, train, mirror, cloud, lemon.</string>
     <string name="enter_here">Enter here</string>
 
-
-    <string name="logo" />
+    <string name="logo">LOGO</string>
     <string name="login">Login</string>
     <string name="how_mindfulness_enhances_nmemory_focus">How mindfulness enhances memory focus</string>
-    <string name="regular_mindfulness_practice_strengthens_neural_pathways_related_to_attention_and_working_memory_helping_you_stay_focused_and_remember_information_more_effectively">regular mindfulness practice strengthens neural pathways related to attention and working memory helping you stay focused and remember information more effectively</string>
+    <string name="regular_mindfulness_practice_strengthens_neural_pathways_related_to_attention_and_working_memory_helping_you_stay_focused_and_remember_information_more_effectively">Regular mindfulness practice strengthens neural pathways related to attention and working memory helping you stay focused and remember information more effectively</string>
     <string name="how_your_progress_is_tracked">How your progress is tracked</string>
     <string name="we_use_validated_psychological_scales_and_cognitive_tasks_to_measure_your_progress_over_time_giving_you_clear_insights_into_your_mental_wellness_journey">We use validated psychological scales and cognitive tasks to measure your progress over time, giving you clear insights into your mental wellness journey</string>
-    <string name="back">Back</string>
-    <string name="leaf" />
+    <string name="leaf">LEAF</string>
     <string name="working_memory_icon">Working Memory Icon</string>
     <string name="emotion_icon">Emotion Icon</string>
     <string name="_5_1_7">5.1/7</string>
@@ -83,7 +90,6 @@
     <string name="learn_basic_techniques_to_improve_your_attention">Learn basic techniques to improve your attention</string>
     <string name="about_this_session">About This Session</string>
     <string name="profile">Profile</string>
-    <string name="Back">Back</string>
     <string name="profile_picture">Profile Picture</string>
     <string name="mohan">Mohan</string>
     <string name="age_20_male">Age: 20 Male</string>

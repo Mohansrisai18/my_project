@@ -1,10 +1,10 @@
 package com.example.cognisync;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class ModuleVideoActivity extends AppCompatActivity {
@@ -14,10 +14,7 @@ public class ModuleVideoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_module_video);
 
-        VideoView video = findViewById(R.id.backgroundVideo);
-        ImageButton playPauseButton = findViewById(R.id.playPauseButton);
-        SeekBar progressBar = findViewById(R.id.progressBar);
-
+        // Bind UI elements
         TextView tvTitle = findViewById(R.id.tvTitle);
         TextView tvSubtitle = findViewById(R.id.tvSubtitle);
         TextView tvSessionInfo = findViewById(R.id.tvSessionInfo);
@@ -25,21 +22,17 @@ public class ModuleVideoActivity extends AppCompatActivity {
         TextView tvFocus = findViewById(R.id.tvFocus);
         TextView tvLevel = findViewById(R.id.tvLevel);
         Button startAssessmentButton = findViewById(R.id.startAssessmentButton);
-
-        // Initially hide start assessment button until video finishes
-        startAssessmentButton.setVisibility(View.GONE);
+        ImageButton backButton = findViewById(R.id.backButton);
 
         final String moduleType = getIntent().getStringExtra("module_type") == null
                 ? "focused_attention"
                 : getIntent().getStringExtra("module_type");
 
-        String videoUrl = "";
-
+        // Set module info based on type
         switch (moduleType) {
             case "focused_attention":
                 tvTitle.setText(getString(R.string.focused_attention));
                 tvSubtitle.setText(getString(R.string.mindfulness_session));
-                videoUrl = "https://your-backend.com/videos/focused_attention.mp4";
                 tvSessionInfo.setText(getString(R.string.focused_attention_desc));
                 tvDuration.setText(getString(R.string.duration_12_minutes));
                 tvFocus.setText(getString(R.string.focus_attention_training));
@@ -48,7 +41,6 @@ public class ModuleVideoActivity extends AppCompatActivity {
             case "working_memory":
                 tvTitle.setText(getString(R.string.working_memory));
                 tvSubtitle.setText(getString(R.string.mindfulness_session));
-                videoUrl = "https://your-backend.com/videos/working_memory.mp4";
                 tvSessionInfo.setText(getString(R.string.working_memory_desc));
                 tvDuration.setText(getString(R.string.duration_13_minutes));
                 tvFocus.setText(getString(R.string.focus_memory_exercises));
@@ -57,7 +49,6 @@ public class ModuleVideoActivity extends AppCompatActivity {
             case "present_moment":
                 tvTitle.setText(getString(R.string.present_moment));
                 tvSubtitle.setText(getString(R.string.mindfulness_session));
-                videoUrl = "https://your-backend.com/videos/present_moment.mp4";
                 tvSessionInfo.setText(getString(R.string.present_moment_desc));
                 tvDuration.setText(getString(R.string.duration_20_minutes));
                 tvFocus.setText(getString(R.string.focus_awareness_practices));
@@ -66,7 +57,6 @@ public class ModuleVideoActivity extends AppCompatActivity {
             case "cognitive_integration":
                 tvTitle.setText(getString(R.string.cognitive_integration));
                 tvSubtitle.setText(getString(R.string.mindfulness_session));
-                videoUrl = "https://your-backend.com/videos/cognitive_integration.mp4";
                 tvSessionInfo.setText(getString(R.string.cognitive_integration_desc));
                 tvDuration.setText(getString(R.string.duration_20_minutes));
                 tvFocus.setText(getString(R.string.focus_integration_techniques));
@@ -75,7 +65,6 @@ public class ModuleVideoActivity extends AppCompatActivity {
             case "emotional_regulation":
                 tvTitle.setText(getString(R.string.emotional_regulation));
                 tvSubtitle.setText(getString(R.string.mindfulness_session));
-                videoUrl = "https://your-backend.com/videos/emotional_regulation.mp4";
                 tvSessionInfo.setText(getString(R.string.emotional_regulation_desc));
                 tvDuration.setText(getString(R.string.duration_15_minutes));
                 tvFocus.setText(getString(R.string.focus_emotional_control));
@@ -83,40 +72,22 @@ public class ModuleVideoActivity extends AppCompatActivity {
                 break;
         }
 
-        video.setVideoURI(Uri.parse(videoUrl));
-
-        final boolean[] isPlaying = {true};
-        video.setOnPreparedListener(mp -> {
-            progressBar.setMax(video.getDuration());
-            video.start();
-            playPauseButton.setImageResource(R.drawable.ic_pause);
-        });
-
-        // Show startAssessmentButton only after video finishes
-        video.setOnCompletionListener(mp -> {
-            startAssessmentButton.setVisibility(View.VISIBLE);
-        });
-
-        playPauseButton.setOnClickListener(v -> {
-            if (isPlaying[0]) {
-                video.pause();
-                playPauseButton.setImageResource(R.drawable.ic_play_arrow);
-            } else {
-                video.start();
-                playPauseButton.setImageResource(R.drawable.ic_pause);
-            }
-            isPlaying[0] = !isPlaying[0];
-        });
-
+        // Show the assessment button and handle click
         startAssessmentButton.setText(getString(R.string.start_assessment));
-        startAssessmentButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AssessmentDetailActivity.class);
-            intent.putExtra("module_type", moduleType);
+        startAssessmentButton.setOnClickListener(v -> startAssessment(moduleType));
+
+        // Back button - navigate to Home page
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(ModuleVideoActivity.this, HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             finish();
         });
+    }
 
-        ImageButton backButton = findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> finish());
+    private void startAssessment(String moduleType) {
+        Intent intent = new Intent(this, AssessmentDetailActivity.class);
+        intent.putExtra("module_type", moduleType);
+        startActivity(intent);
     }
 }

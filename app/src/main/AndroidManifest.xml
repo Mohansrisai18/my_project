@@ -36,6 +36,9 @@
             android:name=".Task1Activity"
             android:exported="false" />
         <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
             android:name=".Task2Activity"
             android:exported="false" />
         <activity
@@ -52,6 +55,32 @@
         <activity
             android:name=".Intro3Activity"
             android:exported="false" />
+        <activity
+            android:name=".AssessmentDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ModuleVideoActivity"
+            android:exported="false" />
+
+        <!-- Additional Activities -->
+        <activity
+            android:name=".FeedbackActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LanguageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".UpdateInfoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ResetAccountActivity"
+            android:exported="false" />
+
+
 
     </application>
 

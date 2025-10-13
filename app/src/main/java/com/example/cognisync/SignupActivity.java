@@ -1,6 +1,7 @@
 package com.example.cognisync;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -26,13 +27,8 @@ public class SignupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        // Initialize views
         initializeViews();
-
-        // Set click listeners
         setClickListeners();
-
-        // Handle back press
         setupBackPressHandler();
     }
 
@@ -47,25 +43,11 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     private void setClickListeners() {
-        // Sign up button click listener
-        btnSignup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                performSignup();
-            }
-        });
-
-        // Login text click listener - navigates back to login page
-        loginText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                navigateToLogin();
-            }
-        });
+        btnSignup.setOnClickListener(v -> performSignup());
+        loginText.setOnClickListener(v -> navigateToLogin());
     }
 
     private void setupBackPressHandler() {
-        // Handle back press to return to login page
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -82,7 +64,6 @@ public class SignupActivity extends AppCompatActivity {
         String email = mailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
 
-        // Validate all input fields
         if (TextUtils.isEmpty(fullName)) {
             fullNameInput.setError("Full name is required");
             fullNameInput.requestFocus();
@@ -145,56 +126,45 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // Show loading state
         btnSignup.setText("Creating Account...");
         btnSignup.setEnabled(false);
 
-        // Simulate signup process
-        createAccount(fullName, ageValue, gender, email, password);
+        createAccount(fullName, age, gender, email, password);
     }
 
-    private void createAccount(String fullName, int age, String gender, String email, String password) {
-        // Simulate network delay for account creation
-        btnSignup.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // Reset button state
-                btnSignup.setText("Sign up");
-                btnSignup.setEnabled(true);
+    private void createAccount(String fullName, String age, String gender, String email, String password) {
+        btnSignup.postDelayed(() -> {
+            btnSignup.setText("Sign up");
+            btnSignup.setEnabled(true);
+            Toast.makeText(SignupActivity.this,
+                    "Account created successfully for " + fullName + "!",
+                    Toast.LENGTH_SHORT).show();
 
-                // Account creation successful
-                Toast.makeText(SignupActivity.this,
-                        "Account created successfully for " + fullName + "!",
-                        Toast.LENGTH_SHORT).show();
+            // Save username to SharedPreferences
+            SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("username", fullName);
+            editor.apply();
 
-                // Navigate to Task1Activity after successful signup
-                navigateToTask1Activity();
-            }
-        }, 2000); // 2 second delay to simulate network request
+            navigateToTask1Activity();
+        }, 2000);
     }
 
     private void navigateToTask1Activity() {
-        // Navigate to Task1Activity after successful signup
         Intent intent = new Intent(SignupActivity.this, Task1Activity.class);
-
-        // Pass user data to next activity if needed
         intent.putExtra("user_name", fullNameInput.getText().toString().trim());
         intent.putExtra("user_age", ageInput.getText().toString().trim());
         intent.putExtra("user_gender", genderInput.getText().toString().trim());
         intent.putExtra("user_email", mailInput.getText().toString().trim());
-
         startActivity(intent);
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-
-        // Clear activity stack so user can't go back to signup
         finish();
     }
 
     private void navigateToLogin() {
-        // Navigate back to login page
         Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
         startActivity(intent);
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-        finish(); // Close signup activity
+        finish();
     }
 }

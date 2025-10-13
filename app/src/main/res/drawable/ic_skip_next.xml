@@ -5,8 +5,13 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
+    <!-- Right-pointing triangle -->
     <path
-        android:fillColor="#666666"
-        android:pathData="M6,18V6l8.5,6L6,18zM16,6v12h2V6h-2z" />
+        android:fillColor="#FF666666"
+        android:pathData="M6,6 L14.5,12 L6,18 Z"/>
 
+    <!-- Vertical rectangle -->
+    <path
+        android:fillColor="#FF666666"
+        android:pathData="M16,6 H18 V18 H16 Z"/>
 </vector>

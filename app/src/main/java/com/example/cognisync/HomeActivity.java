@@ -66,7 +66,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void openScoreDetail(String type) {
-        Intent intent = new Intent(this, AssessmentDetailActivity.class);
+        Intent intent = new Intent(this, ProgressDashboardActivity.class);
         intent.putExtra("score_type", type);
         startActivity(intent);
     }

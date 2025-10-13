@@ -1,62 +1,79 @@
 package com.example.cognisync;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.github.mikephil.charting.components.AxisBase;
-
-import java.util.ArrayList;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class ProgressDashboardActivity extends AppCompatActivity {
 
-    private TextView tvAttentionScore, tvMemoryScore, tvEmotionScore;
-    private LineChart progressChart;
+    private TextView tvScoreTypeTitle, tvLatestScore;
+    private RecyclerView recyclerScoreHistory;
+    private ImageButton backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_progress_dashboard);
 
-        tvAttentionScore = findViewById(R.id.tvAttentionScore);
-        tvMemoryScore = findViewById(R.id.tvMemoryScore);
-        tvEmotionScore = findViewById(R.id.tvEmotionScore);
-        progressChart = findViewById(R.id.progressChart);
+        tvScoreTypeTitle = findViewById(R.id.tvScoreTypeTitle);
+        tvLatestScore = findViewById(R.id.tvLatestScore);
+        recyclerScoreHistory = findViewById(R.id.recyclerScoreHistory);
+        backButton = findViewById(R.id.backButton);
 
-        displayDashboardScores();
-        setupProgressChart();
-    }
+        Intent intent = getIntent();
+        String scoreType = intent.getStringExtra("score_type");
 
-    // Calculates and shows each dashboard "aspect" from module-level scores, as required
-    private void displayDashboardScores() {
+        // Setup Score Title
+        if (scoreType != null) {
+            if ("Attention".equalsIgnoreCase(scoreType)) {
+                tvScoreTypeTitle.setText("Attention Score");
+            } else if ("Memory".equalsIgnoreCase(scoreType)) {
+                tvScoreTypeTitle.setText("Memory Score");
+            } else if ("Emotion".equalsIgnoreCase(scoreType)) {
+                tvScoreTypeTitle.setText("Emotional Regulation");
+            } else {
+                tvScoreTypeTitle.setText(scoreType + " Score");
+            }
+        } else {
+            tvScoreTypeTitle.setText("Score Detail");
+        }
+
+        // Calculate and show the latest score
         SharedPreferences sp = getSharedPreferences("AssessmentScores", MODE_PRIVATE);
+        float latestScore = 0f;
+        if ("Attention".equalsIgnoreCase(scoreType)) {
+            float focusedScore = sp.getFloat("focused_attention_score", 0f);
+            float presentScore = sp.getFloat("present_moment_score", 0f);
+            latestScore = avgNonZero(focusedScore, presentScore);
+        } else if ("Memory".equalsIgnoreCase(scoreType)) {
+            float workingScore = sp.getFloat("working_memory_score", 0f);
+            float cognitiveScore = sp.getFloat("cognitive_integration_score", 0f);
+            latestScore = avgNonZero(workingScore, cognitiveScore);
+        } else if ("Emotion".equalsIgnoreCase(scoreType)) {
+            latestScore = sp.getFloat("emotional_regulation_score", 0f);
+        }
 
-        float focusedScore = sp.getFloat("focused_attention_score", 0f);
-        float presentScore = sp.getFloat("present_moment_score", 0f);
-        float workingScore = sp.getFloat("working_memory_score", 0f);
-        float cognitiveScore = sp.getFloat("cognitive_integration_score", 0f);
-        float emotionalScore = sp.getFloat("emotional_regulation_score", 0f);
+        if (latestScore > 0.01f) {
+            tvLatestScore.setText(String.format("%.1f/7", latestScore));
+        } else {
+            tvLatestScore.setText("--/7");
+        }
 
-        // Logic: categories are averages of listed modules
-        float attention = avgNonZero(focusedScore, presentScore);
-        float memory = avgNonZero(workingScore, cognitiveScore);
-        float emotion = emotionalScore; // Only one module for emotional
+        // Load and show score history
+        List<ScoreHistoryItem> scoreHistory = ScoreHistoryStorage.getScoreHistory(this, scoreType);
+        recyclerScoreHistory.setLayoutManager(new LinearLayoutManager(this));
+        recyclerScoreHistory.setAdapter(new ScoreHistoryAdapter(scoreHistory));
 
-        tvAttentionScore.setText(String.format("%.1f/7", attention));
-        tvMemoryScore.setText(String.format("%.1f/7", memory));
-        tvEmotionScore.setText(String.format("%.1f/7", emotion));
+        backButton.setOnClickListener(v -> finish());
     }
 
-    // Average (ignoring zero/unset scores)
+    // Average helper
     private float avgNonZero(float... vals) {
         float sum = 0;
         int count = 0;
@@ -67,51 +84,5 @@ public class ProgressDashboardActivity extends AppCompatActivity {
             }
         }
         return count > 0 ? sum / count : 0;
-    }
-
-    // Simple hardcoded monthly data demo for the line chart; replace with history!
-    private void setupProgressChart() {
-        List<Entry> attEntries = new ArrayList<>();
-        attEntries.add(new Entry(1, 5.2f));
-        attEntries.add(new Entry(2, 5.7f));
-        attEntries.add(new Entry(3, 6.2f));
-
-        List<Entry> memEntries = new ArrayList<>();
-        memEntries.add(new Entry(1, 4.8f));
-        memEntries.add(new Entry(2, 5.5f));
-        memEntries.add(new Entry(3, 6.3f));
-
-        List<Entry> emoEntries = new ArrayList<>();
-        emoEntries.add(new Entry(1, 5.0f));
-        emoEntries.add(new Entry(2, 5.5f));
-        emoEntries.add(new Entry(3, 5.8f));
-
-        LineDataSet attSet = new LineDataSet(attEntries, "Attention");
-        attSet.setColor(0xFFAE8DF6); attSet.setCircleColor(0xFFAE8DF6); attSet.setLineWidth(2f);
-
-        LineDataSet memSet = new LineDataSet(memEntries, "Memory");
-        memSet.setColor(0xFF72D277); memSet.setCircleColor(0xFF72D277); memSet.setLineWidth(2f);
-
-        LineDataSet emoSet = new LineDataSet(emoEntries, "Emotion");
-        emoSet.setColor(0xFFF6AEDC); emoSet.setCircleColor(0xFFF6AEDC); emoSet.setLineWidth(2f);
-
-        LineData lineData = new LineData(attSet, memSet, emoSet);
-        progressChart.setData(lineData);
-
-        XAxis xAxis = progressChart.getXAxis();
-        xAxis.setGranularity(1f);
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getAxisLabel(float value, AxisBase axis) {
-                return "mth " + ((int) value);
-            }
-        });
-
-        Legend legend = progressChart.getLegend();
-        legend.setEnabled(true);
-
-        progressChart.getDescription().setEnabled(false);
-        progressChart.invalidate();
     }
 }

@@ -27,10 +27,8 @@ public class ModuleVideoActivity extends AppCompatActivity {
                 ? "focused_attention"
                 : getIntent().getStringExtra("module_type");
 
-        // Set module info based on type (your previous switch-case logic)
-        // ...
+        // Optionally set UI info here based on moduleType...
 
-        startAssessmentButton.setText(getString(R.string.start_assessment));
         startAssessmentButton.setOnClickListener(v -> startAssessment(moduleType));
 
         backButton.setOnClickListener(v -> {
@@ -42,17 +40,8 @@ public class ModuleVideoActivity extends AppCompatActivity {
     }
 
     private void startAssessment(String moduleType) {
-        Intent intent = new Intent(this, ProgressDashboardActivity.class);
-        // Map moduleType to scoreType
-        String scoreType = "Attention";
-        if ("focused_attention".equals(moduleType) || "present_moment".equals(moduleType)) {
-            scoreType = "Attention";
-        } else if ("working_memory".equals(moduleType) || "cognitive_integration".equals(moduleType)) {
-            scoreType = "Memory";
-        } else if ("emotional_regulation".equals(moduleType)) {
-            scoreType = "Emotion";
-        }
-        intent.putExtra("score_type", scoreType);
+        Intent intent = new Intent(ModuleVideoActivity.this, AssessmentDetailActivity.class);
+        intent.putExtra("subtopic", moduleType);
         startActivity(intent);
     }
 }

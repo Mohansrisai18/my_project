@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -140,7 +139,7 @@ public class SignupActivity extends AppCompatActivity {
                     "Account created successfully for " + fullName + "!",
                     Toast.LENGTH_SHORT).show();
 
-            // Save username to SharedPreferences
+            // Save full name as "username" in SharedPreferences
             SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("username", fullName);

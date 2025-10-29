@@ -1,6 +1,5 @@
 package com.example.cognisync;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -42,20 +41,17 @@ public class AssessmentDetailActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
 
         btnNext.setOnClickListener(v -> {
-            // Collect answers
             String ans1 = firstInput.getText().toString().trim();
             String ans2 = secondInput.getText().toString().trim();
             String ans3 = thirdInput.getText().toString().trim();
 
-            // Validate or save answers as needed (implementation specific)
             if (ans1.isEmpty() || ans2.isEmpty() || ans3.isEmpty()) {
                 Toast.makeText(this, "Please answer all questions", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // TODO: Save answers or pass to next activity
+            // TODO: Save answers or handle them
 
-            // For example, go back or move to next assessment subtopic or dashboard
             finish();
         });
     }

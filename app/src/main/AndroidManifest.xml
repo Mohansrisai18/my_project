@@ -78,6 +78,16 @@
             android:name=".ResetAccountActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".AssessmentDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ProgressDashboardActivity"
+            android:exported="false" />
+
+
+
 
 
     </application>

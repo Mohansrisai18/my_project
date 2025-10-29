@@ -26,7 +26,11 @@ public class HomeActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "User");
-        tvGreeting.setText("Hi , " + username);
+        if (username == null || username.trim().isEmpty()) {
+            tvGreeting.setText("Hi!");
+        } else {
+            tvGreeting.setText("Hi, " + username);
+        }
 
         ImageButton btnMenu = findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(v -> {

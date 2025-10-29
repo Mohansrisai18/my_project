@@ -55,9 +55,7 @@
         <activity
             android:name=".Intro3Activity"
             android:exported="false" />
-        <activity
-            android:name=".AssessmentDetailActivity"
-            android:exported="false" />
+
         <activity
             android:name=".ModuleVideoActivity"
             android:exported="false" />

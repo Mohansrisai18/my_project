@@ -26,7 +26,7 @@ public class HomeActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "User");
-        tvGreeting.setText("Hi, " + username);
+        tvGreeting.setText("Hi , " + username);
 
         ImageButton btnMenu = findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(v -> {
@@ -55,7 +55,7 @@ public class HomeActivity extends AppCompatActivity {
         cvMemoryScore.setOnClickListener(v -> openScoreDetail("Memory"));
         cvEmotionScore.setOnClickListener(v -> openScoreDetail("Emotion"));
 
-        cvProgressDashboard.setOnClickListener(v -> startActivity(new Intent(this, ProgressOverviewActivity.class)));
+        cvProgressDashboard.setOnClickListener(v -> startActivity(new Intent(this, ProgressDashboardActivity.class)));
         cvGraphSection.setOnClickListener(v -> startActivity(new Intent(this, TrendChartActivity.class)));
     }
 

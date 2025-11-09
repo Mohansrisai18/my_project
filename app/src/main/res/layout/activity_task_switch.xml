@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:background="@drawable/background_gradient"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔴 Red: Is it &lt;5 or &gt;5?\n🔵 Blue: Is it Odd or Even?"
+        android:textSize="18sp"
+        android:textColor="#000"
+        android:gravity="center"
+        android:layout_marginBottom="40dp" />
+
+    <TextView
+        android:id="@+id/tvNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="5"
+        android:textColor="#000"
+        android:textSize="72sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="60dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnLeft"
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="LEFT"
+            android:textSize="18sp"
+            android:backgroundTint="#AED581"
+            android:textColor="#000"
+            android:layout_marginEnd="16dp"/>
+
+        <Button
+            android:id="@+id/btnRight"
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="RIGHT"
+            android:textSize="18sp"
+            android:backgroundTint="#FFB74D"
+            android:textColor="#000"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textColor="#333"
+        android:layout_marginTop="40dp"
+        android:gravity="center" />
+
+</LinearLayout>

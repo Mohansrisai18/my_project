@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 public class FeedbackActivity extends AppCompatActivity {
@@ -15,32 +14,28 @@ public class FeedbackActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_feedback); // Make sure this matches your XML filename
+        setContentView(R.layout.activity_feedback);
 
-        // Initialize UI elements
         feedbackInput = findViewById(R.id.feedbackInput);
         submitFeedbackButton = findViewById(R.id.submitFeedbackButton);
 
-        // Handle submit button click
         submitFeedbackButton.setOnClickListener(v -> {
             String feedback = feedbackInput.getText().toString().trim();
 
             if (feedback.isEmpty()) {
-                Toast.makeText(FeedbackActivity.this, "Please enter your feedback", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter your feedback", Toast.LENGTH_SHORT).show();
             } else {
-                // Feedback submitted
-                Toast.makeText(FeedbackActivity.this, "Thank you for your feedback!", Toast.LENGTH_SHORT).show();
-
-                // Optionally clear the input
+                Toast.makeText(this, "Thank you for your feedback!", Toast.LENGTH_SHORT).show();
                 feedbackInput.setText("");
 
-                // Navigate back to ProfileActivity
+                // Navigate back to profile
                 Intent intent = new Intent(FeedbackActivity.this, ProfileActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
-
-                // Finish current activity to remove it from back stack
                 finish();
             }
         });

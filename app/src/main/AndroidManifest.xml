@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+
 
     <application
         android:allowBackup="true"
@@ -10,7 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CogniSync"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
+
 
         <!-- Main Activity (Welcome Screen) -->
         <activity
@@ -78,16 +83,49 @@
             android:name=".ResetAccountActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".AssessmentDetailActivity"
-            android:exported="false" />
 
         <activity
             android:name=".ProgressDashboardActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".Task5Activity"
+            android:exported="false" />
 
 
+        <activity
+            android:name=".Task4Activity"
+            android:exported="false" />
+
+        <activity
+            android:name=".NBackActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SRTActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".StroopTaskActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TaskSwitchActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ModuleListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SARTActivity"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".PreAssessmentActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        />
 
 
     </application>

@@ -11,27 +11,29 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.model.Patient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class SignupActivity extends AppCompatActivity {
 
-    private EditText fullNameInput;
-    private EditText ageInput;
-    private EditText genderInput;
-    private EditText mailInput;
-    private EditText passwordInput;
+    private EditText fullNameInput, ageInput, genderInput, mailInput, passwordInput;
     private AppCompatButton btnSignup;
     private TextView loginText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        initializeViews();
-        setClickListeners();
-        setupBackPressHandler();
-    }
-
-    private void initializeViews() {
         fullNameInput = findViewById(R.id.fullNameInput);
         ageInput = findViewById(R.id.ageInput);
         genderInput = findViewById(R.id.genderInput);
@@ -39,21 +41,17 @@ public class SignupActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         btnSignup = findViewById(R.id.btnSignup);
         loginText = findViewById(R.id.loginText);
-    }
 
-    private void setClickListeners() {
         btnSignup.setOnClickListener(v -> performSignup());
         loginText.setOnClickListener(v -> navigateToLogin());
-    }
 
-    private void setupBackPressHandler() {
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+        // Handle back press
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 navigateToLogin();
             }
-        };
-        getOnBackPressedDispatcher().addCallback(this, callback);
+        });
     }
 
     private void performSignup() {
@@ -63,92 +61,52 @@ public class SignupActivity extends AppCompatActivity {
         String email = mailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
 
-        if (TextUtils.isEmpty(fullName)) {
-            fullNameInput.setError("Full name is required");
-            fullNameInput.requestFocus();
+        if (TextUtils.isEmpty(fullName) || TextUtils.isEmpty(age) || TextUtils.isEmpty(gender)
+                || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (fullName.length() < 2) {
-            fullNameInput.setError("Please enter a valid name");
-            fullNameInput.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(age)) {
-            ageInput.setError("Age is required");
-            ageInput.requestFocus();
-            return;
-        }
-
-        int ageValue;
-        try {
-            ageValue = Integer.parseInt(age);
-            if (ageValue < 13 || ageValue > 120) {
-                ageInput.setError("Please enter a valid age (13-120)");
-                ageInput.requestFocus();
-                return;
-            }
-        } catch (NumberFormatException e) {
-            ageInput.setError("Please enter a valid number");
-            ageInput.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(gender)) {
-            genderInput.setError("Gender is required");
-            genderInput.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(email)) {
-            mailInput.setError("Email is required");
-            mailInput.requestFocus();
-            return;
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            mailInput.setError("Please enter a valid email address");
-            mailInput.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            passwordInput.setError("Password is required");
-            passwordInput.requestFocus();
-            return;
-        }
-
-        if (password.length() < 6) {
-            passwordInput.setError("Password must be at least 6 characters");
-            passwordInput.requestFocus();
-            return;
-        }
-
-        btnSignup.setText("Creating Account...");
         btnSignup.setEnabled(false);
+        btnSignup.setText("Creating Account...");
 
-        createAccount(fullName, age, gender, email, password);
+        Patient patient = new Patient(fullName, Integer.parseInt(age), gender, email, password);
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.registerPatient(patient);
+
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                btnSignup.setEnabled(true);
+                btnSignup.setText("Sign Up");
+
+                if (response.isSuccessful()) {
+                    Toast.makeText(SignupActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+
+                    // ✅ Save user info in SharedPreferences
+                    SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("username", fullName);
+                    editor.putString("email", email);
+                    editor.apply();
+
+                    // ✅ Navigate to Task1Activity instead of Login
+                    navigateToTask1Activity();
+                } else {
+                    Toast.makeText(SignupActivity.this, "Signup failed! (" + response.code() + ")", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                btnSignup.setEnabled(true);
+                btnSignup.setText("Sign Up");
+                Toast.makeText(SignupActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    private void createAccount(String fullName, String age, String gender, String email, String password) {
-        btnSignup.postDelayed(() -> {
-            btnSignup.setText("Sign up");
-            btnSignup.setEnabled(true);
-            Toast.makeText(SignupActivity.this,
-                    "Account created successfully for " + fullName + "!",
-                    Toast.LENGTH_SHORT).show();
-
-            // Save full name as "username" in SharedPreferences
-            SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("username", fullName);
-            editor.apply();
-
-            navigateToTask1Activity();
-        }, 2000);
-    }
-
+    // ✅ Redirect to Task1Activity after signup
     private void navigateToTask1Activity() {
         Intent intent = new Intent(SignupActivity.this, Task1Activity.class);
         intent.putExtra("user_name", fullNameInput.getText().toString().trim());

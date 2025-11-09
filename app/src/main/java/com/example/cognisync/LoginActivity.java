@@ -1,161 +1,134 @@
 package com.example.cognisync;
 
-import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
-import androidx.activity.OnBackPressedDispatcher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import org.json.JSONObject;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText mailInput;
-    private EditText passwordInput;
+    private EditText mailInput, passwordInput;
     private AppCompatButton btnLogin;
     private TextView signupText;
+
+    private static final String LOGIN_URL = "http://10.0.2.2:8000/user/login/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Initialize views
-        initializeViews();
-
-        // Set click listeners
-        setClickListeners();
-
-        // Handle back press with new method
-        setupBackPressHandler();
-    }
-
-    private void initializeViews() {
         mailInput = findViewById(R.id.mailInput);
         passwordInput = findViewById(R.id.passwordInput);
         btnLogin = findViewById(R.id.btnLogin);
         signupText = findViewById(R.id.signupText);
-    }
 
-    private void setClickListeners() {
-        // Login button click listener
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                performLogin();
-            }
-        });
+        btnLogin.setOnClickListener(v -> performLogin());
+        signupText.setOnClickListener(v -> navigateToSignup());
 
-        // Signup text click listener
-        signupText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                navigateToSignup();
-            }
-        });
-    }
-
-    private void setupBackPressHandler() {
-        // New way to handle back press (replaces deprecated onBackPressed)
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Navigate back to MainActivity
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
                 finish();
-                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
             }
-        };
-        getOnBackPressedDispatcher().addCallback(this, callback);
+        });
     }
 
     private void performLogin() {
         String email = mailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
 
-        // Validate input fields
-        if (TextUtils.isEmpty(email)) {
-            mailInput.setError("Email is required");
-            mailInput.requestFocus();
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "Please enter both email and password", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            mailInput.setError("Please enter a valid email");
-            mailInput.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            passwordInput.setError("Password is required");
-            passwordInput.requestFocus();
-            return;
-        }
-
-        if (password.length() < 6) {
-            passwordInput.setError("Password must be at least 6 characters");
-            passwordInput.requestFocus();
-            return;
-        }
-
-        // Show loading state
-        btnLogin.setText("Logging in...");
         btnLogin.setEnabled(false);
+        btnLogin.setText("Logging in...");
 
-        // Simulate login process
-        authenticateUser(email, password);
+        new LoginTask(email, password).execute();
     }
 
-    private void authenticateUser(String email, String password) {
-        // Simulate network delay
-        btnLogin.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // Reset button state
-                btnLogin.setText("Login");
-                btnLogin.setEnabled(true);
+    private class LoginTask extends AsyncTask<Void, Void, String> {
+        private final String email, password;
 
-                // For demo purposes
-                if (isValidLogin(email, password)) {
-                    // Login successful - navigate to home page
-                    Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                    navigateToHomePage();
-                } else {
-                    // Login failed
-                    Toast.makeText(LoginActivity.this, "Invalid credentials. Please try again.", Toast.LENGTH_SHORT).show();
-                    clearFields();
+        LoginTask(String email, String password) {
+            this.email = email;
+            this.password = password;
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                URL url = new URL(LOGIN_URL);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setDoOutput(true);
+
+                JSONObject jsonParam = new JSONObject();
+                jsonParam.put("email", email);
+                jsonParam.put("password", password);
+
+                OutputStream os = new BufferedOutputStream(conn.getOutputStream());
+                os.write(jsonParam.toString().getBytes());
+                os.flush();
+                os.close();
+
+                int responseCode = conn.getResponseCode();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        responseCode == 200 ? conn.getInputStream() : conn.getErrorStream()
+                ));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
                 }
+                reader.close();
+                conn.disconnect();
+                return response.toString();
+
+            } catch (Exception e) {
+                return "Error: " + e.getMessage();
             }
-        }, 2000);
-    }
+        }
 
-    private boolean isValidLogin(String email, String password) {
-        return email.contains("@") && password.length() >= 6;
-    }
+        @Override
+        protected void onPostExecute(String result) {
+            btnLogin.setEnabled(true);
+            btnLogin.setText("Login");
 
-    private void navigateToHomePage() {
-        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        finish();
+            if (result.contains("Login successful")) {
+                Toast.makeText(LoginActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                navigateToHome();
+            } else {
+                Toast.makeText(LoginActivity.this, "Login failed: " + result, Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private void navigateToSignup() {
         Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
         startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+        finish();
     }
 
-    private void clearFields() {
-        mailInput.setText("");
-        passwordInput.setText("");
-        mailInput.requestFocus();
+    private void navigateToHome() {
+        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

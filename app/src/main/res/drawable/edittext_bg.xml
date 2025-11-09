@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Focused (when user taps inside) -->
+    <!-- When pressed / opened -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="8dp"/>
+            <stroke android:width="2dp" android:color="#8AB4F8" /> <!-- Blue border -->
+        </shape>
+    </item>
+
+    <!-- When focused (keyboard / accessibility focus) -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="#E0E0E0"/> <!-- Light grey when focused -->
+            <solid android:color="#FFFFFF"/>
             <corners android:radius="8dp"/>
+            <stroke android:width="2dp" android:color="#8AB4F8"/>
         </shape>
     </item>
 
     <!-- Default -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FFFFFF"/> <!-- White default -->
+            <solid android:color="#FFFFFF"/>
             <corners android:radius="8dp"/>
-            <stroke android:width="0dp" android:color="#BDBDBD"/> <!-- Border -->
+            <stroke android:width="1dp" android:color="#BDBDBD"/>
         </shape>
     </item>
 

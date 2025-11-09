@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class Task1Activity extends AppCompatActivity {
+public class Task4Activity extends AppCompatActivity {
 
     private ImageButton btnBack;
     private Spinner firstSpinner, secondSpinner, thirdSpinner;
@@ -32,8 +32,11 @@ public class Task1Activity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_task1);
+        setContentView(R.layout.activity_task4);
 
+        sp = getSharedPreferences("Task4Answers", MODE_PRIVATE);
+
+        // UI Components
         btnBack = findViewById(R.id.btnBack);
         btnNext = findViewById(R.id.btnNext);
         firstSpinner = findViewById(R.id.firstSpinner);
@@ -43,30 +46,30 @@ public class Task1Activity extends AppCompatActivity {
         q2Text = findViewById(R.id.q2Text);
         q3Text = findViewById(R.id.q3Text);
 
-        sp = getSharedPreferences("Task1Answers", MODE_PRIVATE);
-
-        String[] mindfulnessQuestions = {
-                "I find my mind wandering when I try to focus.",
-                "I do things on autopilot without being aware.",
-                "I struggle to stay focused on one task.",
-                "I notice when my attention drifts off.",
-                "I am fully present during daily tasks.",
-                "I realize I'm thinking about the past or future instead of now.",
-                "I forget what I’m doing because my mind is elsewhere.",
-                "I am aware of how my body feels in the moment.",
-                "I catch myself operating without thinking.",
-                "I am able to redirect my attention when distracted.",
-                "I get lost in thoughts and miss what’s happening.",
-                "I am attentive to the current task.",
-                "I react before thinking things through.",
-                "I notice small details in my environment.",
-                "I feel like I am functioning on auto-pilot."
+        // 🎭 Emotion Regulation Questions (ERQ-10 Inspired)
+        String[] emotionRegulationQuestions = {
+                "I control my emotions by changing the way I think about the situation I’m in.",
+                "When I’m upset, I remind myself that things could be worse.",
+                "I keep my emotions to myself.",
+                "When I want to feel more positive emotion, I change the way I’m thinking about the situation.",
+                "I control my emotions by not expressing them.",
+                "When I’m faced with a stressful situation, I make myself think about it in a way that helps me stay calm.",
+                "I bottle up my feelings.",
+                "I make sure not to express my negative emotions.",
+                "I change how I think about things to control how I feel.",
+                "I keep my negative emotions to myself.",
+                "I try to see things from a different perspective to manage my emotions.",
+                "I suppress my emotions when I feel upset.",
+                "I think carefully before reacting emotionally.",
+                "I avoid showing my emotions to others.",
+                "I look for positive sides in difficult situations."
         };
 
-        List<String> list = new ArrayList<>(Arrays.asList(mindfulnessQuestions));
-        Collections.shuffle(list);
+        List<String> list = new ArrayList<>(Arrays.asList(emotionRegulationQuestions));
 
+        // ✅ Shuffle only ONCE
         if (!sp.contains("q1")) {
+            Collections.shuffle(list);
             sp.edit()
                     .putString("q1", list.get(0))
                     .putString("q2", list.get(1))
@@ -78,14 +81,16 @@ public class Task1Activity extends AppCompatActivity {
         q2Text.setText(sp.getString("q2", ""));
         q3Text.setText(sp.getString("q3", ""));
 
+        // ✅ Spinner values
         String[] options = {
                 "Select your answer",
-                "1 — Almost Always",
-                "2 — Very Often",
-                "3 — Often",
-                "4 — Sometimes",
-                "5 — Rarely",
-                "6 — Almost Never"
+                "0 — Strongly Disagree",
+                "1 — Disagree",
+                "2 — Slightly Disagree",
+                "3 — Neutral",
+                "4 — Slightly Agree",
+                "5 — Agree",
+                "6 — Strongly Agree"
         };
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -96,29 +101,39 @@ public class Task1Activity extends AppCompatActivity {
         secondSpinner.setAdapter(adapter);
         thirdSpinner.setAdapter(adapter);
 
+        // ✅ Restore answers
         firstSpinner.setSelection(sp.getInt("ans1_pos", 0));
         secondSpinner.setSelection(sp.getInt("ans2_pos", 0));
         thirdSpinner.setSelection(sp.getInt("ans3_pos", 0));
 
-        btnNext.setOnClickListener(v -> navigateToTask2());
-        btnBack.setOnClickListener(v -> navigateToSignup());
+        btnNext.setOnClickListener(v -> navigateToTask5());
+        btnBack.setOnClickListener(v -> navigateToTask3());
 
+        // Physical back press
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                navigateToSignup();
+                navigateToTask3();
             }
         });
     }
 
-    private void navigateToSignup() {
-        Intent intent = new Intent(this, SignupActivity.class);
+    private void navigateToTask3() {
+
+        // ✅ Save selections before going back
+        SharedPreferences.Editor ed = sp.edit();
+        ed.putInt("ans1_pos", firstSpinner.getSelectedItemPosition());
+        ed.putInt("ans2_pos", secondSpinner.getSelectedItemPosition());
+        ed.putInt("ans3_pos", thirdSpinner.getSelectedItemPosition());
+        ed.apply();
+
+        Intent intent = new Intent(this, Task3Activity.class);
         startActivity(intent);
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
         finish();
     }
 
-    private void navigateToTask2() {
+    private void navigateToTask5() {
 
         SharedPreferences.Editor ed = sp.edit();
         ed.putInt("ans1_pos", firstSpinner.getSelectedItemPosition());
@@ -126,8 +141,7 @@ public class Task1Activity extends AppCompatActivity {
         ed.putInt("ans3_pos", thirdSpinner.getSelectedItemPosition());
         ed.apply();
 
-        Intent intent = new Intent(this, Task2Activity.class);
-
+        Intent intent = new Intent(this, Task5Activity.class);
         intent.putExtra("answer1", firstSpinner.getSelectedItem().toString());
         intent.putExtra("answer2", secondSpinner.getSelectedItem().toString());
         intent.putExtra("answer3", thirdSpinner.getSelectedItem().toString());

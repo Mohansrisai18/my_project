@@ -1,66 +1,60 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#FFFFFF"
+    android:padding="24dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+        <!-- Title -->
         <TextView
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Update Your Info"
-            android:textColor="#000000"
+            android:text="Update Account Information"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:textColor="#000000"
             android:layout_marginBottom="16dp" />
 
+        <!-- Name Input -->
         <EditText
             android:id="@+id/editName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Full Name"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
+            android:hint="Enter your name"
+            android:backgroundTint="#000000"
             android:textColor="#000000"
-            android:textSize="16sp"
             android:layout_marginBottom="12dp" />
 
+        <!-- Age Input -->
         <EditText
             android:id="@+id/editAge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="Enter your age"
             android:inputType="number"
-            android:hint="Age"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
+            android:backgroundTint="#000000"
             android:textColor="#000000"
-            android:textSize="16sp"
             android:layout_marginBottom="12dp" />
 
+        <!-- Gender Spinner -->
         <Spinner
             android:id="@+id/genderSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:spinnerMode="dropdown"
-            android:entries="@array/gender_array"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:textAlignment="center" />
+            android:layout_marginBottom="16dp" />
 
+        <!-- Update Button -->
         <Button
             android:id="@+id/updateInfoButton"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content"
             android:text="Update Info"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:background="@drawable/btn_bg" />
-
+            android:backgroundTint="#000000"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 </ScrollView>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:gravity="center">
+
+    <!-- Task Instructions -->
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap for every number EXCEPT 3"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="60dp" />
+
+    <!-- Trial Progress -->
+    <TextView
+        android:id="@+id/tvProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#AAAAAA"
+        android:textSize="14sp"
+        android:layout_below="@id/tvInstruction"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="Trial 0/40" />
+
+    <!-- Main Number Display -->
+    <TextView
+        android:id="@+id/tvNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textColor="#00FFAA"
+        android:textStyle="bold"
+        android:textSize="100sp"
+        android:layout_centerInParent="true" />
+
+    <!-- Start Button -->
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvNumber"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:text="Start Task"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:backgroundTint="#3F51B5" />
+
+</RelativeLayout>

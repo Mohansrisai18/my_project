@@ -1,6 +1,5 @@
 package com.example.cognisync.model;
 
-
 public class Patient {
     private String full_name;
     private int age;

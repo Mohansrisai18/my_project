@@ -3,199 +3,156 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:background="@drawable/background_gradient"
     tools:context=".Task3Activity">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <!-- Decorative quarter circle in top-right -->
-        <View
-            android:id="@+id/topRightCircle"
-            android:layout_width="94dp"
-            android:layout_height="91dp"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true"
-            android:background="@drawable/top_right_circle" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingBottom="30dp"
+        android:paddingHorizontal="16dp">
 
         <!-- Back Button -->
         <ImageButton
             android:id="@+id/btnBack"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_margin="16dp"
             android:background="@drawable/circle_bg"
             android:src="@drawable/ic_arrow_back"
-            android:scaleType="centerInside"
-            android:contentDescription="@string/back_button" />
+            android:contentDescription="Back" />
 
         <!-- Title -->
         <TextView
-            android:id="@+id/titleText"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="80dp"
-            android:text="@string/lets_start_with_quiz"
-            android:textSize="20sp"
+            android:text="Let's Start with Quiz"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#000000"
-            android:fontFamily="sans-serif" />
+            android:layout_marginTop="12dp"/>
 
-        <!-- Task Label -->
         <TextView
-            android:id="@+id/taskLabel"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/titleText"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
-            android:text="@string/task_3"
-            android:textSize="24sp"
+            android:text="Task 3"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="#000000"
-            android:fontFamily="sans-serif" />
+            android:layout_marginTop="4dp"/>
 
-        <!-- Instruction Text -->
         <TextView
-            android:id="@+id/instructionText"
-            android:layout_width="332dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/taskLabel"
-            android:layout_marginTop="4dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/rate_instruction"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"
-            android:textColor="#000000"
-            android:textSize="18sp" />
+            android:text="Rate each statement (0 = Never → 3 = Most of the time)"
+            android:textAlignment="center"
+            android:textColor="#444"
+            android:textSize="16sp"
+            android:layout_marginTop="14dp"/>
 
-        <!-- First Question Box -->
+
+        <!-- QUESTION BOX 1 -->
         <LinearLayout
-            android:id="@+id/firstQuestionBox"
-            android:layout_width="300dp"
-            android:layout_height="180dp"
-            android:layout_below="@id/instructionText"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="30dp"
-            android:background="@drawable/rounded_grey_bg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/question_task3_1"
-                android:textColor="#000000"
-                android:textSize="20sp"
-                android:fontFamily="sans-serif-medium" />
-
-            <EditText
-                android:id="@+id/firstInput"
-                android:layout_width="match_parent"
-                android:layout_height="63dp"
-                android:layout_marginTop="20dp"
-                android:autofillHints="none"
-                android:background="@drawable/edittext_bg"
-                android:fontFamily="sans-serif"
-                android:gravity="center"
-                android:hint="@string/enter_rating_hint"
-                android:inputType="number"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:textColor="#000000"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <!-- Second Question Box -->
-        <LinearLayout
-            android:id="@+id/secondQuestionBox"
-            android:layout_width="300dp"
-            android:layout_height="180dp"
-            android:layout_below="@id/firstQuestionBox"
-            android:layout_centerHorizontal="true"
+            android:background="@drawable/rounded_grey_bg"
+            android:padding="20dp"
             android:layout_marginTop="20dp"
-            android:background="@drawable/rounded_grey_bg"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginHorizontal="20dp">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="@string/question_task3_2"
-                android:textColor="#000000"
-                android:textSize="20sp" />
-
-            <EditText
-                android:id="@+id/secondInput"
+                android:id="@+id/q1Text"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:gravity="center"/>
+
+            <Spinner
+                android:id="@+id/firstSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/edittext_bg"
-                android:gravity="center"
-                android:hint="@string/enter_rating_hint"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:inputType="number"
-                android:autofillHints="none"
-                android:textColor="#000000"
-                android:textSize="14sp"
-                android:fontFamily="sans-serif" />
+                android:padding="10dp" />
         </LinearLayout>
 
-        <!-- Third Question Box -->
+
+        <!-- QUESTION BOX 2 -->
         <LinearLayout
-            android:id="@+id/thirdQuestionBox"
-            android:layout_width="300dp"
-            android:layout_height="180dp"
-            android:layout_below="@id/secondQuestionBox"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/rounded_grey_bg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:background="@drawable/rounded_grey_bg"
+            android:padding="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="20dp">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/question_task3_3"
-                android:textColor="#000000"
-                android:textSize="20sp"
-                android:fontFamily="sans-serif-medium" />
-
-            <EditText
-                android:id="@+id/thirdInput"
+                android:id="@+id/q2Text"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:gravity="center"/>
+
+            <Spinner
+                android:id="@+id/secondSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/edittext_bg"
-                android:hint="@string/enter_rating_hint"
-                android:gravity="center"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:inputType="number"
-                android:autofillHints="none"
-                android:textColor="#000000"
-                android:textSize="14sp"
-                android:fontFamily="sans-serif" />
+                android:padding="10dp" />
         </LinearLayout>
 
-        <!-- Next Button -->
+
+        <!-- QUESTION BOX 3 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_grey_bg"
+            android:padding="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="20dp">
+
+            <TextView
+                android:id="@+id/q3Text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:gravity="center"/>
+
+            <Spinner
+                android:id="@+id/thirdSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/edittext_bg"
+                android:padding="10dp" />
+        </LinearLayout>
+
+
+        <!-- NEXT BUTTON -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNext"
-            android:layout_width="296dp"
-            android:layout_height="67dp"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/thirdQuestionBox"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="40dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/btn_bg"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/next"
-            android:textColor="@android:color/black"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            android:text="NEXT"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#000" />
+
+    </LinearLayout>
 </ScrollView>

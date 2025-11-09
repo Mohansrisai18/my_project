@@ -1,5 +1,3 @@
-
-
 package com.example.cognisync;
 
 import android.view.LayoutInflater;
@@ -10,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
-// Adapter class for RecyclerView
 public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapter.ViewHolder> {
 
     private final List<ScoreHistoryItem> items;
@@ -19,14 +16,13 @@ public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapte
         this.items = items;
     }
 
-    // ViewHolder class
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView scoreText, dateText;
 
         ViewHolder(View itemView) {
             super(itemView);
             scoreText = itemView.findViewById(R.id.score_text);
-            dateText = itemView.findViewById(R.id.date_text);
+            dateText  = itemView.findViewById(R.id.date_text);
         }
     }
 
@@ -34,7 +30,7 @@ public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapte
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_score_history, parent, false); // Use your item XML file name
+                .inflate(R.layout.item_score_history, parent, false);
         return new ViewHolder(view);
     }
 

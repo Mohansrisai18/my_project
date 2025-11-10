@@ -1,11 +1,13 @@
 package com.example.cognisync;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class NBackActivity extends AppCompatActivity {
@@ -23,12 +25,10 @@ public class NBackActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
-            getSupportActionBar().hide();
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (getSupportActionBar()!=null) getSupportActionBar().hide();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nback);
 
@@ -69,6 +69,15 @@ public class NBackActivity extends AppCompatActivity {
         canRespond = false;
         double accuracy = (total == 0) ? 0 : (correct * 100.0 / total);
         tvScore.setText(String.format("Accuracy: %.1f%%", accuracy));
-        // TODO: Save to dashboard variable "nback_accuracy"
+
+        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+        sp.edit()
+                .putFloat("nback_accuracy", (float) accuracy)
+                .putLong("timestamp_post", System.currentTimeMillis())
+                .apply();
+
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+        float wmScore = (float) accuracy;
+        ScoreHistoryStorage.addScoreHistory(this, "Memory", wmScore / 14f * 7, date);
     }
 }

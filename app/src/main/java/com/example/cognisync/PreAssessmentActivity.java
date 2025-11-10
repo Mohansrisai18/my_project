@@ -78,9 +78,34 @@ public class PreAssessmentActivity extends AppCompatActivity {
                 return;
             }
 
+            // ✅ Save module-specific pre-assessment score
             sp.edit().putInt(moduleType + "_pre_score", score).apply();
+
+            // ✅ Global tracking for Progress Dashboard (Baseline Scores)
+            SharedPreferences global = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+            switch (moduleType) {
+                case "focused_attention":
+                    global.edit().putFloat("maas_score", score).apply();
+                    break;
+                case "working_memory":
+                    global.edit().putFloat("cfq_score", score).apply();
+                    break;
+                case "emotional_regulation":
+                    global.edit().putFloat("panas_score", score).apply();
+                    break;
+                case "present_moment":
+                case "present_moment_awareness":
+                    global.edit().putFloat("phlms_awareness", score).apply();
+                    break;
+                case "cognitive_flexibility":
+                    global.edit().putFloat("dass_stress_score", score).apply();
+                    break;
+            }
+            global.edit().putLong("timestamp_baseline", System.currentTimeMillis()).apply();
+
             Toast.makeText(this, "Responses saved! Score: " + score, Toast.LENGTH_SHORT).show();
 
+            // ✅ Move to next screen (video or module)
             Intent intent = new Intent(this, ModuleVideoActivity.class);
             intent.putExtra("module_type", moduleType);
             intent.putExtra("session_title", finalSessionTitle);
@@ -92,12 +117,22 @@ public class PreAssessmentActivity extends AppCompatActivity {
     /** Load only MCQ-based questions */
     private void loadQuestions(String moduleType) {
         switch (moduleType) {
-            case "focused_attention": questions.addAll(getMAASQuestions()); break;
-            case "working_memory": questions.addAll(getCFQQuestions()); break;
-            case "emotional_regulation": questions.addAll(getPANASQuestions()); break;
+            case "focused_attention":
+                questions.addAll(getMAASQuestions());
+                break;
+            case "working_memory":
+                questions.addAll(getCFQQuestions());
+                break;
+            case "emotional_regulation":
+                questions.addAll(getPANASQuestions());
+                break;
             case "present_moment":
-            case "present_moment_awareness": questions.addAll(getPHLMSQuestions()); break;
-            case "cognitive_flexibility": questions.addAll(getDASSQuestions()); break;
+            case "present_moment_awareness":
+                questions.addAll(getPHLMSQuestions());
+                break;
+            case "cognitive_flexibility":
+                questions.addAll(getDASSQuestions());
+                break;
             default:
                 questions.add(new QuestionItem("How attentive did you feel today?", true));
                 break;
@@ -106,7 +141,6 @@ public class PreAssessmentActivity extends AppCompatActivity {
 
     /** Display questions using Spinner dropdown */
     private void displayQuestions() {
-        // Common options for all spinners
         String[] options = {"Select an option", "Very Poor", "Poor", "Average", "Good", "Very Good", "Excellent"};
 
         for (int i = 0; i < questions.size(); i++) {
@@ -205,13 +239,19 @@ public class PreAssessmentActivity extends AppCompatActivity {
     /** Human-readable titles */
     private String getReadableModuleTitle(String moduleType) {
         switch (moduleType) {
-            case "focused_attention": return "Focused Attention";
-            case "working_memory": return "Working Memory";
-            case "emotional_regulation": return "Emotional Regulation";
-            case "cognitive_flexibility": return "Cognitive Flexibility";
+            case "focused_attention":
+                return "Focused Attention";
+            case "working_memory":
+                return "Working Memory";
+            case "emotional_regulation":
+                return "Emotional Regulation";
+            case "cognitive_flexibility":
+                return "Cognitive Flexibility";
             case "present_moment":
-            case "present_moment_awareness": return "Present-Moment Awareness";
-            default: return "Mindfulness Module";
+            case "present_moment_awareness":
+                return "Present-Moment Awareness";
+            default:
+                return "Mindfulness Module";
         }
     }
 
@@ -220,9 +260,13 @@ public class PreAssessmentActivity extends AppCompatActivity {
         String question;
         Spinner spinner;
 
-        QuestionItem(String q, boolean mcq) { this.question = q; }
+        QuestionItem(String q, boolean mcq) {
+            this.question = q;
+        }
 
-        void setSpinner(Spinner s) { this.spinner = s; }
+        void setSpinner(Spinner s) {
+            this.spinner = s;
+        }
 
         int getSelectedValue() {
             if (spinner == null) return -1;

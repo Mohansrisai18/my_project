@@ -1,12 +1,20 @@
 package com.example.cognisync;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import java.util.*;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 public class TaskSwitchActivity extends AppCompatActivity {
 
@@ -29,7 +37,7 @@ public class TaskSwitchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -77,19 +85,15 @@ public class TaskSwitchActivity extends AppCompatActivity {
 
         prevColor = currentColor;
 
-        // Basic feedback rule validation (optional)
-        boolean isCorrect = false;
-        if (currentColor == 0) { // RED rule
+        // Basic feedback rule validation
+        boolean isCorrect;
+        if (currentColor == 0) { // RED rule → less than 5 = left, greater than 5 = right
             isCorrect = (currentNumber < 5 && leftPressed) || (currentNumber > 5 && !leftPressed);
-        } else { // BLUE rule
+        } else { // BLUE rule → even = left, odd = right
             isCorrect = ((currentNumber % 2 == 0) && leftPressed) || ((currentNumber % 2 != 0) && !leftPressed);
         }
 
-        if (!isCorrect) {
-            tvResult.setText("Incorrect!");
-        } else {
-            tvResult.setText("");
-        }
+        tvResult.setText(isCorrect ? "" : "Incorrect!");
 
         handler.postDelayed(this::nextTrial, 700);
     }
@@ -100,22 +104,49 @@ public class TaskSwitchActivity extends AppCompatActivity {
         long switchCost = Math.abs(avgSwitch - avgSame);
 
         String interpretation;
-        if (switchCost < 100)
+        float flexibilityScore;
+
+        if (switchCost < 100) {
             interpretation = "Excellent flexibility";
-        else if (switchCost <= 250)
+            flexibilityScore = 100;
+        } else if (switchCost <= 250) {
             interpretation = "Average";
-        else
+            flexibilityScore = 70;
+        } else {
             interpretation = "Low flexibility";
+            flexibilityScore = 40;
+        }
 
         tvResult.setText("Switch Cost: " + switchCost + " ms\n" + interpretation);
 
-        // TODO: Save `switchCost` → SharedPreferences as "switch_cost_ms"
+        // ✅ Save results to SharedPreferences for dashboard and tracking
+        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+        sp.edit()
+                .putLong("switch_cost_ms", switchCost)
+                .putFloat("flexibility_post_score", flexibilityScore)
+                .putLong("timestamp_post", System.currentTimeMillis())
+                .apply();
+
+        // ✅ Store result for progress dashboard
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+        ScoreHistoryStorage.addScoreHistory(this, "Cognitive", flexibilityScore / 14f * 7, date);
+
+        // Auto-return to Home after 3s
+        handler.postDelayed(() -> {
+            Intent intent = new Intent(this, HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }, 3000);
     }
 
+    // ✅ Helper method for average calculation
     private long average(List<Long> list) {
-        if (list.isEmpty()) return 0;
+        if (list == null || list.isEmpty()) return 0;
         long sum = 0;
-        for (long l : list) sum += l;
+        for (Long value : list) {
+            sum += value;
+        }
         return sum / list.size();
     }
 }

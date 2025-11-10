@@ -1,5 +1,6 @@
 package com.example.cognisync;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -9,6 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 public class SARTActivity extends AppCompatActivity {
@@ -100,27 +104,32 @@ public class SARTActivity extends AppCompatActivity {
         int totalResponses = correctResponses + commissionErrors;
         double accuracy = totalResponses == 0 ? 0 :
                 (correctResponses * 100.0 / totalResponses);
-
         long avgReactionTime = correctResponses == 0 ? 0 :
                 reactionTimeSum / correctResponses;
 
-        float attentionScore = (float) (accuracy - commissionErrors * 2);
-        if (attentionScore < 0) attentionScore = 0;
-        if (attentionScore > 100) attentionScore = 100;
+        float awarenessScore = (float) (accuracy - commissionErrors * 2);
+        if (awarenessScore < 0) awarenessScore = 0;
+        if (awarenessScore > 100) awarenessScore = 100;
 
-        String result = "✅ Accuracy: " + String.format("%.1f", accuracy) + "%\n"
-                + "⚠️ Errors: " + commissionErrors + "\n"
-                + "⏱ Avg Reaction: " + avgReactionTime + " ms\n"
-                + "🎯 Attention Score: " + (int) attentionScore + "/100";
+        String result = "Accuracy: " + String.format("%.1f", accuracy) + "%\n"
+                + "Errors: " + commissionErrors + "\n"
+                + "Avg RT: " + avgReactionTime + " ms\n"
+                + "Awareness Score: " + (int) awarenessScore + "/100";
 
         Toast.makeText(this, result, Toast.LENGTH_LONG).show();
 
-        // Save locally (can later sync with Firebase)
-        getSharedPreferences("ModuleData", MODE_PRIVATE).edit()
+        // ✅ Save scores for dashboard and progress tracking
+        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+        sp.edit()
+                .putFloat("awareness_post_score", awarenessScore)
                 .putFloat("sart_accuracy", (float) accuracy)
                 .putInt("sart_errors", commissionErrors)
                 .putLong("sart_reaction_time", avgReactionTime)
-                .putFloat("attention_score", attentionScore)
+                .putLong("timestamp_post", System.currentTimeMillis())
                 .apply();
+
+        // ✅ Add to score history for Progress Dashboard
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+        ScoreHistoryStorage.addScoreHistory(this, "Awareness", awarenessScore / 14f * 7, date);
     }
 }

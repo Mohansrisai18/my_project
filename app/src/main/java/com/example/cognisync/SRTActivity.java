@@ -8,12 +8,9 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class SRTActivity extends AppCompatActivity {
 
@@ -32,12 +29,10 @@ public class SRTActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_srt);
 
@@ -46,22 +41,16 @@ public class SRTActivity extends AppCompatActivity {
         tvResult = findViewById(R.id.tvResult);
         backButton = findViewById(R.id.backButton);
 
-        // Get screen size for random positioning
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         screenWidth = metrics.widthPixels;
         screenHeight = metrics.heightPixels;
 
-        // Back button
         backButton.setOnClickListener(v -> {
-            Intent intent = new Intent(SRTActivity.this, ModuleVideoActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            startActivity(new Intent(this, ModuleVideoActivity.class));
             finish();
         });
 
         tvInstruction.setText("Tap as soon as you see the dot.");
-
-        // Dot tap listener
         tvDot.setOnClickListener(v -> {
             if (dotVisible) {
                 long reaction = System.currentTimeMillis() - startTime;
@@ -84,7 +73,7 @@ public class SRTActivity extends AppCompatActivity {
         trialCount++;
         tvInstruction.setText("Get ready...");
 
-        int delay = random.nextInt(2000) + 1000; // random 1–3 seconds delay
+        int delay = random.nextInt(2000) + 1000;
         handler.postDelayed(() -> {
             moveDotToRandomPosition();
             tvDot.setVisibility(View.VISIBLE);
@@ -94,41 +83,51 @@ public class SRTActivity extends AppCompatActivity {
         }, delay);
     }
 
-    /** 🔴 Move the dot to a random position within screen bounds */
     private void moveDotToRandomPosition() {
-        int dotSize = 200; // approximate dp size converted to pixels
-
+        int dotSize = 200;
         int maxX = screenWidth - dotSize;
-        int maxY = screenHeight - dotSize - 300; // subtract UI area at top
-
-        int randomX = random.nextInt(Math.max(maxX, 1));
-        int randomY = random.nextInt(Math.max(maxY, 1)) + 200; // avoid too top
-
-        tvDot.setX(randomX);
-        tvDot.setY(randomY);
+        int maxY = screenHeight - dotSize - 300;
+        tvDot.setX(random.nextInt(Math.max(maxX, 1)));
+        tvDot.setY(random.nextInt(Math.max(maxY, 1)) + 200);
     }
 
     private void showResult() {
         long avgRT = (long) reactionTimes.stream().mapToLong(Long::longValue).average().orElse(0);
 
         String performance;
-        if (avgRT < 300) performance = "Excellent Focus";
-        else if (avgRT <= 500) performance = "Normal Performance";
-        else performance = "Reduced Vigilance";
+        float attentionScore;
+
+        if (avgRT < 300) {
+            performance = "Excellent Focus";
+            attentionScore = 100;
+        } else if (avgRT <= 500) {
+            performance = "Normal Performance";
+            attentionScore = 75;
+        } else if (avgRT <= 700) {
+            performance = "Below Average";
+            attentionScore = 50;
+        } else {
+            performance = "Reduced Vigilance";
+            attentionScore = 25;
+        }
 
         tvInstruction.setText("Task Complete!");
-        tvResult.setText("Average Reaction Time: " + avgRT + " ms\n" + performance);
+        tvResult.setText("Avg RT: " + avgRT + " ms\n" + performance);
         tvResult.setVisibility(View.VISIBLE);
 
         SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
-        sp.edit().putLong("srt_ms", avgRT).apply();
+        sp.edit()
+                .putLong("srt_ms", avgRT)
+                .putFloat("attention_post_score", attentionScore)
+                .putLong("timestamp_post", System.currentTimeMillis())
+                .apply();
 
+        // Save to score history for dashboard
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+        ScoreHistoryStorage.addScoreHistory(this, "Attention", attentionScore / 14f * 7, date);
 
-        // Auto return to home
         handler.postDelayed(() -> {
-            Intent intent = new Intent(SRTActivity.this, HomeActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            startActivity(new Intent(this, HomeActivity.class));
             finish();
         }, 3000);
     }

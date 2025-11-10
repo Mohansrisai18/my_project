@@ -9,8 +9,12 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 public class StroopTaskActivity extends AppCompatActivity {
@@ -32,7 +36,7 @@ public class StroopTaskActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -93,35 +97,52 @@ public class StroopTaskActivity extends AppCompatActivity {
         return word.equals("ANGER") || word.equals("FEAR");
     }
 
+    // ... truncated for brevity ...
+// Replace showResult() with:
+
     private void showResult() {
         long avgNeutral = average(neutralTimes);
         long avgEmotional = average(emotionalTimes);
         long delta = Math.abs(avgEmotional - avgNeutral);
 
         String interpretation;
-        if (delta < 50) interpretation = "Good emotion regulation";
-        else if (delta <= 150) interpretation = "Moderate interference";
-        else interpretation = "High reactivity";
+        float emotionScore;
+        if (delta < 50) {
+            interpretation = "Good emotion regulation";
+            emotionScore = 100;
+        } else if (delta <= 150) {
+            interpretation = "Moderate interference";
+            emotionScore = 70;
+        } else {
+            interpretation = "High reactivity";
+            emotionScore = 40;
+        }
 
         tvResult.setText("ΔRT = " + delta + " ms\n" + interpretation);
 
-        // Save to SharedPreferences
-        SharedPreferences sp = getSharedPreferences("CognitiveResults", MODE_PRIVATE);
-        sp.edit().putLong("stroop_delta", delta).apply();
+        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+        sp.edit()
+                .putLong("stroop_delta", delta)
+                .putFloat("emotion_post_score", emotionScore)
+                .putLong("timestamp_post", System.currentTimeMillis())
+                .apply();
 
-        // Auto return to Home after 3 seconds
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+        ScoreHistoryStorage.addScoreHistory(this, "Emotional", emotionScore / 14f * 7, date);
+
         handler.postDelayed(() -> {
-            Intent intent = new Intent(StroopTaskActivity.this, HomeActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            startActivity(new Intent(this, HomeActivity.class));
             finish();
         }, 3000);
     }
 
+    // ✅ Add this helper method below:
     private long average(List<Long> list) {
-        if (list.isEmpty()) return 0;
+        if (list == null || list.isEmpty()) return 0;
         long sum = 0;
-        for (Long l : list) sum += l;
+        for (Long value : list) {
+            sum += value;
+        }
         return sum / list.size();
     }
 }

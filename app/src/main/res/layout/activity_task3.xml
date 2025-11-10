@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:background="@drawable/background_gradient"
+    android:fitsSystemWindows="true"
     tools:context=".Task3Activity">
 
     <LinearLayout

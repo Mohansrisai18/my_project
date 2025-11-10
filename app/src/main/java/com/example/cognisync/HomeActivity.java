@@ -3,10 +3,12 @@ package com.example.cognisync;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -19,11 +21,18 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        // ✅ White status bar with black icons
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
 
         // Greeting
         tvGreeting = findViewById(R.id.tvGreeting);
@@ -51,11 +60,11 @@ public class HomeActivity extends AppCompatActivity {
         cvCognitiveIntegration = findViewById(R.id.cvCognitiveIntegration);
         cvEmotionalRegulation = findViewById(R.id.cvEmotionalRegulation);
 
-        // Navigation Cards
+        // Dashboard & Graph (non-clickable banner)
         cvProgressDashboard = findViewById(R.id.cvProgressDashboard);
         cvGraphSection = findViewById(R.id.cvGraphSection);
 
-        // Menu Button
+        // Menu
         ImageButton btnMenu = findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(v -> startActivity(new Intent(this, ProfileActivity.class)));
     }
@@ -70,23 +79,33 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void setClickActions() {
-        // Open the list of sessions for each module
+        // ✅ Modules Navigation
         cvFocusedAttention.setOnClickListener(v -> openModuleList("focused_attention"));
         cvWorkingMemory.setOnClickListener(v -> openModuleList("working_memory"));
         cvPresentMoment.setOnClickListener(v -> openModuleList("present_moment"));
         cvCognitiveIntegration.setOnClickListener(v -> openModuleList("cognitive_flexibility"));
         cvEmotionalRegulation.setOnClickListener(v -> openModuleList("emotional_regulation"));
 
-        // Open Dashboard & Graph
-        cvProgressDashboard.setOnClickListener(v ->
-                startActivity(new Intent(this, ProgressDashboardActivity.class)));
-        cvGraphSection.setOnClickListener(v ->
-                startActivity(new Intent(this, TrendChartActivity.class)));
+        // ❌ Progress Dashboard is static (no navigation)
+        cvProgressDashboard.setOnClickListener(null);
+
+        // ✅ Score Cards Navigation
+        findViewById(R.id.cvMemoryScore).setOnClickListener(v -> openScoreDashboard("Memory"));
+        findViewById(R.id.cvAttentionScore).setOnClickListener(v -> openScoreDashboard("Attention"));
+        findViewById(R.id.cvEmotionScore).setOnClickListener(v -> openScoreDashboard("Emotional"));
+        findViewById(R.id.cvCognitiveScore).setOnClickListener(v -> openScoreDashboard("Cognitive"));
+        findViewById(R.id.cvPresentMomentScore).setOnClickListener(v -> openScoreDashboard("Present"));
     }
 
     private void openModuleList(String moduleType) {
         Intent intent = new Intent(this, ModuleListActivity.class);
         intent.putExtra("module_type", moduleType);
+        startActivity(intent);
+    }
+
+    private void openScoreDashboard(String scoreType) {
+        Intent intent = new Intent(this, ProgressDashboardActivity.class);
+        intent.putExtra("score_type", scoreType);
         startActivity(intent);
     }
 }

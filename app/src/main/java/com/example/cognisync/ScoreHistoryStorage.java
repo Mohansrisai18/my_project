@@ -2,11 +2,11 @@ package com.example.cognisync;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import java.util.ArrayList;
-import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ScoreHistoryStorage {
 
@@ -24,7 +24,17 @@ public class ScoreHistoryStorage {
             obj.put("date", date);
             array.put(obj);
 
-            prefs.edit().putString(key, array.toString()).apply();
+            // Limit to last 10 entries
+            if (array.length() > 10) {
+                JSONArray trimmed = new JSONArray();
+                for (int i = array.length() - 10; i < array.length(); i++) {
+                    trimmed.put(array.get(i));
+                }
+                prefs.edit().putString(key, trimmed.toString()).apply();
+            } else {
+                prefs.edit().putString(key, array.toString()).apply();
+            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }

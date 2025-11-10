@@ -9,6 +9,11 @@ public class ScoreHistoryItem {
         this.date = date;
     }
 
-    public float getScore() { return score; }
-    public String getDate() { return date; }
+    public float getScore() {
+        return score;
+    }
+
+    public String getDate() {
+        return date;
+    }
 }

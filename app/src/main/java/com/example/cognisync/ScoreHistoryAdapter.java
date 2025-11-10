@@ -22,7 +22,7 @@ public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapte
         ViewHolder(View itemView) {
             super(itemView);
             scoreText = itemView.findViewById(R.id.score_text);
-            dateText  = itemView.findViewById(R.id.date_text);
+            dateText = itemView.findViewById(R.id.date_text);
         }
     }
 

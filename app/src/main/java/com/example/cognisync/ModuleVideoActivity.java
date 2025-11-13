@@ -141,7 +141,7 @@ public class ModuleVideoActivity extends AppCompatActivity {
 
             case "present_moment":
             case "present_moment_awareness":
-                intent = new Intent(this, SRTActivity.class);
+                intent = new Intent(this, SARTActivity.class);
                 intent.putExtra("subtopic", "present_moment_awareness");
                 break;
 

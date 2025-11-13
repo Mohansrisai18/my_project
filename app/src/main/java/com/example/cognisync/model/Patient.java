@@ -14,4 +14,24 @@ public class Patient {
         this.email = email;
         this.password = password;
     }
+
+    public String getFullName() {
+        return full_name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
 }

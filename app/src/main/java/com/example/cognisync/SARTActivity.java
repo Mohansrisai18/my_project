@@ -20,7 +20,7 @@ public class SARTActivity extends AppCompatActivity {
     private TextView tvNumber, tvInstruction, tvProgress;
     private Button btnStart;
 
-    private final int TOTAL_TRIALS = 40; // Total numbers shown
+    private static final int TOTAL_TRIALS = 40; // Total numbers shown
     private int currentTrial = 0;
     private int commissionErrors = 0; // Tap when '3' appears
     private int correctResponses = 0; // Correct tap on non-3 digits
@@ -28,18 +28,19 @@ public class SARTActivity extends AppCompatActivity {
     private long lastShownTime = 0;
     private boolean canTap = false;
 
-    private Handler handler = new Handler();
-    private Random random = new Random();
+    private final Handler handler = new Handler();
+    private final Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+
         setContentView(R.layout.activity_sart);
 
+        // --- Bind Views ---
         tvNumber = findViewById(R.id.tvNumber);
         tvInstruction = findViewById(R.id.tvInstruction);
         tvProgress = findViewById(R.id.tvProgress);
@@ -49,6 +50,7 @@ public class SARTActivity extends AppCompatActivity {
         tvNumber.setOnClickListener(v -> handleTap());
     }
 
+    /** Start the SART task */
     private void startTask() {
         btnStart.setVisibility(View.GONE);
         tvInstruction.setText("Tap for every number EXCEPT 3!");
@@ -59,6 +61,7 @@ public class SARTActivity extends AppCompatActivity {
         runNextTrial();
     }
 
+    /** Run next trial */
     private void runNextTrial() {
         if (currentTrial >= TOTAL_TRIALS) {
             endTask();
@@ -77,9 +80,10 @@ public class SARTActivity extends AppCompatActivity {
         handler.postDelayed(() -> {
             canTap = false;
             runNextTrial();
-        }, 800); // Each number stays for 800ms
+        }, 800); // 800ms per trial
     }
 
+    /** Handle user tap */
     private void handleTap() {
         if (!canTap) return;
 
@@ -96,6 +100,7 @@ public class SARTActivity extends AppCompatActivity {
         canTap = false; // Prevent multiple taps per trial
     }
 
+    /** End the SART task and calculate results */
     private void endTask() {
         tvNumber.setText("-");
         tvInstruction.setText("Task Completed!");
@@ -111,14 +116,14 @@ public class SARTActivity extends AppCompatActivity {
         if (awarenessScore < 0) awarenessScore = 0;
         if (awarenessScore > 100) awarenessScore = 100;
 
-        String result = "Accuracy: " + String.format("%.1f", accuracy) + "%\n"
+        String result = "Accuracy: " + String.format(Locale.getDefault(), "%.1f", accuracy) + "%\n"
                 + "Errors: " + commissionErrors + "\n"
                 + "Avg RT: " + avgReactionTime + " ms\n"
                 + "Awareness Score: " + (int) awarenessScore + "/100";
 
         Toast.makeText(this, result, Toast.LENGTH_LONG).show();
 
-        // ✅ Save scores for dashboard and progress tracking
+        // ✅ Save scores to SharedPreferences
         SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
         sp.edit()
                 .putFloat("awareness_post_score", awarenessScore)
@@ -128,8 +133,11 @@ public class SARTActivity extends AppCompatActivity {
                 .putLong("timestamp_post", System.currentTimeMillis())
                 .apply();
 
-        // ✅ Add to score history for Progress Dashboard
+        // ✅ Add to score history
         String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Awareness", awarenessScore / 14f * 7, date);
+        ScoreHistoryStorage.addScoreHistory(this, "Awareness", awarenessScore, date);
+
+        // ✅ Auto-close after 3 seconds
+        handler.postDelayed(this::finish, 3000);
     }
 }

@@ -4,8 +4,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapter.ViewHolder> {
@@ -37,9 +39,10 @@ public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ScoreHistoryItem item = items.get(position);
-        holder.scoreText.setText(String.format("%.1f/7", item.getScore()));
-        holder.dateText.setText(item.getDate());
+        holder.scoreText.setText(String.format("%.1f", item.getScore()));
+        holder.dateText.setText(item.getDate() + " • " + item.getTime());
     }
+
 
     @Override
     public int getItemCount() {

@@ -1,148 +1,149 @@
 package com.example.cognisync;
 
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import androidx.core.content.ContextCompat;
 
-import org.json.JSONObject;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.LoginRequest;
+import com.example.cognisync.model.Patient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText mailInput, passwordInput;
+    private EditText emailInput, passwordInput;
     private AppCompatButton btnLogin;
     private TextView signupText;
 
-    private static final String LOGIN_URL = "http://10.0.2.2:8000/user/login/";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
-            getSupportActionBar().hide();
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
-        mailInput = findViewById(R.id.mailInput);
+
+        // ✅ Match the correct XML IDs
+        emailInput = findViewById(R.id.mailInput); // matches your XML
         passwordInput = findViewById(R.id.passwordInput);
         btnLogin = findViewById(R.id.btnLogin);
         signupText = findViewById(R.id.signupText);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
 
-        // ✅ Black icons in status bar (for white background)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
         btnLogin.setOnClickListener(v -> performLogin());
         signupText.setOnClickListener(v -> navigateToSignup());
 
+        // Handle back press
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                finish();
+                finishAffinity();
             }
         });
     }
 
+    /** ✅ Step 1: Perform login authentication */
     private void performLogin() {
-        String email = mailInput.getText().toString().trim();
+        String email = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
 
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Please enter both email and password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please enter all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
         btnLogin.setEnabled(false);
         btnLogin.setText("Logging in...");
 
-        new LoginTask(email, password).execute();
-    }
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        LoginRequest loginRequest = new LoginRequest(email, password);
 
-    private class LoginTask extends AsyncTask<Void, Void, String> {
-        private final String email, password;
-
-        LoginTask(String email, String password) {
-            this.email = email;
-            this.password = password;
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                URL url = new URL(LOGIN_URL);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setDoOutput(true);
-
-                JSONObject jsonParam = new JSONObject();
-                jsonParam.put("email", email);
-                jsonParam.put("password", password);
-
-                OutputStream os = new BufferedOutputStream(conn.getOutputStream());
-                os.write(jsonParam.toString().getBytes());
-                os.flush();
-                os.close();
-
-                int responseCode = conn.getResponseCode();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        responseCode == 200 ? conn.getInputStream() : conn.getErrorStream()
-                ));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
+        // ✅ Step 1: Authenticate user
+        Call<Void> call = apiService.loginPatient(loginRequest);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // ✅ Step 2: Fetch profile after successful authentication
+                    fetchUserProfile(email);
+                } else {
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Login");
+                    Toast.makeText(LoginActivity.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
                 }
-                reader.close();
-                conn.disconnect();
-                return response.toString();
-
-            } catch (Exception e) {
-                return "Error: " + e.getMessage();
             }
-        }
 
-        @Override
-        protected void onPostExecute(String result) {
-            btnLogin.setEnabled(true);
-            btnLogin.setText("Login");
-
-            if (result.contains("Login successful")) {
-                Toast.makeText(LoginActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
-                navigateToHome();
-            } else {
-                Toast.makeText(LoginActivity.this, "Login failed: " + result, Toast.LENGTH_LONG).show();
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                btnLogin.setEnabled(true);
+                btnLogin.setText("Login");
+                Toast.makeText(LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
-        }
+        });
     }
 
+    /** ✅ Step 2: Fetch user profile using backend email */
+    private void fetchUserProfile(String email) {
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Patient> profileCall = apiService.getPatientProfile(email); // must exist in ApiService
+
+        profileCall.enqueue(new Callback<Patient>() {
+            @Override
+            public void onResponse(Call<Patient> call, Response<Patient> response) {
+                btnLogin.setEnabled(true);
+                btnLogin.setText("Login");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    Patient user = response.body();
+
+                    // ✅ Save backend data locally
+                    SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sp.edit();
+                    editor.putString("username", user.getFullName());
+                    editor.putString("email", user.getEmail());
+                    editor.putString("age", String.valueOf(user.getAge()));
+                    editor.putString("gender", user.getGender());
+                    editor.apply();
+
+                    Toast.makeText(LoginActivity.this, "Welcome back, " + user.getFullName(), Toast.LENGTH_SHORT).show();
+
+                    // ✅ Go to HomeActivity
+                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Toast.makeText(LoginActivity.this, "Failed to load profile data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Patient> call, Throwable t) {
+                btnLogin.setEnabled(true);
+                btnLogin.setText("Login");
+                Toast.makeText(LoginActivity.this, "Profile fetch error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    /** Navigate to SignupActivity */
     private void navigateToSignup() {
         Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
         startActivity(intent);
-        finish();
-    }
-
-    private void navigateToHome() {
-        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-        startActivity(intent);
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
         finish();
     }
 }

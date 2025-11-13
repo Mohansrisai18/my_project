@@ -3,15 +3,23 @@ package com.example.cognisync;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Spinner;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreRequest;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,66 +29,64 @@ import java.util.List;
 public class Task1Activity extends AppCompatActivity {
 
     private ImageButton btnBack;
-    private Spinner firstSpinner, secondSpinner, thirdSpinner;
     private AppCompatButton btnNext;
-    private TextView q1Text, q2Text, q3Text;
-
-    SharedPreferences sp;
+    private Spinner s1, s2, s3, s4, s5;
+    private TextView q1, q2, q3, q4, q5;
+    private SharedPreferences sp;
+    private SharedPreferences userSp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
-            getSupportActionBar().hide();
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+        if (getSupportActionBar()!=null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task1);
 
+        sp = getSharedPreferences("Task1Answers", MODE_PRIVATE); // used only for question shuffle & restore UI
+        userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE); // contains email saved at signup/login
+
         btnBack = findViewById(R.id.btnBack);
         btnNext = findViewById(R.id.btnNext);
-        firstSpinner = findViewById(R.id.firstSpinner);
-        secondSpinner = findViewById(R.id.secondSpinner);
-        thirdSpinner = findViewById(R.id.thirdSpinner);
-        q1Text = findViewById(R.id.q1Text);
-        q2Text = findViewById(R.id.q2Text);
-        q3Text = findViewById(R.id.q3Text);
 
-        sp = getSharedPreferences("Task1Answers", MODE_PRIVATE);
+        s1 = findViewById(R.id.spinner1);
+        s2 = findViewById(R.id.spinner2);
+        s3 = findViewById(R.id.spinner3);
+        s4 = findViewById(R.id.spinner4);
+        s5 = findViewById(R.id.spinner5);
 
-        String[] mindfulnessQuestions = {
-                "I find my mind wandering when I try to focus.",
-                "I do things on autopilot without being aware.",
-                "I struggle to stay focused on one task.",
-                "I notice when my attention drifts off.",
-                "I am fully present during daily tasks.",
-                "I realize I'm thinking about the past or future instead of now.",
-                "I forget what I’m doing because my mind is elsewhere.",
-                "I am aware of how my body feels in the moment.",
-                "I catch myself operating without thinking.",
-                "I am able to redirect my attention when distracted.",
-                "I get lost in thoughts and miss what’s happening.",
-                "I am attentive to the current task.",
-                "I react before thinking things through.",
-                "I notice small details in my environment.",
-                "I feel like I am functioning on auto-pilot."
+        q1 = findViewById(R.id.q1);
+        q2 = findViewById(R.id.q2);
+        q3 = findViewById(R.id.q3);
+        q4 = findViewById(R.id.q4);
+        q5 = findViewById(R.id.q5);
+
+        String[] questions = {
+                "I find it difficult to stay focused on what’s happening in the present.",
+                "I rush through activities without really paying attention.",
+                "I do things automatically without being aware of what I'm doing.",
+                "I get lost in thoughts or daydreaming.",
+                "I find myself listening with one ear while doing something else.",
+                "I find myself doing things without paying attention.",
+                "I notice that I am not feeling present in the moment."
         };
 
-        List<String> list = new ArrayList<>(Arrays.asList(mindfulnessQuestions));
+        List<String> list = new ArrayList<>(Arrays.asList(questions));
         Collections.shuffle(list);
 
-        if (!sp.contains("q1")) {
+        if (!sp.contains("t1_q1")) {
             sp.edit()
-                    .putString("q1", list.get(0))
-                    .putString("q2", list.get(1))
-                    .putString("q3", list.get(2))
+                    .putString("t1_q1", list.get(0))
+                    .putString("t1_q2", list.get(1))
+                    .putString("t1_q3", list.get(2))
+                    .putString("t1_q4", list.get(3))
+                    .putString("t1_q5", list.get(4))
                     .apply();
         }
 
-        q1Text.setText(sp.getString("q1", ""));
-        q2Text.setText(sp.getString("q2", ""));
-        q3Text.setText(sp.getString("q3", ""));
+        q1.setText(sp.getString("t1_q1", ""));
+        q2.setText(sp.getString("t1_q2", ""));
+        q3.setText(sp.getString("t1_q3", ""));
+        q4.setText(sp.getString("t1_q4", ""));
+        q5.setText(sp.getString("t1_q5", ""));
 
         String[] options = {
                 "Select your answer",
@@ -92,52 +98,91 @@ public class Task1Activity extends AppCompatActivity {
                 "6 — Almost Never"
         };
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, R.layout.spinner_selected_item, options);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
-        firstSpinner.setAdapter(adapter);
-        secondSpinner.setAdapter(adapter);
-        thirdSpinner.setAdapter(adapter);
+        s1.setAdapter(adapter);
+        s2.setAdapter(adapter);
+        s3.setAdapter(adapter);
+        s4.setAdapter(adapter);
+        s5.setAdapter(adapter);
 
-        firstSpinner.setSelection(sp.getInt("ans1_pos", 0));
-        secondSpinner.setSelection(sp.getInt("ans2_pos", 0));
-        thirdSpinner.setSelection(sp.getInt("ans3_pos", 0));
+        // restore selections if present (optional UI convenience)
+        s1.setSelection(sp.getInt("t1_a1", 0));
+        s2.setSelection(sp.getInt("t1_a2", 0));
+        s3.setSelection(sp.getInt("t1_a3", 0));
+        s4.setSelection(sp.getInt("t1_a4", 0));
+        s5.setSelection(sp.getInt("t1_a5", 0));
 
-        btnNext.setOnClickListener(v -> navigateToTask2());
-        btnBack.setOnClickListener(v -> navigateToSignup());
+        btnBack.setOnClickListener(v -> {
+            startActivity(new Intent(Task1Activity.this, SignupActivity.class));
+            finish();
+        });
+
+        btnNext.setOnClickListener(v -> {
+            // ensure all answered
+            int[] pos = {
+                    s1.getSelectedItemPosition(),
+                    s2.getSelectedItemPosition(),
+                    s3.getSelectedItemPosition(),
+                    s4.getSelectedItemPosition(),
+                    s5.getSelectedItemPosition()
+            };
+
+            for (int p : pos) {
+                if (p == 0) {
+                    Toast.makeText(this, "Please answer all questions", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+
+            // Save UI selections locally for convenience (not used as authoritative storage)
+            sp.edit()
+                    .putInt("t1_a1", pos[0])
+                    .putInt("t1_a2", pos[1])
+                    .putInt("t1_a3", pos[2])
+                    .putInt("t1_a4", pos[3])
+                    .putInt("t1_a5", pos[4])
+                    .apply();
+
+            // Calculate MAAS (reverse 1..6 => 7-value), average, convert to 0..100
+            int sumReversed = 0;
+            for (int p : pos) {
+                int val = p; // spinner pos 1..6
+                int rev = 7 - val;
+                sumReversed += rev;
+            }
+            float avg = sumReversed / 5f; // 1..6
+            int percent = (int) (((avg - 1f) / 5f) * 100f);
+
+            // send initial MAAS
+            String email = userSp.getString("email", null);
+            if (email != null) sendMaasInitial(email, percent);
+
+            startActivity(new Intent(Task1Activity.this, Task2Activity.class));
+            finish();
+        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                navigateToSignup();
+            @Override public void handleOnBackPressed() {
+                startActivity(new Intent(Task1Activity.this, SignupActivity.class));
+                finish();
             }
         });
     }
 
-    private void navigateToSignup() {
-        Intent intent = new Intent(this, SignupActivity.class);
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-        finish();
-    }
-
-    private void navigateToTask2() {
-
-        SharedPreferences.Editor ed = sp.edit();
-        ed.putInt("ans1_pos", firstSpinner.getSelectedItemPosition());
-        ed.putInt("ans2_pos", secondSpinner.getSelectedItemPosition());
-        ed.putInt("ans3_pos", thirdSpinner.getSelectedItemPosition());
-        ed.apply();
-
-        Intent intent = new Intent(this, Task2Activity.class);
-
-        intent.putExtra("answer1", firstSpinner.getSelectedItem().toString());
-        intent.putExtra("answer2", secondSpinner.getSelectedItem().toString());
-        intent.putExtra("answer3", thirdSpinner.getSelectedItem().toString());
-
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-        finish();
+    private void sendMaasInitial(String email, int percent) {
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        ScoreRequest req = new ScoreRequest(email, percent);
+        api.saveMaasInitial(req).enqueue(new Callback<Void>() {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) {
+                    Toast.makeText(Task1Activity.this, "MAAS initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(Task1Activity.this, "MAAS initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

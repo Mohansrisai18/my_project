@@ -40,7 +40,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
-    // Add MPAndroidChart dependency for line charts
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    // Add MPAndroidChart dependency for line charts
+
 }

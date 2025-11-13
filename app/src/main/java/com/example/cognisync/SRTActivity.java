@@ -8,7 +8,9 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -45,10 +47,7 @@ public class SRTActivity extends AppCompatActivity {
         screenWidth = metrics.widthPixels;
         screenHeight = metrics.heightPixels;
 
-        backButton.setOnClickListener(v -> {
-            startActivity(new Intent(this, ModuleVideoActivity.class));
-            finish();
-        });
+        backButton.setOnClickListener(v -> finish());
 
         tvInstruction.setText("Tap as soon as you see the dot.");
         tvDot.setOnClickListener(v -> {
@@ -122,13 +121,11 @@ public class SRTActivity extends AppCompatActivity {
                 .putLong("timestamp_post", System.currentTimeMillis())
                 .apply();
 
-        // Save to score history for dashboard
+        // Save to history
         String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Attention", attentionScore / 14f * 7, date);
+        ScoreHistoryStorage.addScoreHistory(this, "Attention", attentionScore, date);
 
-        handler.postDelayed(() -> {
-            startActivity(new Intent(this, HomeActivity.class));
-            finish();
-        }, 3000);
+        // Auto close after 3 seconds
+        handler.postDelayed(this::finish, 3000);
     }
 }

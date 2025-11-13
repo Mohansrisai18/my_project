@@ -3,18 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     android:background="@drawable/background_gradient"
     android:fitsSystemWindows="true"
+    android:fillViewport="true"
     tools:context=".Task3Activity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="20dp"
-        android:paddingBottom="30dp"
-        android:paddingHorizontal="16dp">
+        android:padding="18dp">
 
         <!-- Back Button -->
         <ImageButton
@@ -29,131 +27,155 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Let's Start with Quiz"
-            android:textAlignment="center"
-            android:textColor="#000"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginTop="12dp"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:text="Task 3"
-            android:textAlignment="center"
-            android:textColor="#000"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:layout_marginTop="4dp"/>
+            android:gravity="center"
+            android:layout_marginTop="8dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Rate each statement (0 = Never → 3 = Most of the time)"
-            android:textAlignment="center"
-            android:textColor="#444"
-            android:textSize="16sp"
-            android:layout_marginTop="14dp"/>
+            android:text="Rate each statement (0 = Did not apply → 3 = Most of the time)"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="6dp" />
 
-
-        <!-- QUESTION BOX 1 -->
+        <!-- ==== Question Box 1 ==== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/rounded_grey_bg"
-            android:padding="20dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginHorizontal="20dp">
-
-            <TextView
-                android:id="@+id/q1Text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#000"
-                android:gravity="center"/>
-
-            <Spinner
-                android:id="@+id/firstSpinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
-                android:padding="10dp" />
-        </LinearLayout>
-
-
-        <!-- QUESTION BOX 2 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/rounded_grey_bg"
-            android:padding="20dp"
+            android:padding="18dp"
             android:layout_marginTop="16dp"
-            android:layout_marginHorizontal="20dp">
+            android:background="@drawable/rounded_grey_bg">
 
             <TextView
-                android:id="@+id/q2Text"
+                android:id="@+id/q1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#000"
-                android:gravity="center"/>
+                android:gravity="center" />
 
             <Spinner
-                android:id="@+id/secondSpinner"
+                android:id="@+id/spinner1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
-                android:padding="10dp" />
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_bg" />
         </LinearLayout>
 
-
-        <!-- QUESTION BOX 3 -->
+        <!-- ==== Question Box 2 ==== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/rounded_grey_bg"
-            android:padding="20dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginHorizontal="20dp">
+            android:padding="18dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/rounded_grey_bg">
 
             <TextView
-                android:id="@+id/q3Text"
+                android:id="@+id/q2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#000"
-                android:gravity="center"/>
+                android:gravity="center" />
 
             <Spinner
-                android:id="@+id/thirdSpinner"
+                android:id="@+id/spinner2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/edittext_bg"
-                android:padding="10dp" />
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_bg" />
         </LinearLayout>
 
+        <!-- ==== Question Box 3 ==== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/rounded_grey_bg">
+
+            <TextView
+                android:id="@+id/q3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <Spinner
+                android:id="@+id/spinner3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_bg" />
+        </LinearLayout>
+
+        <!-- ==== Question Box 4 ==== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/rounded_grey_bg">
+
+            <TextView
+                android:id="@+id/q4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <Spinner
+                android:id="@+id/spinner4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_bg" />
+        </LinearLayout>
+
+        <!-- ==== Question Box 5 ==== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/rounded_grey_bg">
+
+            <TextView
+                android:id="@+id/q5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <Spinner
+                android:id="@+id/spinner5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_bg" />
+        </LinearLayout>
 
         <!-- NEXT BUTTON -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNext"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/btn_bg"
+            android:layout_marginTop="18dp"
             android:text="NEXT"
             android:textStyle="bold"
             android:textSize="18sp"
-            android:textColor="#000" />
+            android:background="@drawable/btn_bg" />
 
     </LinearLayout>
 </ScrollView>

@@ -3,15 +3,23 @@ package com.example.cognisync;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreRequest;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,131 +28,150 @@ import java.util.List;
 
 public class Task2Activity extends AppCompatActivity {
 
-    Spinner firstSpinner, secondSpinner, thirdSpinner;
-    TextView q1Text, q2Text, q3Text;
     ImageButton btnBack;
     AppCompatButton btnNext;
-
+    Spinner s1, s2, s3, s4, s5;
+    TextView q1, q2, q3, q4, q5;
     SharedPreferences sp;
+    SharedPreferences userSp;
 
-    // List of emotions for Task 2
-    List<String> emotions = Arrays.asList(
-            "Interested", "Excited", "Enthusiastic", "Inspired", "Alert",
-            "Determined", "Active", "Proud", "Upset", "Nervous",
-            "Irritable", "Anxious", "Distressed", "Jittery", "Sad"
+    List<String> panasItems = Arrays.asList(
+            "Interested", "Excited", "Enthusiastic", "Inspired", "Active",
+            "Distressed", "Upset", "Nervous", "Irritable", "Jittery"
     );
 
-    // Rating scale options
-    String[] scaleOptions = {
+    String[] ratingScale = {
             "Select your answer",
-            "1 - Not at all",
-            "2 - A little",
-            "3 - Somewhat",
-            "4 - Moderately",
-            "5 - Quite a bit",
-            "6 - Extremely"
+            "1 - Very Slightly",
+            "2 - A Little",
+            "3 - Moderately",
+            "4 - Quite a Bit",
+            "5 - Extremely"
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(getSupportActionBar()!=null){
-            getSupportActionBar().hide();
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+        if (getSupportActionBar()!=null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task2);
 
-        // Initialize SharedPreferences
         sp = getSharedPreferences("Task2Answers", MODE_PRIVATE);
+        userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
-        // Initialize UI elements
         btnBack = findViewById(R.id.btnBack);
         btnNext = findViewById(R.id.btnNext);
-        firstSpinner = findViewById(R.id.firstSpinner);
-        secondSpinner = findViewById(R.id.secondSpinner);
-        thirdSpinner = findViewById(R.id.thirdSpinner);
-        q1Text = findViewById(R.id.q1Text);
-        q2Text = findViewById(R.id.q2Text);
-        q3Text = findViewById(R.id.q3Text);
 
-        // ✅ Generate & store questions once
-        if (!sp.contains("q2_1")) {
-            List<String> shuffled = new ArrayList<>(emotions);
+        s1 = findViewById(R.id.spinner1);
+        s2 = findViewById(R.id.spinner2);
+        s3 = findViewById(R.id.spinner3);
+        s4 = findViewById(R.id.spinner4);
+        s5 = findViewById(R.id.spinner5);
+
+        q1 = findViewById(R.id.q1);
+        q2 = findViewById(R.id.q2);
+        q3 = findViewById(R.id.q3);
+        q4 = findViewById(R.id.q4);
+        q5 = findViewById(R.id.q5);
+
+        if (!sp.contains("t2_q1")) {
+            List<String> shuffled = new ArrayList<>(panasItems);
             Collections.shuffle(shuffled);
-
             sp.edit()
-                    .putString("q2_1", "I feel " + shuffled.get(0))
-                    .putString("q2_2", "I feel " + shuffled.get(1))
-                    .putString("q2_3", "I feel " + shuffled.get(2))
+                    .putString("t2_q1", "I feel " + shuffled.get(0))
+                    .putString("t2_q2", "I feel " + shuffled.get(1))
+                    .putString("t2_q3", "I feel " + shuffled.get(2))
+                    .putString("t2_q4", "I feel " + shuffled.get(3))
+                    .putString("t2_q5", "I feel " + shuffled.get(4))
                     .apply();
         }
 
-        // Load stored question text
-        q1Text.setText(sp.getString("q2_1", ""));
-        q2Text.setText(sp.getString("q2_2", ""));
-        q3Text.setText(sp.getString("q2_3", ""));
+        q1.setText(sp.getString("t2_q1", ""));
+        q2.setText(sp.getString("t2_q2", ""));
+        q3.setText(sp.getString("t2_q3", ""));
+        q4.setText(sp.getString("t2_q4", ""));
+        q5.setText(sp.getString("t2_q5", ""));
 
-        // ✅ Set up spinner adapter
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(this, R.layout.spinner_selected_item, scaleOptions);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, ratingScale);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
-        firstSpinner.setAdapter(adapter);
-        secondSpinner.setAdapter(adapter);
-        thirdSpinner.setAdapter(adapter);
+        s1.setAdapter(adapter);
+        s2.setAdapter(adapter);
+        s3.setAdapter(adapter);
+        s4.setAdapter(adapter);
+        s5.setAdapter(adapter);
 
-        // ✅ Restore last selected answers
-        firstSpinner.setSelection(sp.getInt("ans2_1_pos", 0));
-        secondSpinner.setSelection(sp.getInt("ans2_2_pos", 0));
-        thirdSpinner.setSelection(sp.getInt("ans2_3_pos", 0));
+        s1.setSelection(sp.getInt("t2_a1", 0));
+        s2.setSelection(sp.getInt("t2_a2", 0));
+        s3.setSelection(sp.getInt("t2_a3", 0));
+        s4.setSelection(sp.getInt("t2_a4", 0));
+        s5.setSelection(sp.getInt("t2_a5", 0));
 
-        // ✅ Next button → Save + go to Task3
-        btnNext.setOnClickListener(v -> {
-            saveSelections();
-            Intent intent = new Intent(Task2Activity.this, Task3Activity.class);
-            intent.putExtra("emotion1", firstSpinner.getSelectedItem().toString());
-            intent.putExtra("emotion2", secondSpinner.getSelectedItem().toString());
-            intent.putExtra("emotion3", thirdSpinner.getSelectedItem().toString());
-            startActivity(intent);
-            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+        btnBack.setOnClickListener(v -> {
+            startActivity(new Intent(Task2Activity.this, Task1Activity.class));
             finish();
         });
 
-        // ✅ Back button → Navigate to Task1
-        btnBack.setOnClickListener(v -> navigateToTask1());
+        btnNext.setOnClickListener(v -> {
+            // save local UI state
+            sp.edit()
+                    .putInt("t2_a1", s1.getSelectedItemPosition())
+                    .putInt("t2_a2", s2.getSelectedItemPosition())
+                    .putInt("t2_a3", s3.getSelectedItemPosition())
+                    .putInt("t2_a4", s4.getSelectedItemPosition())
+                    .putInt("t2_a5", s5.getSelectedItemPosition())
+                    .apply();
 
-        // ✅ Handle hardware back button
+            if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
+                    s3.getSelectedItemPosition()==0 || s4.getSelectedItemPosition()==0 ||
+                    s5.getSelectedItemPosition()==0) {
+                Toast.makeText(this, "Please answer all questions", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // values 1..5
+            int v1 = s1.getSelectedItemPosition();
+            int v2 = s2.getSelectedItemPosition();
+            int v3 = s3.getSelectedItemPosition();
+            int v4 = s4.getSelectedItemPosition();
+            int v5 = s5.getSelectedItemPosition();
+
+            // Option 2 logic: first 3 => PA (3..15), last 2 => NA (2..10)
+            int PA = v1 + v2 + v3; // 3..15
+            int NA = v4 + v5;      // 2..10
+
+            int paPercent = (int)(((PA - 3f) / 12f) * 100f); // 0..100
+            int naPercent = (int)(((NA - 2f) / 8f) * 100f);  // 0..100
+
+            // final single PANAS percent = average of PA and NA percents
+            int panasFinal = (paPercent + naPercent) / 2;
+
+            String email = userSp.getString("email", null);
+            if (email != null) sendPanasInitial(email, panasFinal);
+
+            startActivity(new Intent(Task2Activity.this, Task3Activity.class));
+            finish();
+        });
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                navigateToTask1();
+            @Override public void handleOnBackPressed() {
+                startActivity(new Intent(Task2Activity.this, Task1Activity.class));
+                finish();
             }
         });
     }
 
-    // ✅ Save answers when user navigates away or minimizes the app
-    @Override
-    protected void onPause() {
-        super.onPause();
-        saveSelections();
-    }
-
-    // ✅ Helper method to save spinner selections
-    private void saveSelections() {
-        SharedPreferences.Editor ed = sp.edit();
-        ed.putInt("ans2_1_pos", firstSpinner.getSelectedItemPosition());
-        ed.putInt("ans2_2_pos", secondSpinner.getSelectedItemPosition());
-        ed.putInt("ans2_3_pos", thirdSpinner.getSelectedItemPosition());
-        ed.apply();
-    }
-
-    private void navigateToTask1() {
-        saveSelections(); // ✅ Ensure state is saved before going back
-        Intent intent = new Intent(this, Task1Activity.class);
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
-        finish();
+    private void sendPanasInitial(String email, int percent) {
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        ScoreRequest req = new ScoreRequest(email, percent);
+        api.savePanasInitial(req).enqueue(new Callback<Void>() {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) {
+                    Toast.makeText(Task2Activity.this, "PANAS initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(Task2Activity.this, "PANAS initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

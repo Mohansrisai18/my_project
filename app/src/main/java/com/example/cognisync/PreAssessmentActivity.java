@@ -5,18 +5,16 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class PreAssessmentActivity extends AppCompatActivity {
 
@@ -27,20 +25,18 @@ public class PreAssessmentActivity extends AppCompatActivity {
 
     private SharedPreferences sp;
     private static final String PREF_NAME = "ModulePreAssessment";
+    private static final String PREF_MODULE_STATE = "ModuleState";
 
     private String moduleType;
-    private List<QuestionItem> questions = new ArrayList<>();
+    private final List<QuestionItem> questions = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
         setContentView(R.layout.activity_assessment);
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        // Initialize views
+        // Bind Views
         titleText = findViewById(R.id.titleText);
         taskLabel = findViewById(R.id.taskLabel);
         questionContainer = findViewById(R.id.questionContainer);
@@ -48,100 +44,63 @@ public class PreAssessmentActivity extends AppCompatActivity {
         btnNext = findViewById(R.id.btnNext);
         navPath = findViewById(R.id.navPath);
 
-        // Get module info
+        // Module Type
         moduleType = getIntent().getStringExtra("module_type");
-        if (moduleType == null || moduleType.isEmpty()) moduleType = "focused_attention";
-        String sessionTitle = getIntent().getStringExtra("session_title");
-        if (sessionTitle == null) sessionTitle = "Session 1";
+        if (moduleType == null) moduleType = "focused_attention";
 
-        // Setup preferences
-        sp = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-
-        String readableName = getReadableModuleTitle(moduleType);
-        navPath.setText("Home > " + readableName + " > " + sessionTitle);
-        titleText.setText(readableName);
+        // UI Text
+        titleText.setText(getReadableModuleTitle(moduleType));
+        navPath.setText("Home > " + getReadableModuleTitle(moduleType));
         taskLabel.setText("Pre-Session Self-Assessment");
 
-        // Load MCQ questions
+        sp = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+
+        // Load & Show Questions
         loadQuestions(moduleType);
         displayQuestions();
 
-        // Back
         backButton.setOnClickListener(v -> finish());
 
-        // Continue
-        String finalSessionTitle = sessionTitle;
-        btnNext.setOnClickListener(v -> {
-            int score = collectResponses();
-            if (score == -1) {
-                Toast.makeText(this, "Please answer all questions!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // ✅ Save module-specific pre-assessment score
-            sp.edit().putInt(moduleType + "_pre_score", score).apply();
-
-            // ✅ Global tracking for Progress Dashboard (Baseline Scores)
-            SharedPreferences global = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
-            switch (moduleType) {
-                case "focused_attention":
-                    global.edit().putFloat("maas_score", score).apply();
-                    break;
-                case "working_memory":
-                    global.edit().putFloat("cfq_score", score).apply();
-                    break;
-                case "emotional_regulation":
-                    global.edit().putFloat("panas_score", score).apply();
-                    break;
-                case "present_moment":
-                case "present_moment_awareness":
-                    global.edit().putFloat("phlms_awareness", score).apply();
-                    break;
-                case "cognitive_flexibility":
-                    global.edit().putFloat("dass_stress_score", score).apply();
-                    break;
-            }
-            global.edit().putLong("timestamp_baseline", System.currentTimeMillis()).apply();
-
-            Toast.makeText(this, "Responses saved! Score: " + score, Toast.LENGTH_SHORT).show();
-
-            // ✅ Move to next screen (video or module)
-            Intent intent = new Intent(this, ModuleVideoActivity.class);
-            intent.putExtra("module_type", moduleType);
-            intent.putExtra("session_title", finalSessionTitle);
-            startActivity(intent);
-            finish();
-        });
+        btnNext.setOnClickListener(v -> saveAssessment(moduleType));
     }
 
-    /** Load only MCQ-based questions */
-    private void loadQuestions(String moduleType) {
-        switch (moduleType) {
+    // ---------------------------------------------------------
+    // Load questions
+    // ---------------------------------------------------------
+    private void loadQuestions(String type) {
+        questions.clear();
+        switch (type) {
             case "focused_attention":
-                questions.addAll(getMAASQuestions());
+                questions.addAll(getRandomQuestions(getMAASPool(), 5));
                 break;
-            case "working_memory":
-                questions.addAll(getCFQQuestions());
-                break;
+
             case "emotional_regulation":
-                questions.addAll(getPANASQuestions());
+                questions.addAll(getRandomQuestions(getPANASPool(), 10));
                 break;
+
+            case "cognitive_flexibility":
+                questions.addAll(getDASSPool());
+                break;
+
+            case "working_memory":
+                questions.addAll(getRandomQuestions(getCFQPool(), 5));
+                break;
+
             case "present_moment":
             case "present_moment_awareness":
-                questions.addAll(getPHLMSQuestions());
+                questions.addAll(getRandomQuestions(getPHLMSPool(), 5));
                 break;
-            case "cognitive_flexibility":
-                questions.addAll(getDASSQuestions());
-                break;
+
             default:
-                questions.add(new QuestionItem("How attentive did you feel today?", true));
-                break;
+                questions.add(new QuestionItem("How are you feeling today?", 1, 6, true));
         }
     }
 
-    /** Display questions using Spinner dropdown */
+    // ---------------------------------------------------------
+    // Display questions
+    // ---------------------------------------------------------
     private void displayQuestions() {
-        String[] options = {"Select an option", "Very Poor", "Poor", "Average", "Good", "Very Good", "Excellent"};
+        questionContainer.removeAllViews();
 
         for (int i = 0; i < questions.size(); i++) {
             QuestionItem q = questions.get(i);
@@ -153,125 +112,241 @@ public class PreAssessmentActivity extends AppCompatActivity {
             questionContainer.addView(qText);
 
             Spinner spinner = new Spinner(this);
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_spinner_item, options);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    q.getOptionsArray()
+            );
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinner.setAdapter(adapter);
-            questionContainer.addView(spinner);
 
-            q.setSpinner(spinner);
+            questionContainer.addView(spinner);
+            q.spinner = spinner;
         }
     }
 
-    /** Calculate total score */
-    private int collectResponses() {
-        int total = 0;
-        for (QuestionItem q : questions) {
-            int value = q.getSelectedValue();
-            if (value == -1) return -1;
-            total += value;
+    // ---------------------------------------------------------
+    // Save Assessment + navigate to ModuleHome
+    // ---------------------------------------------------------
+    private void saveAssessment(String moduleType) {
+
+        if (hasUnanswered()) {
+            Toast.makeText(this, "Please answer all questions!", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        SharedPreferences global = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+
+        float scoreToSave = 0;
+
+        switch (moduleType) {
+
+            case "focused_attention":
+                scoreToSave = computeMAASScore();
+                global.edit().putFloat("MAAS_pre", scoreToSave).apply();
+                break;
+
+            case "emotional_regulation":
+                float pos = computePANASPositive();
+                float neg = computePANASNegative();
+                float net = pos - neg;
+
+                global.edit()
+                        .putFloat("PANAS_positive_pre", pos)
+                        .putFloat("PANAS_negative_pre", neg)
+                        .putFloat("PANAS_pre", net)
+                        .apply();
+
+                scoreToSave = net;
+                break;
+
+            case "cognitive_flexibility":
+                scoreToSave = computeDASSScore();
+                global.edit().putFloat("DASS_pre", scoreToSave).apply();
+                break;
+
+            case "working_memory":
+                scoreToSave = computeCFQScore();
+                global.edit().putFloat("CFQ_pre", scoreToSave).apply();
+                break;
+
+            case "present_moment":
+            case "present_moment_awareness":
+                scoreToSave = computePHLMSScore();
+                global.edit().putFloat("PHLMS_pre", scoreToSave).apply();
+                break;
+        }
+
+        // Save local pre score
+        sp.edit().putFloat(moduleType + "_pre_score", scoreToSave).apply();
+
+        // Mark Pre Completed
+        getSharedPreferences(PREF_MODULE_STATE, MODE_PRIVATE)
+                .edit()
+                .putBoolean(moduleType + "_pre_completed", true)
+                .apply();
+
+        Toast.makeText(this, "Saved! Score: " + scoreToSave, Toast.LENGTH_SHORT).show();
+
+        // ---------------------------------------------------------
+        // 🔥 Navigate to ModuleHomeActivity
+        // ---------------------------------------------------------
+        Intent intent = new Intent(this, ModuleHomeActivity.class);
+        intent.putExtra("module_type", moduleType);
+        startActivity(intent);
+        finish();
+    }
+
+    // ---------------------------------------------------------
+    private boolean hasUnanswered() {
+        for (QuestionItem q : questions)
+            if (q.getSelectedValue() == -1) return true;
+        return false;
+    }
+
+    // ---------------------------------------------------------
+    // Scoring logic
+    // ---------------------------------------------------------
+    private float computeMAASScore() {
+        float total = 0;
+        for (QuestionItem q : questions) total += q.getSelectedValue();
+        return total / questions.size();
+    }
+
+    private float computePANASPositive() {
+        float sum = 0; int c = 0;
+        for (QuestionItem q : questions) if (q.isPositive) { sum += q.getSelectedValue(); c++; }
+        return (c == 0) ? 0 : sum / c;
+    }
+
+    private float computePANASNegative() {
+        float sum = 0; int c = 0;
+        for (QuestionItem q : questions) if (!q.isPositive) { sum += q.getSelectedValue(); c++; }
+        return (c == 0) ? 0 : sum / c;
+    }
+
+    private float computeDASSScore() {
+        float total = 0;
+        for (QuestionItem q : questions) total += q.getSelectedValue();
+        return total * 2;
+    }
+
+    private float computeCFQScore() {
+        float total = 0;
+        for (QuestionItem q : questions) total += q.getSelectedValue();
         return total;
     }
 
-    // ======== Question sets ======== //
+    private float computePHLMSScore() {
+        float total = 0;
+        for (QuestionItem q : questions) total += q.getSelectedValue();
+        return total / questions.size();
+    }
 
-    private List<QuestionItem> getMAASQuestions() {
-        List<QuestionItem> list = new ArrayList<>();
-        Collections.addAll(list,
-                new QuestionItem("I found it hard to stay focused.", true),
-                new QuestionItem("I felt distracted during simple tasks.", true),
-                new QuestionItem("I noticed thoughts drifting frequently.", true),
-                new QuestionItem("I rushed through activities without attention.", true),
-                new QuestionItem("I was aware of my breathing while working.", true)
+    // ---------------------------------------------------------
+    // Question banks
+    // ---------------------------------------------------------
+    private List<QuestionItem> getMAASPool() {
+        return Arrays.asList(
+                new QuestionItem("I find it difficult to stay focused on what’s happening.", 1, 6),
+                new QuestionItem("I rush through activities without paying attention.", 1, 6),
+                new QuestionItem("I get easily distracted.", 1, 6),
+                new QuestionItem("I do things automatically without awareness.", 1, 6),
+                new QuestionItem("I fail to notice small details.", 1, 6)
         );
-        return list;
     }
 
-    private List<QuestionItem> getCFQQuestions() {
-        List<QuestionItem> list = new ArrayList<>();
-        Collections.addAll(list,
-                new QuestionItem("I forget why I entered a room.", true),
-                new QuestionItem("I lose track of what I was doing mid-task.", true),
-                new QuestionItem("I forget instructions quickly.", true),
-                new QuestionItem("I misplace items I just used.", true),
-                new QuestionItem("I find it hard to keep multiple things in mind.", true)
+    private List<QuestionItem> getPANASPool() {
+        return Arrays.asList(
+                new QuestionItem("Interested", 1, 5, true),
+                new QuestionItem("Excited", 1, 5, true),
+                new QuestionItem("Strong", 1, 5, true),
+                new QuestionItem("Enthusiastic", 1, 5, true),
+                new QuestionItem("Alert", 1, 5, true),
+                new QuestionItem("Distressed", 1, 5, false),
+                new QuestionItem("Upset", 1, 5, false),
+                new QuestionItem("Guilty", 1, 5, false),
+                new QuestionItem("Scared", 1, 5, false),
+                new QuestionItem("Hostile", 1, 5, false)
         );
-        return list;
     }
 
-    private List<QuestionItem> getPANASQuestions() {
-        List<QuestionItem> list = new ArrayList<>();
-        Collections.addAll(list,
-                new QuestionItem("I felt calm and balanced.", true),
-                new QuestionItem("I felt nervous or tense.", true),
-                new QuestionItem("I felt optimistic about my day.", true),
-                new QuestionItem("I felt easily irritated.", true),
-                new QuestionItem("I felt in control of my emotions.", true)
+    private List<QuestionItem> getCFQPool() {
+        return Arrays.asList(
+                new QuestionItem("Do you forget why you entered a room?", 1, 5),
+                new QuestionItem("Do you lose track mid-task?", 1, 5),
+                new QuestionItem("Do you misplace items you just used?", 1, 5),
+                new QuestionItem("Do you forget instructions quickly?", 1, 5),
+                new QuestionItem("Do you forget daily routines?", 1, 5)
         );
-        return list;
     }
 
-    private List<QuestionItem> getPHLMSQuestions() {
-        List<QuestionItem> list = new ArrayList<>();
-        Collections.addAll(list,
-                new QuestionItem("I noticed sounds and sensations clearly.", true),
-                new QuestionItem("I was aware of my body posture.", true),
-                new QuestionItem("I observed my thoughts calmly.", true),
-                new QuestionItem("I was present with what I was doing.", true),
-                new QuestionItem("I noticed emotions as they appeared.", true)
+    private List<QuestionItem> getPHLMSPool() {
+        return Arrays.asList(
+                new QuestionItem("I noticed sensations in my body.", 1, 5),
+                new QuestionItem("I was aware of my breathing.", 1, 5),
+                new QuestionItem("I observed my thoughts calmly.", 1, 5),
+                new QuestionItem("I was present with my actions.", 1, 5),
+                new QuestionItem("I noticed emotions as they appeared.", 1, 5)
         );
-        return list;
     }
 
-    private List<QuestionItem> getDASSQuestions() {
-        List<QuestionItem> list = new ArrayList<>();
-        Collections.addAll(list,
-                new QuestionItem("I felt stressed easily.", true),
-                new QuestionItem("I overreacted to small issues.", true),
-                new QuestionItem("I found it hard to relax.", true),
-                new QuestionItem("I got irritated by interruptions.", true),
-                new QuestionItem("I used a lot of nervous energy.", true)
+    private List<QuestionItem> getDASSPool() {
+        return Arrays.asList(
+                new QuestionItem("I found it difficult to relax.", 0, 3),
+                new QuestionItem("I felt stressed over small things.", 0, 3),
+                new QuestionItem("I felt tense for no reason.", 0, 3)
         );
-        return list;
     }
 
-    /** Human-readable titles */
-    private String getReadableModuleTitle(String moduleType) {
-        switch (moduleType) {
-            case "focused_attention":
-                return "Focused Attention";
-            case "working_memory":
-                return "Working Memory";
-            case "emotional_regulation":
-                return "Emotional Regulation";
-            case "cognitive_flexibility":
-                return "Cognitive Flexibility";
-            case "present_moment":
-            case "present_moment_awareness":
-                return "Present-Moment Awareness";
-            default:
-                return "Mindfulness Module";
-        }
+    private List<QuestionItem> getRandomQuestions(List<QuestionItem> pool, int count) {
+        List<QuestionItem> shuffled = new ArrayList<>(pool);
+        Collections.shuffle(shuffled);
+        return shuffled.subList(0, Math.min(count, shuffled.size()));
     }
 
-    /** Inner class for MCQ item */
+    // ---------------------------------------------------------
+    // Model
+    // ---------------------------------------------------------
     private static class QuestionItem {
         String question;
         Spinner spinner;
+        int min, max;
+        boolean isPositive;
 
-        QuestionItem(String q, boolean mcq) {
+        QuestionItem(String q, int min, int max) { this(q, min, max, true); }
+
+        QuestionItem(String q, int min, int max, boolean isPositive) {
             this.question = q;
+            this.min = min;
+            this.max = max;
+            this.isPositive = isPositive;
         }
 
-        void setSpinner(Spinner s) {
-            this.spinner = s;
+        String[] getOptionsArray() {
+            List<String> list = new ArrayList<>();
+            list.add("Select");
+            for (int i = min; i <= max; i++) list.add(String.valueOf(i));
+            return list.toArray(new String[0]);
         }
 
         int getSelectedValue() {
             if (spinner == null) return -1;
             int pos = spinner.getSelectedItemPosition();
-            return pos == 0 ? -1 : pos; // 1–6 values
+            if (pos == 0) return -1;
+            return Integer.parseInt(spinner.getSelectedItem().toString());
+        }
+    }
+
+    private String getReadableModuleTitle(String moduleType) {
+        switch (moduleType) {
+            case "focused_attention": return "Focused Attention";
+            case "working_memory": return "Working Memory";
+            case "emotional_regulation": return "Emotional Regulation";
+            case "cognitive_flexibility": return "Cognitive Flexibility";
+            case "present_moment":
+            case "present_moment_awareness": return "Present-Moment Awareness";
+            default: return "Mindfulness Module";
         }
     }
 }

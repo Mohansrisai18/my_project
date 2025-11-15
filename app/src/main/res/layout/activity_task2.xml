@@ -21,6 +21,7 @@
         <TextView
             android:text="Task 2"
             android:textSize="28sp"
+            android:textColor="#000000"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_width="match_parent"
@@ -30,6 +31,7 @@
         <TextView
             android:text="Rate how you feel right now (1 = Very Slightly → 5 = Extremely)"
             android:textSize="16sp"
+            android:textColor="#000000"
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

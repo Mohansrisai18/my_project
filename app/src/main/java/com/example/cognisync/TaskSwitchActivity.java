@@ -1,5 +1,6 @@
 package com.example.cognisync;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,23 +29,24 @@ public class TaskSwitchActivity extends AppCompatActivity {
     private static final int TOTAL_TRIALS = 12;
 
     private long startTime;
-    private long prevColor = -1;
+    private int prevColor = -1;
     private final List<Long> sameRuleTimes = new ArrayList<>();
     private final List<Long> switchRuleTimes = new ArrayList<>();
 
     private int currentNumber;
-    private int currentColor; // 0 = red (<5/>5), 1 = blue (odd/even)
+    private int currentColor;
+
+    private String moduleType = "cognitive_flexibility";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_switch);
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        // --- View Bindings ---
+        Intent i = getIntent();
+        if (i != null && i.hasExtra("module_type")) moduleType = i.getStringExtra("module_type");
+
         tvInstruction = findViewById(R.id.tvInstruction);
         tvNumber = findViewById(R.id.tvNumber);
         tvResult = findViewById(R.id.tvResult);
@@ -57,15 +59,14 @@ public class TaskSwitchActivity extends AppCompatActivity {
         nextTrial();
     }
 
-    /** Generate next trial */
     private void nextTrial() {
         if (trial >= TOTAL_TRIALS) {
             showResult();
             return;
         }
 
-        currentNumber = random.nextInt(9) + 1; // 1–9
-        currentColor = random.nextBoolean() ? 0 : 1; // 0 = red, 1 = blue
+        currentNumber = random.nextInt(9) + 1;
+        currentColor = random.nextBoolean() ? 0 : 1;
 
         tvNumber.setText(String.valueOf(currentNumber));
         tvNumber.setTextColor(currentColor == 0 ? 0xFFFF0000 : 0xFF2196F3);
@@ -74,11 +75,9 @@ public class TaskSwitchActivity extends AppCompatActivity {
         trial++;
     }
 
-    /** Handle user input */
     private void handleResponse(boolean leftPressed) {
         long rt = System.currentTimeMillis() - startTime;
 
-        // Determine if this trial is a "switch" from the previous color
         if (prevColor != -1) {
             if (prevColor == currentColor) sameRuleTimes.add(rt);
             else switchRuleTimes.add(rt);
@@ -86,11 +85,10 @@ public class TaskSwitchActivity extends AppCompatActivity {
 
         prevColor = currentColor;
 
-        // Rule validation
         boolean isCorrect;
-        if (currentColor == 0) { // RED rule → less than 5 = left, greater than 5 = right
+        if (currentColor == 0) {
             isCorrect = (currentNumber < 5 && leftPressed) || (currentNumber > 5 && !leftPressed);
-        } else { // BLUE rule → even = left, odd = right
+        } else {
             isCorrect = ((currentNumber % 2 == 0) && leftPressed) || ((currentNumber % 2 != 0) && !leftPressed);
         }
 
@@ -98,46 +96,41 @@ public class TaskSwitchActivity extends AppCompatActivity {
         handler.postDelayed(this::nextTrial, 700);
     }
 
-    /** Compute and show result */
     private void showResult() {
         long avgSame = average(sameRuleTimes);
         long avgSwitch = average(switchRuleTimes);
         long switchCost = Math.abs(avgSwitch - avgSame);
 
-        String interpretation;
-        float flexibilityScore;
+        double flexibilityScore = 100.0 * Math.exp(-((double) switchCost) / 180.0);
+        flexibilityScore = Math.max(0, Math.min(100, flexibilityScore));
 
-        if (switchCost < 100) {
-            interpretation = "Excellent flexibility";
-            flexibilityScore = 100;
-        } else if (switchCost <= 250) {
-            interpretation = "Average";
-            flexibilityScore = 70;
-        } else {
-            interpretation = "Low flexibility";
-            flexibilityScore = 40;
-        }
+        String interpretation;
+        if (flexibilityScore >= 75) interpretation = "Excellent flexibility";
+        else if (flexibilityScore >= 45) interpretation = "Average";
+        else interpretation = "Low flexibility";
 
         tvResult.setText(String.format(Locale.getDefault(),
-                "Switch Cost: %d ms\n%s", switchCost, interpretation));
+                "Switch Cost: %d ms\nScore: %.1f /100\n%s", switchCost, flexibilityScore, interpretation));
 
-        // ✅ Save results to SharedPreferences
         SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
         sp.edit()
                 .putLong("switch_cost_ms", switchCost)
-                .putFloat("flexibility_post_score", flexibilityScore)
+                .putFloat("flexibility_post_score", (float) flexibilityScore)
                 .putLong("timestamp_post", System.currentTimeMillis())
                 .apply();
 
-        // ✅ Store result in progress dashboard
-        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Cognitive", flexibilityScore, date);
+        // mark post completed for this module
+        getSharedPreferences("ModuleState", MODE_PRIVATE)
+                .edit()
+                .putBoolean(moduleType + "_post_completed", true)
+                .apply();
 
-        // ✅ Auto-close after 3 seconds
-        handler.postDelayed(this::finish, 3000);
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+        ScoreHistoryStorage.addScoreHistory(this, "Cognitive", (float) flexibilityScore, date);
+
+        handler.postDelayed(this::finish, 2500);
     }
 
-    /** Helper for average time */
     private long average(List<Long> list) {
         if (list == null || list.isEmpty()) return 0;
         long sum = 0;

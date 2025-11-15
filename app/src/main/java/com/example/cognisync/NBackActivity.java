@@ -1,9 +1,10 @@
 package com.example.cognisync;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View; // ✅ FIXED: added missing import
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -21,7 +22,7 @@ public class NBackActivity extends AppCompatActivity {
     private TextView tvLetter, tvScore;
     private Button btnMatch;
 
-    private final String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H"};
+    private final String[] letters = {"A","B","C","D","E","F","G","H"};
     private final List<String> shown = new ArrayList<>();
     private int correct = 0, total = 0;
 
@@ -29,23 +30,21 @@ public class NBackActivity extends AppCompatActivity {
     private final Random random = new Random();
     private boolean canRespond = false;
 
+    private String moduleType = "working_memory";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // ✅ Hide action bar and set light status bar
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nback);
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        // --- View Bindings ---
+        Intent i = getIntent();
+        if (i != null && i.hasExtra("module_type")) moduleType = i.getStringExtra("module_type");
+
         tvLetter = findViewById(R.id.tvLetter);
         tvScore = findViewById(R.id.tvScore);
         btnMatch = findViewById(R.id.btnMatch);
 
-        // --- Button Logic ---
         btnMatch.setOnClickListener(v -> {
             if (canRespond && shown.size() > 2) {
                 String current = shown.get(shown.size() - 1);
@@ -55,34 +54,26 @@ public class NBackActivity extends AppCompatActivity {
             }
         });
 
-        // --- Start Task ---
         startSequence();
     }
 
-    /** Start the N-Back sequence */
     private void startSequence() {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (shown.size() >= 20) { // after 20 trials
+                if (shown.size() >= 20) {
                     showResult();
                     return;
                 }
-
-                // Display random letter
                 String letter = letters[random.nextInt(letters.length)];
                 shown.add(letter);
                 tvLetter.setText(letter);
-
                 canRespond = true;
-
-                // Show next letter after 1.5 seconds
                 handler.postDelayed(this, 1500);
             }
         }, 1000);
     }
 
-    /** Display final result */
     private void showResult() {
         canRespond = false;
         double accuracy = (total == 0) ? 0 : (correct * 100.0 / total);
@@ -90,7 +81,6 @@ public class NBackActivity extends AppCompatActivity {
         tvScore.setVisibility(View.VISIBLE);
         tvScore.setText(String.format(Locale.getDefault(), "Accuracy: %.1f%%", accuracy));
 
-        // ✅ Save data to SharedPreferences for dashboard
         SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
         sp.edit()
                 .putFloat("nback_accuracy", (float) accuracy)
@@ -98,11 +88,15 @@ public class NBackActivity extends AppCompatActivity {
                 .putLong("timestamp_post", System.currentTimeMillis())
                 .apply();
 
-        // ✅ Save to score history (normalized key handled automatically)
+        // mark post completed for this module
+        getSharedPreferences("ModuleState", MODE_PRIVATE)
+                .edit()
+                .putBoolean(moduleType + "_post_completed", true)
+                .apply();
+
         String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
         ScoreHistoryStorage.addScoreHistory(this, "Memory", (float) accuracy, date);
 
-        // ✅ Auto close after 3 seconds
-        handler.postDelayed(this::finish, 3000);
+        handler.postDelayed(this::finish, 2500);
     }
 }

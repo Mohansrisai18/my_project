@@ -4,57 +4,63 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdapter.ViewHolder> {
 
-    private final List<ModuleSessionItem> sessionList;
-    private final OnSessionClickListener listener;
-
     public interface OnSessionClickListener {
-        void onSessionClick(ModuleSessionItem session);
+        void onSessionClick(ModuleSessionItem item);
     }
 
-    public ModuleSessionAdapter(List<ModuleSessionItem> sessionList, OnSessionClickListener listener) {
-        this.sessionList = sessionList;
+    private final List<ModuleSessionItem> list;
+    private final OnSessionClickListener listener;
+
+    public ModuleSessionAdapter(List<ModuleSessionItem> list, OnSessionClickListener listener) {
+        this.list = list;
         this.listener = listener;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_module_session, parent, false);
-        return new ViewHolder(view);
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_session, parent, false);
+        return new ViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ModuleSessionItem session = sessionList.get(position);
-        holder.tvSessionTitle.setText(session.getTitle());
-        holder.tvSessionDesc.setText(session.getDescription());
-        holder.tvSessionTest.setText("Linked Task: " + session.getModuleType());
-        holder.cardSession.setOnClickListener(v -> listener.onSessionClick(session));
+
+        ModuleSessionItem s = list.get(position);   // ✅ FIXED
+
+        holder.title.setText(s.getTitle());
+        holder.desc.setText(s.getDescription());
+        holder.tag.setText(s.getModuleType());
+
+        holder.card.setOnClickListener(v -> listener.onSessionClick(s));
     }
 
     @Override
     public int getItemCount() {
-        return sessionList.size();
+        return list.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvSessionTitle, tvSessionDesc, tvSessionTest;
-        CardView cardSession;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        CardView card;
+        TextView title, desc, tag;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            cardSession = itemView.findViewById(R.id.cardSession);
-            tvSessionTitle = itemView.findViewById(R.id.tvSessionTitle);
-            tvSessionDesc = itemView.findViewById(R.id.tvSessionDesc);
-            tvSessionTest = itemView.findViewById(R.id.tvSessionTest);
+
+            card = itemView.findViewById(R.id.cardSession);
+            title = itemView.findViewById(R.id.tvSessionTitle);
+            desc = itemView.findViewById(R.id.tvSessionDesc);
+            tag = itemView.findViewById(R.id.tvModuleTag);
         }
     }
 }

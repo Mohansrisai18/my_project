@@ -28,6 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Task 3"
+            android:textColor="#000000"
             android:textSize="28sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -37,6 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Rate each statement (0 = Did not apply → 3 = Most of the time)"
+            android:textColor="#000000"
             android:textSize="14sp"
             android:gravity="center"
             android:layout_marginTop="6dp" />
@@ -54,6 +56,7 @@
                 android:id="@+id/q1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center" />
@@ -79,6 +82,7 @@
                 android:id="@+id/q2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center" />
@@ -104,6 +108,7 @@
                 android:id="@+id/q3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center" />
@@ -129,6 +134,7 @@
                 android:id="@+id/q4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center" />
@@ -154,6 +160,7 @@
                 android:id="@+id/q5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center" />
@@ -175,6 +182,7 @@
             android:text="NEXT"
             android:textStyle="bold"
             android:textSize="18sp"
+            android:textColor="#000000"
             android:background="@drawable/btn_bg" />
 
     </LinearLayout>

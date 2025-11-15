@@ -51,6 +51,7 @@ public class Task2Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         if (getSupportActionBar()!=null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task2);
@@ -73,6 +74,7 @@ public class Task2Activity extends AppCompatActivity {
         q4 = findViewById(R.id.q4);
         q5 = findViewById(R.id.q5);
 
+        // SHUFFLING QUESTIONS
         if (!sp.contains("t2_q1")) {
             List<String> shuffled = new ArrayList<>(panasItems);
             Collections.shuffle(shuffled);
@@ -85,12 +87,22 @@ public class Task2Activity extends AppCompatActivity {
                     .apply();
         }
 
+        // SETTING TEXT
         q1.setText(sp.getString("t2_q1", ""));
         q2.setText(sp.getString("t2_q2", ""));
         q3.setText(sp.getString("t2_q3", ""));
         q4.setText(sp.getString("t2_q4", ""));
         q5.setText(sp.getString("t2_q5", ""));
 
+        // 🔥 FORCE ALL QUESTION TEXTS TO BLACK
+        int black = getResources().getColor(android.R.color.black);
+        q1.setTextColor(black);
+        q2.setTextColor(black);
+        q3.setTextColor(black);
+        q4.setTextColor(black);
+        q5.setTextColor(black);
+
+        // ADAPTER
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, ratingScale);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
@@ -100,19 +112,23 @@ public class Task2Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
+        // RESTORE UI STATE
         s1.setSelection(sp.getInt("t2_a1", 0));
         s2.setSelection(sp.getInt("t2_a2", 0));
         s3.setSelection(sp.getInt("t2_a3", 0));
         s4.setSelection(sp.getInt("t2_a4", 0));
         s5.setSelection(sp.getInt("t2_a5", 0));
 
+        // BACK BUTTON
         btnBack.setOnClickListener(v -> {
             startActivity(new Intent(Task2Activity.this, Task1Activity.class));
             finish();
         });
 
+        // NEXT BUTTON
         btnNext.setOnClickListener(v -> {
-            // save local UI state
+
+            // SAVE SPINNER STATES
             sp.edit()
                     .putInt("t2_a1", s1.getSelectedItemPosition())
                     .putInt("t2_a2", s2.getSelectedItemPosition())
@@ -121,6 +137,7 @@ public class Task2Activity extends AppCompatActivity {
                     .putInt("t2_a5", s5.getSelectedItemPosition())
                     .apply();
 
+            // VALIDATION
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
                     s3.getSelectedItemPosition()==0 || s4.getSelectedItemPosition()==0 ||
                     s5.getSelectedItemPosition()==0) {
@@ -128,21 +145,20 @@ public class Task2Activity extends AppCompatActivity {
                 return;
             }
 
-            // values 1..5
+            // VALUES 1..5
             int v1 = s1.getSelectedItemPosition();
             int v2 = s2.getSelectedItemPosition();
             int v3 = s3.getSelectedItemPosition();
             int v4 = s4.getSelectedItemPosition();
             int v5 = s5.getSelectedItemPosition();
 
-            // Option 2 logic: first 3 => PA (3..15), last 2 => NA (2..10)
-            int PA = v1 + v2 + v3; // 3..15
-            int NA = v4 + v5;      // 2..10
+            // PA/NA CALCULATION
+            int PA = v1 + v2 + v3; // 3–15
+            int NA = v4 + v5;      // 2–10
 
-            int paPercent = (int)(((PA - 3f) / 12f) * 100f); // 0..100
-            int naPercent = (int)(((NA - 2f) / 8f) * 100f);  // 0..100
+            int paPercent = (int)(((PA - 3f) / 12f) * 100f);
+            int naPercent = (int)(((NA - 2f) / 8f) * 100f);
 
-            // final single PANAS percent = average of PA and NA percents
             int panasFinal = (paPercent + naPercent) / 2;
 
             String email = userSp.getString("email", null);
@@ -152,6 +168,7 @@ public class Task2Activity extends AppCompatActivity {
             finish();
         });
 
+        // SYSTEM BACK OVERRIDE
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() {
                 startActivity(new Intent(Task2Activity.this, Task1Activity.class));
@@ -163,6 +180,7 @@ public class Task2Activity extends AppCompatActivity {
     private void sendPanasInitial(String email, int percent) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         ScoreRequest req = new ScoreRequest(email, percent);
+
         api.savePanasInitial(req).enqueue(new Callback<Void>() {
             @Override public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {

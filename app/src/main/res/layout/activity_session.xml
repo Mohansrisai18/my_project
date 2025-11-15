@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:src="@drawable/chevron_right"
+        android:background="@null"/>
+
+    <TextView
+        android:id="@+id/tvVideoTitle"
+        android:layout_below="@id/backButton"
+        android:layout_marginTop="12dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Video Title"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvVideoDesc"
+        android:layout_below="@id/tvVideoTitle"
+        android:layout_marginTop="6dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Video description"/>
+
+    <VideoView
+        android:id="@+id/videoView"
+        android:layout_below="@id/tvVideoDesc"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"/>
+
+    <SeekBar
+        android:id="@+id/progressBar"
+        android:layout_below="@id/videoView"
+        android:layout_marginTop="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <ImageButton
+        android:id="@+id/playPauseButton"
+        android:layout_below="@id/progressBar"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="12dp"
+        android:src="@android:drawable/ic_media_play"
+        android:layout_centerHorizontal="true"/>
+
+    <Button
+        android:id="@+id/btnFinishSave"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="Finish and Save Progress"
+        android:layout_marginTop="12dp"/>
+</RelativeLayout>

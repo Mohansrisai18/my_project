@@ -12,7 +12,11 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 public class SRTActivity extends AppCompatActivity {
 
@@ -29,14 +33,17 @@ public class SRTActivity extends AppCompatActivity {
     private int screenWidth, screenHeight;
     private final List<Long> reactionTimes = new ArrayList<>();
 
+    private String moduleType = "focused_attention";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_srt);
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
+
+        // read module_type if passed
+        Intent i = getIntent();
+        if (i != null && i.hasExtra("module_type")) moduleType = i.getStringExtra("module_type");
 
         tvInstruction = findViewById(R.id.tvInstruction);
         tvDot = findViewById(R.id.tvDot);
@@ -93,39 +100,38 @@ public class SRTActivity extends AppCompatActivity {
     private void showResult() {
         long avgRT = (long) reactionTimes.stream().mapToLong(Long::longValue).average().orElse(0);
 
-        String performance;
-        float attentionScore;
+        // --- Exponential normalization ---
+        double attentionScore = 100.0 * Math.exp(-((double) (avgRT - 250L)) / 250.0);
+        attentionScore = Math.max(0, Math.min(100, attentionScore));
 
-        if (avgRT < 300) {
-            performance = "Excellent Focus";
-            attentionScore = 100;
-        } else if (avgRT <= 500) {
-            performance = "Normal Performance";
-            attentionScore = 75;
-        } else if (avgRT <= 700) {
-            performance = "Below Average";
-            attentionScore = 50;
-        } else {
-            performance = "Reduced Vigilance";
-            attentionScore = 25;
-        }
+        String performance;
+        if (attentionScore >= 80) performance = "Excellent Focus";
+        else if (attentionScore >= 50) performance = "Normal Performance";
+        else performance = "Reduced Vigilance";
 
         tvInstruction.setText("Task Complete!");
-        tvResult.setText("Avg RT: " + avgRT + " ms\n" + performance);
+        tvResult.setText(String.format(Locale.getDefault(),
+                "Avg RT: %d ms\nScore: %.1f /100\n%s", avgRT, attentionScore, performance));
         tvResult.setVisibility(View.VISIBLE);
 
         SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
         sp.edit()
                 .putLong("srt_ms", avgRT)
-                .putFloat("attention_post_score", attentionScore)
+                .putFloat("attention_post_score", (float) attentionScore)
                 .putLong("timestamp_post", System.currentTimeMillis())
+                .apply();
+
+        // mark post completed for this module
+        getSharedPreferences("ModuleState", MODE_PRIVATE)
+                .edit()
+                .putBoolean(moduleType + "_post_completed", true)
                 .apply();
 
         // Save to history
         String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Attention", attentionScore, date);
+        ScoreHistoryStorage.addScoreHistory(this, "Attention", (float) attentionScore, date);
 
-        // Auto close after 3 seconds
-        handler.postDelayed(this::finish, 3000);
+        // Auto close after short delay
+        handler.postDelayed(this::finish, 2500);
     }
 }

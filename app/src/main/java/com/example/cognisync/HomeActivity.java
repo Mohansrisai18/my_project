@@ -124,7 +124,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void openModuleList(String moduleType) {
-        Intent intent = new Intent(this, ModuleListActivity.class);
+        Intent intent = new Intent(this, ModuleIntroActivity.class);
         intent.putExtra("module_type", moduleType);
         startActivity(intent);
     }

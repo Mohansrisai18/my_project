@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_gradient"
     android:fitsSystemWindows="true"
-    android:fillViewport="true">
+    android:background="@drawable/background_gradient"
+    android:fillViewport="true"
+    tools:context=".Task5Activity">
 
-    <LinearLayout
+
+<LinearLayout
         android:orientation="vertical"
         android:padding="18dp"
         android:layout_width="match_parent"
@@ -24,6 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Task 5"
+            android:textColor="#000000"
             android:textSize="28sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -33,6 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Rate each statement (1 = Almost Never → 5 = Almost Always)"
+            android:textColor="#000000"
             android:textSize="14sp"
             android:gravity="center"
             android:layout_marginTop="6dp"/>
@@ -51,6 +56,7 @@
                 android:id="@+id/q1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
@@ -76,6 +82,7 @@
                 android:id="@+id/q2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
@@ -101,6 +108,7 @@
                 android:id="@+id/q3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
@@ -126,6 +134,7 @@
                 android:id="@+id/q4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
@@ -151,6 +160,7 @@
                 android:id="@+id/q5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
@@ -169,6 +179,7 @@
             android:layout_height="60dp"
             android:layout_marginTop="18dp"
             android:text="NEXT"
+            android:textColor="#000000"
             android:textStyle="bold"
             android:textSize="18sp"
             android:background="@drawable/btn_bg"/>

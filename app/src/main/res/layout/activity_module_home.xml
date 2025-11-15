@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="18dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:src="@drawable/chevron_right"
+        android:background="@null"/>
+
+    <TextView
+        android:id="@+id/tvModuleTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Module Name"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginTop="12dp"/>
+
+    <!-- PRE-ASSESSMENT button -->
+    <Button
+        android:id="@+id/btnStartPre"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Start Pre-Assessment"
+        android:layout_marginTop="12dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sessionRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="18dp" />
+
+    <Button
+        android:id="@+id/btnStartPost"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Start Post Assessment"
+        android:layout_marginTop="18dp"/>
+
+</LinearLayout>

@@ -59,6 +59,7 @@ public class Task5Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         if (getSupportActionBar()!=null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task5);
@@ -81,9 +82,11 @@ public class Task5Activity extends AppCompatActivity {
         s4 = findViewById(R.id.spinner4);
         s5 = findViewById(R.id.spinner5);
 
+        // Shuffle first time
         if (!sp.contains("t5_q1")) {
             List<String> shuffled = new ArrayList<>(awarenessItems);
             Collections.shuffle(shuffled);
+
             sp.edit()
                     .putString("t5_q1", shuffled.get(0))
                     .putString("t5_q2", shuffled.get(1))
@@ -93,12 +96,22 @@ public class Task5Activity extends AppCompatActivity {
                     .apply();
         }
 
+        // Set question text
         q1.setText(sp.getString("t5_q1", ""));
         q2.setText(sp.getString("t5_q2", ""));
         q3.setText(sp.getString("t5_q3", ""));
         q4.setText(sp.getString("t5_q4", ""));
         q5.setText(sp.getString("t5_q5", ""));
 
+        // 🔥 FORCE ALL QUESTION TEXTS TO BLACK (important)
+        int black = getResources().getColor(android.R.color.black);
+        q1.setTextColor(black);
+        q2.setTextColor(black);
+        q3.setTextColor(black);
+        q4.setTextColor(black);
+        q5.setTextColor(black);
+
+        // Spinner setup
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
@@ -114,13 +127,16 @@ public class Task5Activity extends AppCompatActivity {
         s4.setSelection(sp.getInt("t5_a4", 0));
         s5.setSelection(sp.getInt("t5_a5", 0));
 
+        // Back button
         btnBack.setOnClickListener(v -> {
             saveSelections();
             startActivity(new Intent(Task5Activity.this, Task4Activity.class));
             finish();
         });
 
+        // Next button
         btnNext.setOnClickListener(v -> {
+
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
                     s3.getSelectedItemPosition()==0 || s4.getSelectedItemPosition()==0 ||
                     s5.getSelectedItemPosition()==0) {
@@ -138,19 +154,20 @@ public class Task5Activity extends AppCompatActivity {
             int v5 = s5.getSelectedItemPosition();
 
             int sum = v1 + v2 + v3 + v4 + v5; // 5..25
-            float avg = sum / 5f; // 1..5
+            float avg = sum / 5f;
             int percent = (int) ((avg / 5f) * 100f);
 
             String email = userSp.getString("email", null);
             if (email != null) sendPhlmsInitial(email, percent);
 
-            // after finishing initial tasks start Intro1Activity (your flow)
             startActivity(new Intent(Task5Activity.this, Intro1Activity.class));
             finish();
         });
 
+        // System back
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override public void handleOnBackPressed() {
+            @Override
+            public void handleOnBackPressed() {
                 saveSelections();
                 startActivity(new Intent(Task5Activity.this, Task4Activity.class));
                 finish();
@@ -171,13 +188,17 @@ public class Task5Activity extends AppCompatActivity {
     private void sendPhlmsInitial(String email, int percent) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         ScoreRequest req = new ScoreRequest(email, percent);
+
         api.savePhlmsInitial(req).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(Task5Activity.this, "PHLMS initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override public void onFailure(Call<Void> call, Throwable t) {
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(Task5Activity.this, "PHLMS initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

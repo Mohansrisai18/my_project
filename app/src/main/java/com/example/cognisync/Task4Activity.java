@@ -61,7 +61,8 @@ public class Task4Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar()!=null) getSupportActionBar().hide();
+
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task4);
 
@@ -83,6 +84,7 @@ public class Task4Activity extends AppCompatActivity {
         s4 = findViewById(R.id.spinner4);
         s5 = findViewById(R.id.spinner5);
 
+        // First-time shuffle
         if (!sp.contains("t4_q1")) {
             List<String> shuffled = new ArrayList<>(emotionRegulationItems);
             Collections.shuffle(shuffled);
@@ -95,11 +97,20 @@ public class Task4Activity extends AppCompatActivity {
                     .apply();
         }
 
+        // Set questions
         q1.setText(sp.getString("t4_q1", ""));
         q2.setText(sp.getString("t4_q2", ""));
         q3.setText(sp.getString("t4_q3", ""));
         q4.setText(sp.getString("t4_q4", ""));
         q5.setText(sp.getString("t4_q5", ""));
+
+        // 🔥 FORCE BLACK TEXT FOR ALL QUESTIONS
+        int black = getResources().getColor(android.R.color.black);
+        q1.setTextColor(black);
+        q2.setTextColor(black);
+        q3.setTextColor(black);
+        q4.setTextColor(black);
+        q5.setTextColor(black);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
@@ -123,6 +134,7 @@ public class Task4Activity extends AppCompatActivity {
         });
 
         btnNext.setOnClickListener(v -> {
+
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
                     s3.getSelectedItemPosition()==0 || s4.getSelectedItemPosition()==0 ||
                     s5.getSelectedItemPosition()==0) {
@@ -132,7 +144,7 @@ public class Task4Activity extends AppCompatActivity {
 
             saveSelections();
 
-            // spinner pos 1..7 -> value 0..6 (pos - 1)
+            // spinner pos (1..7) -> value (0..6)
             int v1 = s1.getSelectedItemPosition() - 1;
             int v2 = s2.getSelectedItemPosition() - 1;
             int v3 = s3.getSelectedItemPosition() - 1;
@@ -141,7 +153,8 @@ public class Task4Activity extends AppCompatActivity {
 
             int raw = v1 + v2 + v3 + v4 + v5; // 0..30
             float avg = raw / 5f; // 0..6
-            int percent = (int) ((avg / 6f) * 100f);
+
+            int percent = (int)((avg / 6f) * 100f);
 
             String email = userSp.getString("email", null);
             if (email != null) sendErqInitial(email, percent);
@@ -151,7 +164,8 @@ public class Task4Activity extends AppCompatActivity {
         });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override public void handleOnBackPressed() {
+            @Override
+            public void handleOnBackPressed() {
                 saveSelections();
                 startActivity(new Intent(Task4Activity.this, Task3Activity.class));
                 finish();
@@ -172,13 +186,17 @@ public class Task4Activity extends AppCompatActivity {
     private void sendErqInitial(String email, int percent) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         ScoreRequest req = new ScoreRequest(email, percent);
+
         api.saveErqInitial(req).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(Task4Activity.this, "ERQ initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override public void onFailure(Call<Void> call, Throwable t) {
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(Task4Activity.this, "ERQ initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

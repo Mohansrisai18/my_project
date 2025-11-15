@@ -61,9 +61,7 @@
             android:name=".Intro3Activity"
             android:exported="false" />
 
-        <activity
-            android:name=".ModuleVideoActivity"
-            android:exported="false" />
+
 
         <!-- Additional Activities -->
         <activity
@@ -111,9 +109,7 @@
         <activity
             android:name=".TaskSwitchActivity"
             android:exported="false" />
-        <activity
-            android:name=".ModuleListActivity"
-            android:exported="false" />
+
         <activity
             android:name=".SARTActivity"
             android:exported="false" />
@@ -128,6 +124,19 @@
         />
 
 
+        <activity
+            android:name=".SessionDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SessionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ModuleIntroActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ModuleHomeActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

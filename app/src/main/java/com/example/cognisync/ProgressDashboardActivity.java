@@ -36,22 +36,21 @@ public class ProgressDashboardActivity extends AppCompatActivity {
         recyclerScoreHistory = findViewById(R.id.recyclerScoreHistory);
         backButton = findViewById(R.id.backButton);
 
-        // Get domain type
+        // Get score type
         scoreType = getIntent().getStringExtra("score_type");
         if (scoreType == null) scoreType = "Score";
         tvScoreTypeTitle.setText(scoreType + " Progress");
 
-        // Load and display data
         loadScoreHistory();
         showProgressSummary();
 
         backButton.setOnClickListener(v -> finish());
     }
 
-    /** Load score history */
+    /** Load score history & show latest score */
     private void loadScoreHistory() {
-        String normalizedType = normalizeType(scoreType);
-        List<ScoreHistoryItem> history = ScoreHistoryStorage.getScoreHistory(this, normalizedType);
+        String normalized = normalizeType(scoreType);
+        List<ScoreHistoryItem> history = ScoreHistoryStorage.getScoreHistory(this, normalized);
 
         recyclerScoreHistory.setLayoutManager(new LinearLayoutManager(this));
         recyclerScoreHistory.setAdapter(new ScoreHistoryAdapter(history));
@@ -64,38 +63,39 @@ public class ProgressDashboardActivity extends AppCompatActivity {
         }
     }
 
-    /** Compare baseline vs post scores */
+    /** Compare baseline vs post scores (new model) */
     private void showProgressSummary() {
         SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
 
+        String domain = normalizeType(scoreType);
         float baseline = 0f, post = 0f;
-        String keyBaseline = "", keyPost = "";
 
-        switch (normalizeType(scoreType)) {
-            case "attention":
-                keyBaseline = "maas_score";
-                keyPost = "attention_post_score";
+        switch (domain) {
+            case "attention":     // SRT → attention score
+                baseline = sp.getFloat("maas_score", 0f);
+                post = sp.getFloat("attention_post_score", 0f);
                 break;
-            case "memory":
-                keyBaseline = "cfq_score";
-                keyPost = "memory_post_score";
+
+            case "memory":        // N-Back → new memory formula
+                baseline = sp.getFloat("cfq_score", 0f);
+                post = sp.getFloat("nback_memory_score", 0f);
                 break;
-            case "emotional":
-                keyBaseline = "panas_score";
-                keyPost = "emotion_post_score";
+
+            case "emotional":     // Stroop → exponential
+                baseline = sp.getFloat("panas_score", 0f);
+                post = sp.getFloat("emotion_post_score", 0f);
                 break;
-            case "awareness":
-                keyBaseline = "phlms_awareness";
-                keyPost = "awareness_post_score";
+
+            case "awareness":     // SART → weighted exponential
+                baseline = sp.getFloat("phlms_awareness", 0f);
+                post = sp.getFloat("awareness_post_score", 0f);
                 break;
-            case "cognitive":
-                keyBaseline = "dass_stress_score";
-                keyPost = "flexibility_post_score";
+
+            case "cognitive":     // Task Switching → flexibility score
+                baseline = sp.getFloat("dass_stress_score", 0f);
+                post = sp.getFloat("flexibility_post_score", 0f);
                 break;
         }
-
-        baseline = sp.getFloat(keyBaseline, 0f);
-        post = sp.getFloat(keyPost, 0f);
 
         if (baseline == 0f && post == 0f) {
             tvSummary.setText("No assessment data yet for this domain.");
@@ -104,24 +104,35 @@ public class ProgressDashboardActivity extends AppCompatActivity {
 
         float delta = post - baseline;
         String status;
-        if (delta > 5) status = "↑ Improved";
-        else if (delta < -5) status = "↓ Declined";
+
+        if (delta > 3) status = "↑ Improved";
+        else if (delta < -3) status = "↓ Declined";
         else status = "→ Stable";
 
         String summary = String.format(
-                "%s Progress\nBaseline: %.1f   |   Post: %.1f   |   Δ Change: %.1f   %s",
-                scoreType, baseline, post, delta, status
+                "%s Progress\nBaseline: %.1f   |   Post: %.1f   |   Δ: %.1f   %s",
+                capitalize(scoreType), baseline, post, delta, status
         );
+
         tvSummary.setText(summary);
     }
 
-    /** Normalize score type key (for consistent history mapping) */
+    /** Normalize keys for consistent history + SharedPrefs */
     private String normalizeType(String input) {
         if (input == null) return "";
         input = input.trim().toLowerCase();
-        if (input.contains("working")) return "memory";
-        if (input.contains("emotional") || input.contains("emotion")) return "emotional";
-        if (input.contains("flexibility") || input.contains("cognitive")) return "cognitive";
+
+        if (input.contains("attention")) return "attention";
+        if (input.contains("memory") || input.contains("working")) return "memory";
+        if (input.contains("emotion") || input.contains("emotional")) return "emotional";
+        if (input.contains("awareness")) return "awareness";
+        if (input.contains("cognitive") || input.contains("flexibility")) return "cognitive";
+
         return input;
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 }

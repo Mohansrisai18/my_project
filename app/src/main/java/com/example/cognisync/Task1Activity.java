@@ -37,12 +37,13 @@ public class Task1Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar()!=null) getSupportActionBar().hide();
+
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task1);
 
-        sp = getSharedPreferences("Task1Answers", MODE_PRIVATE); // used only for question shuffle & restore UI
-        userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE); // contains email saved at signup/login
+        sp = getSharedPreferences("Task1Answers", MODE_PRIVATE);
+        userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         btnBack = findViewById(R.id.btnBack);
         btnNext = findViewById(R.id.btnNext);
@@ -59,6 +60,7 @@ public class Task1Activity extends AppCompatActivity {
         q4 = findViewById(R.id.q4);
         q5 = findViewById(R.id.q5);
 
+        // QUESTIONS
         String[] questions = {
                 "I find it difficult to stay focused on what’s happening in the present.",
                 "I rush through activities without really paying attention.",
@@ -82,12 +84,22 @@ public class Task1Activity extends AppCompatActivity {
                     .apply();
         }
 
+        // SET TEXT
         q1.setText(sp.getString("t1_q1", ""));
         q2.setText(sp.getString("t1_q2", ""));
         q3.setText(sp.getString("t1_q3", ""));
         q4.setText(sp.getString("t1_q4", ""));
         q5.setText(sp.getString("t1_q5", ""));
 
+        // 🔥 FORCE TEXT COLOR TO BLACK (IMPORTANT FIX)
+        int black = getResources().getColor(android.R.color.black);
+        q1.setTextColor(black);
+        q2.setTextColor(black);
+        q3.setTextColor(black);
+        q4.setTextColor(black);
+        q5.setTextColor(black);
+
+        // SPINNER OPTIONS
         String[] options = {
                 "Select your answer",
                 "1 — Almost Always",
@@ -107,20 +119,22 @@ public class Task1Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
-        // restore selections if present (optional UI convenience)
+        // RESTORE SAVED UI SELECTIONS
         s1.setSelection(sp.getInt("t1_a1", 0));
         s2.setSelection(sp.getInt("t1_a2", 0));
         s3.setSelection(sp.getInt("t1_a3", 0));
         s4.setSelection(sp.getInt("t1_a4", 0));
         s5.setSelection(sp.getInt("t1_a5", 0));
 
+        // BACK BUTTON
         btnBack.setOnClickListener(v -> {
             startActivity(new Intent(Task1Activity.this, SignupActivity.class));
             finish();
         });
 
+        // NEXT BUTTON
         btnNext.setOnClickListener(v -> {
-            // ensure all answered
+
             int[] pos = {
                     s1.getSelectedItemPosition(),
                     s2.getSelectedItemPosition(),
@@ -136,7 +150,6 @@ public class Task1Activity extends AppCompatActivity {
                 }
             }
 
-            // Save UI selections locally for convenience (not used as authoritative storage)
             sp.edit()
                     .putInt("t1_a1", pos[0])
                     .putInt("t1_a2", pos[1])
@@ -145,17 +158,16 @@ public class Task1Activity extends AppCompatActivity {
                     .putInt("t1_a5", pos[4])
                     .apply();
 
-            // Calculate MAAS (reverse 1..6 => 7-value), average, convert to 0..100
+            // CALCULATE MAAS
             int sumReversed = 0;
             for (int p : pos) {
-                int val = p; // spinner pos 1..6
-                int rev = 7 - val;
-                sumReversed += rev;
+                int reversed = 7 - p;
+                sumReversed += reversed;
             }
-            float avg = sumReversed / 5f; // 1..6
+
+            float avg = sumReversed / 5f;
             int percent = (int) (((avg - 1f) / 5f) * 100f);
 
-            // send initial MAAS
             String email = userSp.getString("email", null);
             if (email != null) sendMaasInitial(email, percent);
 
@@ -163,6 +175,7 @@ public class Task1Activity extends AppCompatActivity {
             finish();
         });
 
+        // SYSTEM BACK
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() {
                 startActivity(new Intent(Task1Activity.this, SignupActivity.class));
@@ -174,12 +187,14 @@ public class Task1Activity extends AppCompatActivity {
     private void sendMaasInitial(String email, int percent) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         ScoreRequest req = new ScoreRequest(email, percent);
+
         api.saveMaasInitial(req).enqueue(new Callback<Void>() {
             @Override public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(Task1Activity.this, "MAAS initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(Task1Activity.this, "MAAS initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }

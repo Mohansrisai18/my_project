@@ -35,12 +35,11 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
-        ModuleSessionItem s = list.get(position);   // ✅ FIXED
+        ModuleSessionItem s = list.get(position);
 
         holder.title.setText(s.getTitle());
         holder.desc.setText(s.getDescription());
-        holder.tag.setText(s.getModuleType());
+        holder.tag.setText("Module: " + s.getModuleType());
 
         holder.card.setOnClickListener(v -> listener.onSessionClick(s));
     }
@@ -56,7 +55,6 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
             card = itemView.findViewById(R.id.cardSession);
             title = itemView.findViewById(R.id.tvSessionTitle);
             desc = itemView.findViewById(R.id.tvSessionDesc);

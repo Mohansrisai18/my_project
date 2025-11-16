@@ -124,9 +124,7 @@
         />
 
 
-        <activity
-            android:name=".SessionDetailActivity"
-            android:exported="false" />
+
 
         <activity
             android:name=".SessionActivity"

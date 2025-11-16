@@ -43,7 +43,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
 
         setupPreLogic();
-
         setupRecycler();
 
         btnStartPost.setOnClickListener(v -> openPostTask());
@@ -71,7 +70,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
         sessionRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         List<ModuleSessionItem> list = new ArrayList<>();
-
         list.add(new ModuleSessionItem("Video 1", "Introduction session", moduleType));
         list.add(new ModuleSessionItem("Video 2", "Guided practice", moduleType));
         list.add(new ModuleSessionItem("Video 3", "Deep training", moduleType));
@@ -79,7 +77,13 @@ public class ModuleHomeActivity extends AppCompatActivity {
         list.add(new ModuleSessionItem("Video 5", "Final session", moduleType));
 
         ModuleSessionAdapter adapter = new ModuleSessionAdapter(list, session -> {
-            // TODO: play video later
+            // 🎯 OPEN VIDEO PLAYER HERE
+            Intent i = new Intent(this, SessionActivity.class);
+            i.putExtra("module_type", moduleType);
+            i.putExtra("video_title", session.getTitle());
+            i.putExtra("video_desc", session.getDescription());
+            i.putExtra("video_uri", ""); // blank until backend provides real video URL
+            startActivity(i);
         });
 
         sessionRecyclerView.setAdapter(adapter);

@@ -4,10 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,32 +29,37 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-
         super.onCreate(savedInstanceState);
+
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
+
+        // 🔥 AUTO LOGIN CHECK
+        SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        boolean isLoggedIn = sp.getBoolean("isLoggedIn", false);
+
+        if (isLoggedIn) {
+            // user already logged in → go to home
+            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
 
-        // ✅ Match the correct XML IDs
-        emailInput = findViewById(R.id.mailInput); // matches your XML
+        emailInput = findViewById(R.id.mailInput);
         passwordInput = findViewById(R.id.passwordInput);
         btnLogin = findViewById(R.id.btnLogin);
         signupText = findViewById(R.id.signupText);
 
         btnLogin.setOnClickListener(v -> performLogin());
-        signupText.setOnClickListener(v -> navigateToSignup());
+        signupText.setOnClickListener(v -> goToSignup());
 
-        // Handle back press
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                finishAffinity();
-            }
+            @Override public void handleOnBackPressed() { finishAffinity(); }
         });
     }
 
-    /** ✅ Step 1: Perform login authentication */
+    // STEP 1: LOGIN
     private void performLogin() {
         String email = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
@@ -66,23 +70,21 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         btnLogin.setEnabled(false);
-        btnLogin.setText("Logging in...");
+        btnLogin.setText("Logging in…");
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
         LoginRequest loginRequest = new LoginRequest(email, password);
 
-        // ✅ Step 1: Authenticate user
-        Call<Void> call = apiService.loginPatient(loginRequest);
-        call.enqueue(new Callback<Void>() {
+        apiService.loginPatient(loginRequest).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
+
                 if (response.isSuccessful()) {
-                    // ✅ Step 2: Fetch profile after successful authentication
                     fetchUserProfile(email);
                 } else {
                     btnLogin.setEnabled(true);
                     btnLogin.setText("Login");
-                    Toast.makeText(LoginActivity.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -90,43 +92,43 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(Call<Void> call, Throwable t) {
                 btnLogin.setEnabled(true);
                 btnLogin.setText("Login");
-                Toast.makeText(LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    /** ✅ Step 2: Fetch user profile using backend email */
+    // STEP 2: FETCH USER PROFILE
     private void fetchUserProfile(String email) {
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        Call<Patient> profileCall = apiService.getPatientProfile(email); // must exist in ApiService
 
-        profileCall.enqueue(new Callback<Patient>() {
+        apiService.getPatientProfile(email).enqueue(new Callback<Patient>() {
             @Override
             public void onResponse(Call<Patient> call, Response<Patient> response) {
                 btnLogin.setEnabled(true);
                 btnLogin.setText("Login");
 
                 if (response.isSuccessful() && response.body() != null) {
+
                     Patient user = response.body();
 
-                    // ✅ Save backend data locally
+                    // 🔥 Save login state + user info
                     SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sp.edit();
                     editor.putString("username", user.getFullName());
                     editor.putString("email", user.getEmail());
-                    editor.putString("age", String.valueOf(user.getAge()));
                     editor.putString("gender", user.getGender());
+                    editor.putString("age", String.valueOf(user.getAge()));
+                    editor.putBoolean("isLoggedIn", true); // 🔥 AUTO LOGIN FLAG
                     editor.apply();
 
-                    Toast.makeText(LoginActivity.this, "Welcome back, " + user.getFullName(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Welcome " + user.getFullName(), Toast.LENGTH_SHORT).show();
 
-                    // ✅ Go to HomeActivity
-                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
+                    Intent i = new Intent(LoginActivity.this, HomeActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
                     finish();
                 } else {
-                    Toast.makeText(LoginActivity.this, "Failed to load profile data", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Could not load profile data", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -139,11 +141,8 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    /** Navigate to SignupActivity */
-    private void navigateToSignup() {
-        Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+    private void goToSignup() {
+        startActivity(new Intent(LoginActivity.this, SignupActivity.class));
         finish();
     }
 }

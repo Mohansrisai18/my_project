@@ -4,15 +4,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreResponse;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -20,8 +23,14 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -30,40 +39,56 @@ public class HomeActivity extends AppCompatActivity {
             tvMinutesCognitive, tvMinutesEmotional;
 
     private CardView cvFocusedAttention, cvWorkingMemory, cvPresentMoment,
-            cvCognitiveIntegration, cvEmotionalRegulation,
-            cvProgressDashboard, cvGraphSection;
+            cvCognitiveIntegration, cvEmotionalRegulation;
 
     private LineChart lineChart;
 
+    private ApiService api;
+    private String email;
+
+    // POST scores only
+    private Float attentionPost = null;
+    private Float memoryPost = null;
+    private Float emotionPost = null;
+    private Float cognitivePost = null;
+    private Float awarenessPost = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // ✅ White status bar with dark icons
         getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 
-        // Initialize and setup
+        api = ApiClient.getClient().create(ApiService.class);
+
+        SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        email = sp.getString("email", "");
+
         initViews();
         setGreeting();
-        loadDynamicMinutes();
+        loadEmptyMinutes();
         setClickActions();
-        showOverallGraph();
+
+        if (!email.isEmpty()) {
+            fetchPostScoresFromBackend();
+        } else {
+            Toast.makeText(this, "Email missing!", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    /** Refresh graph every time user returns to Home */
     @Override
     protected void onResume() {
         super.onResume();
-        showOverallGraph();
+        fetchPostScoresFromBackend();
     }
 
-    /** Initialize all views */
     private void initViews() {
+
         tvMinutesFocused = findViewById(R.id.tvMinutesFocused);
         tvMinutesWorking = findViewById(R.id.tvMinutesWorking);
         tvMinutesPresent = findViewById(R.id.tvMinutesPresent);
@@ -75,8 +100,6 @@ public class HomeActivity extends AppCompatActivity {
         cvPresentMoment = findViewById(R.id.cvPresentMoment);
         cvCognitiveIntegration = findViewById(R.id.cvCognitiveIntegration);
         cvEmotionalRegulation = findViewById(R.id.cvEmotionalRegulation);
-        cvProgressDashboard = findViewById(R.id.cvProgressDashboard);
-        cvGraphSection = findViewById(R.id.cvGraphSection);
 
         lineChart = findViewById(R.id.lineChart);
 
@@ -86,142 +109,148 @@ public class HomeActivity extends AppCompatActivity {
         );
     }
 
-    /** Set greeting based on saved username */
     private void setGreeting() {
         tvGreeting = findViewById(R.id.tvGreeting);
-        SharedPreferences userPref = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String username = userPref.getString("username", "User");
+        SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String username = sp.getString("username", "User");
         tvGreeting.setText("Hi, " + username);
     }
 
-    /** Load minutes from SharedPreferences */
-    private void loadDynamicMinutes() {
-        SharedPreferences sp = getSharedPreferences("ModuleData", MODE_PRIVATE);
-        tvMinutesFocused.setText(sp.getString("module_focused_minutes", "--"));
-        tvMinutesWorking.setText(sp.getString("module_working_minutes", "--"));
-        tvMinutesPresent.setText(sp.getString("module_present_minutes", "--"));
-        tvMinutesCognitive.setText(sp.getString("module_cognitive_minutes", "--"));
-        tvMinutesEmotional.setText(sp.getString("module_emotional_minutes", "--"));
+    private void loadEmptyMinutes() {
+        tvMinutesFocused.setText("--");
+        tvMinutesWorking.setText("--");
+        tvMinutesPresent.setText("--");
+        tvMinutesCognitive.setText("--");
+        tvMinutesEmotional.setText("--");
     }
 
-    /** Set navigation click actions */
     private void setClickActions() {
-        cvFocusedAttention.setOnClickListener(v -> openModuleList("focused_attention"));
-        cvWorkingMemory.setOnClickListener(v -> openModuleList("working_memory"));
-        cvPresentMoment.setOnClickListener(v -> openModuleList("present_moment"));
-        cvCognitiveIntegration.setOnClickListener(v -> openModuleList("cognitive_flexibility"));
-        cvEmotionalRegulation.setOnClickListener(v -> openModuleList("emotional_regulation"));
+        cvFocusedAttention.setOnClickListener(v -> openModule("focused_attention"));
+        cvWorkingMemory.setOnClickListener(v -> openModule("working_memory"));
+        cvPresentMoment.setOnClickListener(v -> openModule("present_moment"));
+        cvCognitiveIntegration.setOnClickListener(v -> openModule("cognitive_flexibility"));
+        cvEmotionalRegulation.setOnClickListener(v -> openModule("emotional_regulation"));
 
-        // ✅ Score Dashboard Navigation
-        findViewById(R.id.cvAttentionScore).setOnClickListener(v -> openScoreDashboard("Attention"));
-        findViewById(R.id.cvMemoryScore).setOnClickListener(v -> openScoreDashboard("Memory"));
-        findViewById(R.id.cvPresentMomentScore).setOnClickListener(v -> openScoreDashboard("Awareness"));
-        findViewById(R.id.cvCognitiveScore).setOnClickListener(v -> openScoreDashboard("Cognitive"));
-        findViewById(R.id.cvEmotionScore).setOnClickListener(v -> openScoreDashboard("Emotional"));
-
-        // Progress Dashboard stays static
-        cvProgressDashboard.setOnClickListener(null);
+        findViewById(R.id.cvAttentionScore).setOnClickListener(v -> openScore("Attention"));
+        findViewById(R.id.cvMemoryScore).setOnClickListener(v -> openScore("Memory"));
+        findViewById(R.id.cvPresentMomentScore).setOnClickListener(v -> openScore("Awareness"));
+        findViewById(R.id.cvCognitiveScore).setOnClickListener(v -> openScore("Cognitive"));
+        findViewById(R.id.cvEmotionScore).setOnClickListener(v -> openScore("Emotional"));
     }
 
-    private void openModuleList(String moduleType) {
-        Intent intent = new Intent(this, ModuleIntroActivity.class);
-        intent.putExtra("module_type", moduleType);
-        startActivity(intent);
+    private void openModule(String type) {
+        Intent i = new Intent(this, ModuleIntroActivity.class);
+        i.putExtra("module_type", type);
+        startActivity(i);
     }
 
-    private void openScoreDashboard(String scoreType) {
-        Intent intent = new Intent(this, ProgressDashboardActivity.class);
-        intent.putExtra("score_type", scoreType);
-        startActivity(intent);
+    private void openScore(String type) {
+        Intent i = new Intent(this, ProgressDashboardActivity.class);
+        i.putExtra("score_type", type);
+        startActivity(i);
     }
 
-    /** ✅ Show Overall Mindfulness Graph */
-    private void showOverallGraph() {
+    // ----------------------------------------------------
+    // 🔥 Fetch only POST scores for each cognitive category
+    // ----------------------------------------------------
+    private void fetchPostScoresFromBackend() {
+
+        fetchScoreForDomain("srt");          // Attention
+        fetchScoreForDomain("nback");        // Memory
+        fetchScoreForDomain("stroop");       // Emotion Regulation
+        fetchScoreForDomain("task_switch");  // Cognitive Integration
+        fetchScoreForDomain("sart");         // Awareness
+    }
+
+    private void fetchScoreForDomain(String domain) {
+
+        api.getScoreHistory(email, domain).enqueue(new Callback<List<ScoreResponse>>() {
+            @Override
+            public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> res) {
+
+                if (!res.isSuccessful() || res.body() == null) return;
+
+                // find latest POST score
+                for (ScoreResponse s : res.body()) {
+                    if ("post".equalsIgnoreCase(s.getScore_type())) {
+
+                        switch (domain) {
+                            case "srt": attentionPost = s.getScore(); break;
+                            case "nback": memoryPost = s.getScore(); break;
+                            case "stroop": emotionPost = s.getScore(); break;
+                            case "task_switch": cognitivePost = s.getScore(); break;
+                            case "sart": awarenessPost = s.getScore(); break;
+                        }
+                        break;
+                    }
+                }
+
+                drawGraph();
+            }
+
+            @Override
+            public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {}
+        });
+    }
+
+    // ----------------------------------------------------
+    // 🔥 Draw line graph using ONLY POST scores
+    // ----------------------------------------------------
+    private void drawGraph() {
+
         if (lineChart == null) return;
 
-        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
+        float a = attentionPost == null ? 0 : attentionPost;
+        float m = memoryPost == null ? 0 : memoryPost;
+        float e = emotionPost == null ? 0 : emotionPost;
+        float c = cognitivePost == null ? 0 : cognitivePost;
+        float w = awarenessPost == null ? 0 : awarenessPost;
 
-        float attention = sp.getFloat("attention_post_score", 0f);
-        float memory = sp.getFloat("memory_post_score", 0f);
-        float emotion = sp.getFloat("emotion_post_score", 0f);
-        float cognitive = sp.getFloat("flexibility_post_score", 0f);
-        float awareness = sp.getFloat("awareness_post_score", 0f);
-
-        // Log for debugging (optional)
-        Log.d("GRAPH_DEBUG", "Scores → attention=" + attention +
-                ", memory=" + memory +
-                ", emotion=" + emotion +
-                ", cognitive=" + cognitive +
-                ", awareness=" + awareness);
-
-        // If all zero → no data
-        if (attention == 0f && memory == 0f && emotion == 0f && cognitive == 0f && awareness == 0f) {
+        if (a == 0 && m == 0 && e == 0 && c == 0 && w == 0) {
             lineChart.clear();
-            lineChart.setNoDataText("No data available yet");
-            lineChart.setNoDataTextColor(Color.GRAY);
+            lineChart.setNoDataText("No progress data yet");
             return;
         }
 
         ArrayList<Entry> entries = new ArrayList<>();
-        entries.add(new Entry(0, attention));
-        entries.add(new Entry(1, memory));
-        entries.add(new Entry(2, emotion));
-        entries.add(new Entry(3, cognitive));
-        entries.add(new Entry(4, awareness));
+        entries.add(new Entry(0, a));
+        entries.add(new Entry(1, m));
+        entries.add(new Entry(2, e));
+        entries.add(new Entry(3, c));
+        entries.add(new Entry(4, w));
 
-        LineDataSet dataSet = new LineDataSet(entries, "Mindfulness Progress");
-        dataSet.setColor(Color.parseColor("#7C4DFF"));
-        dataSet.setLineWidth(3f);
-        dataSet.setCircleRadius(6f);
-        dataSet.setCircleHoleRadius(3f);
-        dataSet.setCircleColor(Color.parseColor("#7C4DFF"));
-        dataSet.setValueTextSize(11f);
-        dataSet.setValueTextColor(Color.DKGRAY);
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataSet.setDrawFilled(true);
-        dataSet.setFillColor(Color.parseColor("#BCA7FF"));
-        dataSet.setFillAlpha(160);
+        LineDataSet ds = new LineDataSet(entries, "Your Mindfulness Growth");
+        ds.setColor(Color.parseColor("#7C4DFF"));
+        ds.setLineWidth(3f);
+        ds.setCircleRadius(6f);
+        ds.setCircleColor(Color.parseColor("#7C4DFF"));
+        ds.setDrawFilled(true);
+        ds.setFillColor(Color.parseColor("#BCA7FF"));
+        ds.setValueTextSize(10f);
 
-        LineData lineData = new LineData(dataSet);
-        lineChart.setData(lineData);
+        LineData data = new LineData(ds);
+        lineChart.setData(data);
 
-        // ✅ Customize X-axis
-        String[] labels = {"Attention", "Memory", "Emotion", "Cognitive", "Awareness"};
+        final String[] labels = {"Attention", "Memory", "Emotion", "Cognitive", "Awareness"};
+
         XAxis xAxis = lineChart.getXAxis();
-        xAxis.setGranularity(1f);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setTextColor(Color.DKGRAY);
-        xAxis.setTextSize(11f);
-        xAxis.setDrawGridLines(false);
-        xAxis.setValueFormatter(new com.github.mikephil.charting.formatter.ValueFormatter() {
+        xAxis.setGranularity(1f);
+        xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                return (value >= 0 && value < labels.length) ? labels[(int) value] : "";
+                if (value >= 0 && value < labels.length) return labels[(int) value];
+                return "";
             }
         });
 
-        // ✅ Customize Y-axis
-        YAxis leftAxis = lineChart.getAxisLeft();
-        leftAxis.setAxisMinimum(0f);
-        leftAxis.setAxisMaximum(100f);
-        leftAxis.setTextColor(Color.DKGRAY);
-        leftAxis.setTextSize(10f);
-        leftAxis.setDrawGridLines(true);
-        leftAxis.enableGridDashedLine(10f, 10f, 0f);
+        YAxis yAxis = lineChart.getAxisLeft();
+        yAxis.setAxisMinimum(0);
+        yAxis.setAxisMaximum(100);
         lineChart.getAxisRight().setEnabled(false);
 
-        // ✅ Legend
-        Legend legend = lineChart.getLegend();
-        legend.setEnabled(true);
-        legend.setTextColor(Color.DKGRAY);
-        legend.setTextSize(12f);
-        legend.setForm(Legend.LegendForm.CIRCLE);
-
-        // ✅ Chart styling
         lineChart.getDescription().setEnabled(false);
-        lineChart.setDrawGridBackground(false);
-        lineChart.animateX(1000);
-        lineChart.setExtraBottomOffset(10f);
+        lineChart.animateX(800);
         lineChart.invalidate();
     }
 }

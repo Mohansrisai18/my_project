@@ -123,7 +123,9 @@
 
         />
 
-
+        <activity
+            android:name=".SplashScreenActivity"
+            android:exported="false" />
 
 
         <activity

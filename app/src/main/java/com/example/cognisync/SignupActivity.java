@@ -33,13 +33,10 @@ public class SignupActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         if (getSupportActionBar() != null) getSupportActionBar().hide();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            getWindow().getDecorView().setSystemUiVisibility(
-                    android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
+        // Inputs
         fullNameInput = findViewById(R.id.fullNameInput);
         ageInput = findViewById(R.id.ageInput);
         mailInput = findViewById(R.id.mailInput);
@@ -48,23 +45,23 @@ public class SignupActivity extends AppCompatActivity {
         btnSignup = findViewById(R.id.btnSignup);
         loginText = findViewById(R.id.loginText);
 
-        // ⭐ Correct spinner setup
+        // Set gender dropdown
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
-                R.layout.spinner_selected_item,          // selected view
-                new String[]{"Male", "Female"}          // options
+                R.layout.spinner_selected_item,
+                new String[]{"Male", "Female"}
         );
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
 
         btnSignup.setOnClickListener(v -> performSignup());
-        loginText.setOnClickListener(v -> navigateToLogin());
+        loginText.setOnClickListener(v -> goToLogin());
 
         getOnBackPressedDispatcher().addCallback(this,
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
-                        navigateToLogin();
+                        goToLogin();
                     }
                 });
     }
@@ -87,7 +84,7 @@ public class SignupActivity extends AppCompatActivity {
         }
 
         btnSignup.setEnabled(false);
-        btnSignup.setText("Creating Account...");
+        btnSignup.setText("Creating account…");
 
         Patient patient = new Patient(fullName, Integer.parseInt(age), gender, email, password);
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
@@ -101,6 +98,7 @@ public class SignupActivity extends AppCompatActivity {
 
                 if (response.isSuccessful()) {
 
+                    // Save user credentials for auto-login
                     SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor ed = sp.edit();
                     ed.putString("username", fullName);
@@ -109,6 +107,9 @@ public class SignupActivity extends AppCompatActivity {
                     ed.putString("gender", gender);
                     ed.apply();
 
+                    Toast.makeText(SignupActivity.this, "Account created!", Toast.LENGTH_SHORT).show();
+
+                    // Move to Task1Activity (your assessment screen)
                     navigateToTask1Activity();
 
                 } else {
@@ -135,9 +136,8 @@ public class SignupActivity extends AppCompatActivity {
         finish();
     }
 
-    private void navigateToLogin() {
-        Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
-        startActivity(intent);
+    private void goToLogin() {
+        startActivity(new Intent(SignupActivity.this, LoginActivity.class));
         finish();
     }
 }

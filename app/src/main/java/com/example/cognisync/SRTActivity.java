@@ -1,22 +1,25 @@
 package com.example.cognisync;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.text.SimpleDateFormat;
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreRequest;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
+import retrofit2.Call;
 
 public class SRTActivity extends AppCompatActivity {
 
@@ -35,15 +38,21 @@ public class SRTActivity extends AppCompatActivity {
 
     private String moduleType = "focused_attention";
 
+    private ApiService api;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_srt);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        // read module_type if passed
+        // Retrofit
+        api = ApiClient.getClient().create(ApiService.class);
+
+        // get module type
         Intent i = getIntent();
-        if (i != null && i.hasExtra("module_type")) moduleType = i.getStringExtra("module_type");
+        if (i != null && i.hasExtra("module_type"))
+            moduleType = i.getStringExtra("module_type");
 
         tvInstruction = findViewById(R.id.tvInstruction);
         tvDot = findViewById(R.id.tvDot);
@@ -57,12 +66,13 @@ public class SRTActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
 
         tvInstruction.setText("Tap as soon as you see the dot.");
+
         tvDot.setOnClickListener(v -> {
             if (dotVisible) {
                 long reaction = System.currentTimeMillis() - startTime;
                 reactionTimes.add(reaction);
                 dotVisible = false;
-                tvDot.setVisibility(View.INVISIBLE);
+                tvDot.setVisibility(TextView.INVISIBLE);
                 nextTrial();
             }
         });
@@ -80,9 +90,10 @@ public class SRTActivity extends AppCompatActivity {
         tvInstruction.setText("Get ready...");
 
         int delay = random.nextInt(2000) + 1000;
+
         handler.postDelayed(() -> {
             moveDotToRandomPosition();
-            tvDot.setVisibility(View.VISIBLE);
+            tvDot.setVisibility(TextView.VISIBLE);
             dotVisible = true;
             startTime = System.currentTimeMillis();
             tvInstruction.setText("Tap it!");
@@ -93,14 +104,16 @@ public class SRTActivity extends AppCompatActivity {
         int dotSize = 200;
         int maxX = screenWidth - dotSize;
         int maxY = screenHeight - dotSize - 300;
+
         tvDot.setX(random.nextInt(Math.max(maxX, 1)));
         tvDot.setY(random.nextInt(Math.max(maxY, 1)) + 200);
     }
 
     private void showResult() {
+
         long avgRT = (long) reactionTimes.stream().mapToLong(Long::longValue).average().orElse(0);
 
-        // --- Exponential normalization ---
+        // Exponential normalization
         double attentionScore = 100.0 * Math.exp(-((double) (avgRT - 250L)) / 250.0);
         attentionScore = Math.max(0, Math.min(100, attentionScore));
 
@@ -110,28 +123,35 @@ public class SRTActivity extends AppCompatActivity {
         else performance = "Reduced Vigilance";
 
         tvInstruction.setText("Task Complete!");
+
         tvResult.setText(String.format(Locale.getDefault(),
-                "Avg RT: %d ms\nScore: %.1f /100\n%s", avgRT, attentionScore, performance));
-        tvResult.setVisibility(View.VISIBLE);
+                "Avg RT: %d ms\nScore: %.1f /100\n%s",
+                avgRT, attentionScore, performance));
+        tvResult.setVisibility(TextView.VISIBLE);
 
-        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
-        sp.edit()
-                .putLong("srt_ms", avgRT)
-                .putFloat("attention_post_score", (float) attentionScore)
-                .putLong("timestamp_post", System.currentTimeMillis())
-                .apply();
+        // -------------------------------------------
+        // 🔥 SEND SCORE TO BACKEND (server-only)
+        // -------------------------------------------
+        String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                .getString("email", "");
 
-        // mark post completed for this module
-        getSharedPreferences("ModuleState", MODE_PRIVATE)
-                .edit()
-                .putBoolean(moduleType + "_post_completed", true)
-                .apply();
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Error: No user email saved!", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-        // Save to history
-        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Attention", (float) attentionScore, date);
+        ScoreRequest req = new ScoreRequest(email, (float) attentionScore);
+        Call<Void> call = api.saveSrtPost(req);
 
-        // Auto close after short delay
+        ScoreUploader.uploadScore(
+                this,
+                email,
+                (float) attentionScore,
+                "SRT Post",
+                call
+        );
+
+        // Finish automatically
         handler.postDelayed(this::finish, 2500);
     }
 }

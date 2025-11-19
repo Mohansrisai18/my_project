@@ -1,8 +1,8 @@
 package com.example.cognisync;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -14,8 +14,29 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.*;
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreRequest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.text.SimpleDateFormat;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+/**
+ * PreAssessmentActivity — Option A (Server-only).
+ *
+ * - Computes pre-assessment scores locally (same as before)
+ * - Sends only to backend via appropriate endpoint (e.g., save-maas-pre)
+ * - Does NOT store scores locally in SharedPreferences
+ */
 public class PreAssessmentActivity extends AppCompatActivity {
 
     private LinearLayout questionContainer;
@@ -23,12 +44,10 @@ public class PreAssessmentActivity extends AppCompatActivity {
     private ImageButton backButton;
     private Button btnNext;
 
-    private SharedPreferences sp;
-    private static final String PREF_NAME = "ModulePreAssessment";
-    private static final String PREF_MODULE_STATE = "ModuleState";
-
     private String moduleType;
     private final List<QuestionItem> questions = new ArrayList<>();
+
+    private ApiService api;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +55,6 @@ public class PreAssessmentActivity extends AppCompatActivity {
         setContentView(R.layout.activity_assessment);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        // Bind Views
         titleText = findViewById(R.id.titleText);
         taskLabel = findViewById(R.id.taskLabel);
         questionContainer = findViewById(R.id.questionContainer);
@@ -44,64 +62,50 @@ public class PreAssessmentActivity extends AppCompatActivity {
         btnNext = findViewById(R.id.btnNext);
         navPath = findViewById(R.id.navPath);
 
-        // Module Type
         moduleType = getIntent().getStringExtra("module_type");
         if (moduleType == null) moduleType = "focused_attention";
 
-        // UI Text
         titleText.setText(getReadableModuleTitle(moduleType));
         navPath.setText("Home > " + getReadableModuleTitle(moduleType));
         taskLabel.setText("Pre-Session Self-Assessment");
 
-        sp = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        api = ApiClient.getClient().create(ApiService.class);
 
-        // Load & Show Questions
         loadQuestions(moduleType);
         displayQuestions();
 
         backButton.setOnClickListener(v -> finish());
-
         btnNext.setOnClickListener(v -> saveAssessment(moduleType));
     }
 
-    // ---------------------------------------------------------
-    // Load questions
-    // ---------------------------------------------------------
+    // ---------------- Load questions ----------------
     private void loadQuestions(String type) {
         questions.clear();
         switch (type) {
             case "focused_attention":
                 questions.addAll(getRandomQuestions(getMAASPool(), 5));
                 break;
-
             case "emotional_regulation":
                 questions.addAll(getRandomQuestions(getPANASPool(), 10));
                 break;
-
             case "cognitive_flexibility":
                 questions.addAll(getDASSPool());
                 break;
-
             case "working_memory":
                 questions.addAll(getRandomQuestions(getCFQPool(), 5));
                 break;
-
             case "present_moment":
             case "present_moment_awareness":
                 questions.addAll(getRandomQuestions(getPHLMSPool(), 5));
                 break;
-
             default:
                 questions.add(new QuestionItem("How are you feeling today?", 1, 6, true));
         }
     }
 
-    // ---------------------------------------------------------
-    // Display questions
-    // ---------------------------------------------------------
+    // ---------------- Display questions ----------------
     private void displayQuestions() {
         questionContainer.removeAllViews();
-
         for (int i = 0; i < questions.size(); i++) {
             QuestionItem q = questions.get(i);
 
@@ -125,88 +129,137 @@ public class PreAssessmentActivity extends AppCompatActivity {
         }
     }
 
-    // ---------------------------------------------------------
-    // Save Assessment + navigate to ModuleHome
-    // ---------------------------------------------------------
+    // ---------------- Save assessment (server-only) ----------------
     private void saveAssessment(String moduleType) {
-
         if (hasUnanswered()) {
             Toast.makeText(this, "Please answer all questions!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        SharedPreferences global = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
-
-        float scoreToSave = 0;
+        float scoreToSave = 0f;
 
         switch (moduleType) {
-
             case "focused_attention":
                 scoreToSave = computeMAASScore();
-                global.edit().putFloat("MAAS_pre", scoreToSave).apply();
+                callSaveMaasPre(scoreToSave);
                 break;
-
             case "emotional_regulation":
                 float pos = computePANASPositive();
                 float neg = computePANASNegative();
-                float net = pos - neg;
-
-                global.edit()
-                        .putFloat("PANAS_positive_pre", pos)
-                        .putFloat("PANAS_negative_pre", neg)
-                        .putFloat("PANAS_pre", net)
-                        .apply();
-
-                scoreToSave = net;
+                scoreToSave = pos - neg;
+                callSavePanasPre(scoreToSave);
                 break;
-
             case "cognitive_flexibility":
                 scoreToSave = computeDASSScore();
-                global.edit().putFloat("DASS_pre", scoreToSave).apply();
+                callSaveDassPre(scoreToSave);
                 break;
-
             case "working_memory":
                 scoreToSave = computeCFQScore();
-                global.edit().putFloat("CFQ_pre", scoreToSave).apply();
+                callSaveCfqPre(scoreToSave);
                 break;
-
             case "present_moment":
             case "present_moment_awareness":
                 scoreToSave = computePHLMSScore();
-                global.edit().putFloat("PHLMS_pre", scoreToSave).apply();
+                callSavePhlmsPre(scoreToSave);
                 break;
         }
 
-        // Save local pre score
-        sp.edit().putFloat(moduleType + "_pre_score", scoreToSave).apply();
+        // notify user locally (server call will also notify on success/failure)
+        Toast.makeText(this, "Submitting score to server... (" + String.format(Locale.getDefault(), "%.2f", scoreToSave) + ")", Toast.LENGTH_SHORT).show();
 
-        // Mark Pre Completed
-        getSharedPreferences(PREF_MODULE_STATE, MODE_PRIVATE)
-                .edit()
-                .putBoolean(moduleType + "_pre_completed", true)
-                .apply();
-
-        Toast.makeText(this, "Saved! Score: " + scoreToSave, Toast.LENGTH_SHORT).show();
-
-        // ---------------------------------------------------------
-        // 🔥 Navigate to ModuleHomeActivity
-        // ---------------------------------------------------------
+        // navigate back to module home (we still navigate; server call runs async)
         Intent intent = new Intent(this, ModuleHomeActivity.class);
         intent.putExtra("module_type", moduleType);
         startActivity(intent);
         finish();
     }
 
-    // ---------------------------------------------------------
+    // ---------------- Network calls (use ScoreRequest(email, score) constructor) ----------------
+    private void callSaveMaasPre(float score) {
+        String email = getUserEmail();
+        if (email.isEmpty()) { showNoEmailError(); return; }
+
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.saveMaasPre(req);
+        enqueueScoreCall(call, "MAAS pre");
+    }
+
+    private void callSavePanasPre(float score) {
+        String email = getUserEmail();
+        if (email.isEmpty()) { showNoEmailError(); return; }
+
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.savePanasPre(req);
+        enqueueScoreCall(call, "PANAS pre");
+    }
+
+    private void callSaveDassPre(float score) {
+        String email = getUserEmail();
+        if (email.isEmpty()) { showNoEmailError(); return; }
+
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.saveDassPre(req);
+        enqueueScoreCall(call, "DASS pre");
+    }
+
+    private void callSaveCfqPre(float score) {
+        String email = getUserEmail();
+        if (email.isEmpty()) { showNoEmailError(); return; }
+
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.saveCfqPre(req);
+        enqueueScoreCall(call, "CFQ pre");
+    }
+
+    private void callSavePhlmsPre(float score) {
+        String email = getUserEmail();
+        if (email.isEmpty()) { showNoEmailError(); return; }
+
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.savePhlmsPre(req);
+        enqueueScoreCall(call, "PHLMS pre");
+    }
+
+    private void enqueueScoreCall(Call<Void> call, final String label) {
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("PreAssessment", label + " saved. HTTP " + response.code());
+                    // Small success toast (non-blocking)
+                    Toast.makeText(PreAssessmentActivity.this, label + " saved on server", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e("PreAssessment", label + " server error: HTTP " + response.code());
+                    Toast.makeText(PreAssessmentActivity.this, label + " failed: server " + response.code(), Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("PreAssessment", label + " network failure: " + t.getMessage(), t);
+                Toast.makeText(PreAssessmentActivity.this, label + " failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void showNoEmailError() {
+        Toast.makeText(this, "No user email found (login required). Score not sent.", Toast.LENGTH_LONG).show();
+    }
+
+    private String getUserEmail() {
+        // We need user's email to associate scores on server. This expects you stored it at login.
+        // If you don't store email on login, store it in UserPrefs with key "email".
+        return getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "").trim();
+    }
+
+    // ---------------- Validation ----------------
     private boolean hasUnanswered() {
         for (QuestionItem q : questions)
             if (q.getSelectedValue() == -1) return true;
         return false;
     }
 
-    // ---------------------------------------------------------
-    // Scoring logic
-    // ---------------------------------------------------------
+    // ---------------- Scoring logic (same as your previous) ----------------
     private float computeMAASScore() {
         float total = 0;
         for (QuestionItem q : questions) total += q.getSelectedValue();
@@ -243,9 +296,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
         return total / questions.size();
     }
 
-    // ---------------------------------------------------------
-    // Question banks
-    // ---------------------------------------------------------
+    // ---------------- Question pools ----------------
     private List<QuestionItem> getMAASPool() {
         return Arrays.asList(
                 new QuestionItem("I find it difficult to stay focused on what’s happening.", 1, 6),
@@ -305,9 +356,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
         return shuffled.subList(0, Math.min(count, shuffled.size()));
     }
 
-    // ---------------------------------------------------------
-    // Model
-    // ---------------------------------------------------------
+    // ---------------- Model ----------------
     private static class QuestionItem {
         String question;
         Spinner spinner;
@@ -334,7 +383,11 @@ public class PreAssessmentActivity extends AppCompatActivity {
             if (spinner == null) return -1;
             int pos = spinner.getSelectedItemPosition();
             if (pos == 0) return -1;
-            return Integer.parseInt(spinner.getSelectedItem().toString());
+            try {
+                return Integer.parseInt(spinner.getSelectedItem().toString());
+            } catch (Exception e) {
+                return -1;
+            }
         }
     }
 

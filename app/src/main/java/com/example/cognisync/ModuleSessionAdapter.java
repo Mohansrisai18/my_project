@@ -39,7 +39,6 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
 
         holder.title.setText(s.getTitle());
         holder.desc.setText(s.getDescription());
-        holder.tag.setText("Module: " + s.getModuleType());
 
         holder.card.setOnClickListener(v -> listener.onSessionClick(s));
     }
@@ -51,14 +50,14 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView card;
-        TextView title, desc, tag;
+        TextView title, desc;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+
             card = itemView.findViewById(R.id.cardSession);
             title = itemView.findViewById(R.id.tvSessionTitle);
             desc = itemView.findViewById(R.id.tvSessionDesc);
-            tag = itemView.findViewById(R.id.tvModuleTag);
         }
     }
 }

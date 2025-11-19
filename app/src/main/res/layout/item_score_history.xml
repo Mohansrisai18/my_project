@@ -4,8 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@drawable/card_bg"
-    android:elevation="4dp"
+    android:background="@drawable/score_card_bg"
     android:layout_marginBottom="10dp">
 
     <TextView
@@ -14,15 +13,21 @@
         android:layout_height="wrap_content"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="#222"
-        android:text="Score" />
+        android:textColor="#111" />
+
+    <TextView
+        android:id="@+id/type_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#888"
+        android:layout_marginTop="3dp" />
 
     <TextView
         android:id="@+id/date_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
+        android:textSize="15sp"
         android:textColor="#555"
-        android:text="Date"
         android:layout_marginTop="4dp" />
 </LinearLayout>

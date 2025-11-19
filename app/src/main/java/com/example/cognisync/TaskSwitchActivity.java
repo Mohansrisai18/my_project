@@ -1,21 +1,24 @@
 package com.example.cognisync;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.text.SimpleDateFormat;
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreRequest;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
+import retrofit2.Call;
 
 public class TaskSwitchActivity extends AppCompatActivity {
 
@@ -30,13 +33,14 @@ public class TaskSwitchActivity extends AppCompatActivity {
 
     private long startTime;
     private int prevColor = -1;
+
     private final List<Long> sameRuleTimes = new ArrayList<>();
     private final List<Long> switchRuleTimes = new ArrayList<>();
 
     private int currentNumber;
     private int currentColor;
 
-    private String moduleType = "cognitive_flexibility";
+    private ApiService api;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +48,12 @@ public class TaskSwitchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_task_switch);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        Intent i = getIntent();
-        if (i != null && i.hasExtra("module_type")) moduleType = i.getStringExtra("module_type");
+        api = ApiClient.getClient().create(ApiService.class);
 
         tvInstruction = findViewById(R.id.tvInstruction);
         tvNumber = findViewById(R.id.tvNumber);
         tvResult = findViewById(R.id.tvResult);
+
         btnLeft = findViewById(R.id.btnLeft);
         btnRight = findViewById(R.id.btnRight);
 
@@ -65,8 +69,8 @@ public class TaskSwitchActivity extends AppCompatActivity {
             return;
         }
 
-        currentNumber = random.nextInt(9) + 1;
-        currentColor = random.nextBoolean() ? 0 : 1;
+        currentNumber = random.nextInt(9) + 1; // 1–9
+        currentColor = random.nextBoolean() ? 0 : 1; // Red=0, Blue=1
 
         tvNumber.setText(String.valueOf(currentNumber));
         tvNumber.setTextColor(currentColor == 0 ? 0xFFFF0000 : 0xFF2196F3);
@@ -86,19 +90,24 @@ public class TaskSwitchActivity extends AppCompatActivity {
         prevColor = currentColor;
 
         boolean isCorrect;
-        if (currentColor == 0) {
-            isCorrect = (currentNumber < 5 && leftPressed) || (currentNumber > 5 && !leftPressed);
-        } else {
-            isCorrect = ((currentNumber % 2 == 0) && leftPressed) || ((currentNumber % 2 != 0) && !leftPressed);
+
+        if (currentColor == 0) {  // Red → small/large
+            isCorrect = (currentNumber < 5 && leftPressed) ||
+                    (currentNumber > 5 && !leftPressed);
+        } else {  // Blue → even/odd
+            isCorrect = ((currentNumber % 2 == 0) && leftPressed) ||
+                    ((currentNumber % 2 != 0) && !leftPressed);
         }
 
         tvResult.setText(isCorrect ? "" : "Incorrect!");
+
         handler.postDelayed(this::nextTrial, 700);
     }
 
     private void showResult() {
         long avgSame = average(sameRuleTimes);
         long avgSwitch = average(switchRuleTimes);
+
         long switchCost = Math.abs(avgSwitch - avgSame);
 
         double flexibilityScore = 100.0 * Math.exp(-((double) switchCost) / 180.0);
@@ -109,24 +118,30 @@ public class TaskSwitchActivity extends AppCompatActivity {
         else if (flexibilityScore >= 45) interpretation = "Average";
         else interpretation = "Low flexibility";
 
-        tvResult.setText(String.format(Locale.getDefault(),
-                "Switch Cost: %d ms\nScore: %.1f /100\n%s", switchCost, flexibilityScore, interpretation));
+        tvResult.setText(
+                String.format(Locale.getDefault(),
+                        "Switch Cost: %d ms\nScore: %.1f /100\n%s",
+                        switchCost, flexibilityScore, interpretation)
+        );
 
-        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
-        sp.edit()
-                .putLong("switch_cost_ms", switchCost)
-                .putFloat("flexibility_post_score", (float) flexibilityScore)
-                .putLong("timestamp_post", System.currentTimeMillis())
-                .apply();
+        // --------- 🔥 SEND TO BACKEND ONLY ---------
+        String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                .getString("email", "");
 
-        // mark post completed for this module
-        getSharedPreferences("ModuleState", MODE_PRIVATE)
-                .edit()
-                .putBoolean(moduleType + "_post_completed", true)
-                .apply();
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Error: No user email saved!", Toast.LENGTH_LONG).show();
+        } else {
+            ScoreRequest req = new ScoreRequest(email, (float) flexibilityScore);
+            Call<Void> call = api.saveTaskSwitchPost(req);
 
-        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Cognitive", (float) flexibilityScore, date);
+            ScoreUploader.uploadScore(
+                    this,
+                    email,
+                    (float) flexibilityScore,
+                    "TaskSwitch post",
+                    call
+            );
+        }
 
         handler.postDelayed(this::finish, 2500);
     }
@@ -134,7 +149,7 @@ public class TaskSwitchActivity extends AppCompatActivity {
     private long average(List<Long> list) {
         if (list == null || list.isEmpty()) return 0;
         long sum = 0;
-        for (Long value : list) sum += value;
+        for (Long v : list) sum += v;
         return sum / list.size();
     }
 }

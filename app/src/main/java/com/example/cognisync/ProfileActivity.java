@@ -47,55 +47,53 @@ public class ProfileActivity extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // ✅ Load dynamic user info
+        // Load user info
         String name = sharedPreferences.getString("username", "User");
         String age = sharedPreferences.getString("age", "--");
         String gender = sharedPreferences.getString("gender", "--");
         userName.setText(name);
         userInfo.setText("Age: " + age + ", " + gender);
 
-        // Optional: static placeholders
+        // Optional static placeholders
         sessionCount.setText("4");
         totalMinutes.setText("67 Minutes");
 
-        // ✅ Load selected language
+        // Load selected language
         String language = sharedPreferences.getString(LANGUAGE_KEY, "English");
         selectedLanguage.setText(language);
 
         // Back button
         backButton.setOnClickListener(v -> onBackPressed());
 
-        // ✅ Feedback Option → open FeedbackActivity
+        // Feedback
         feedbackOption.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, FeedbackActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(ProfileActivity.this, FeedbackActivity.class));
         });
 
-        // ✅ Language Option → open LanguageActivity
+        // Language
         languageOption.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, LanguageActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(ProfileActivity.this, LanguageActivity.class));
         });
 
-        // ✅ Account Settings Option → open UpdateInfoActivity
+        // Account Settings
         accountSettingsOption.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, UpdateInfoActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(ProfileActivity.this, UpdateInfoActivity.class));
         });
 
-        // ✅ Reset Progress Option → open ResetAccountActivity
+        // Reset Progress
         resetProgressOption.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, ResetAccountActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(ProfileActivity.this, ResetAccountActivity.class));
         });
 
-        // ✅ Sign Out button → clear preferences & go to Login
+        // Sign Out
         signOutButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("isLoggedIn", false);  // 🔥 IMPORTANT (logout)
             editor.clear();
             editor.apply();
 
             Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show();
+
             Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);

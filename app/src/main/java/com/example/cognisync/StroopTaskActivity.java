@@ -1,22 +1,26 @@
 package com.example.cognisync;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.text.SimpleDateFormat;
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.ScoreRequest;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
+import retrofit2.Call;
 
 public class StroopTaskActivity extends AppCompatActivity {
 
@@ -26,15 +30,17 @@ public class StroopTaskActivity extends AppCompatActivity {
 
     private final String[] words = {"ANGER","CALM","JOY","FEAR","LOVE"};
     private final int[] colors = {0xFFF44336, 0xFF2196F3, 0xFF4CAF50};
+
     private final Random random = new Random();
     private final Handler handler = new Handler();
 
     private int trial = 0;
     private long startTime;
+
     private final List<Long> neutralTimes = new ArrayList<>();
     private final List<Long> emotionalTimes = new ArrayList<>();
 
-    private String moduleType = "emotional_regulation";
+    private ApiService api;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +48,7 @@ public class StroopTaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_stroop_task);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        Intent i = getIntent();
-        if (i != null && i.hasExtra("module_type")) moduleType = i.getStringExtra("module_type");
+        api = ApiClient.getClient().create(ApiService.class);
 
         tvWord = findViewById(R.id.tvWord);
         tvResult = findViewById(R.id.tvResult);
@@ -57,8 +62,10 @@ public class StroopTaskActivity extends AppCompatActivity {
         View.OnClickListener listener = v -> {
             long rt = System.currentTimeMillis() - startTime;
             String word = tvWord.getText().toString();
+
             if (isEmotional(word)) emotionalTimes.add(rt);
             else neutralTimes.add(rt);
+
             nextTrial();
         };
 
@@ -74,10 +81,13 @@ public class StroopTaskActivity extends AppCompatActivity {
             showResult();
             return;
         }
+
         String word = words[random.nextInt(words.length)];
         int color = colors[random.nextInt(colors.length)];
+
         tvWord.setText(word);
         tvWord.setTextColor(color);
+
         startTime = System.currentTimeMillis();
         trial++;
     }
@@ -101,23 +111,27 @@ public class StroopTaskActivity extends AppCompatActivity {
 
         tvResult.setVisibility(View.VISIBLE);
         tvResult.setText(String.format(Locale.getDefault(),
-                "Δ Reaction Time = %d ms\nScore: %.1f /100\n%s", delta, emotionScore, interpretation));
+                "Δ Reaction Time = %d ms\nScore: %.1f /100\n%s",
+                delta, emotionScore, interpretation));
 
-        SharedPreferences sp = getSharedPreferences("CognitiveScores", MODE_PRIVATE);
-        sp.edit()
-                .putLong("stroop_delta", delta)
-                .putFloat("emotion_post_score", (float) emotionScore)
-                .putLong("timestamp_post", System.currentTimeMillis())
-                .apply();
+        // 🔥 Backend only — no SharedPreferences
+        String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                .getString("email", "");
 
-        // mark post completed for this module
-        getSharedPreferences("ModuleState", MODE_PRIVATE)
-                .edit()
-                .putBoolean(moduleType + "_post_completed", true)
-                .apply();
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Error: No user email saved!", Toast.LENGTH_LONG).show();
+        } else {
+            ScoreRequest req = new ScoreRequest(email, (float) emotionScore);
+            Call<Void> call = api.saveStroopPost(req);
 
-        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
-        ScoreHistoryStorage.addScoreHistory(this, "Emotional", (float) emotionScore, date);
+            ScoreUploader.uploadScore(
+                    this,
+                    email,
+                    (float) emotionScore,
+                    "Stroop post",
+                    call
+            );
+        }
 
         handler.postDelayed(this::finish, 2500);
     }
@@ -125,7 +139,7 @@ public class StroopTaskActivity extends AppCompatActivity {
     private long average(List<Long> list) {
         if (list == null || list.isEmpty()) return 0;
         long sum = 0;
-        for (Long value : list) sum += value;
+        for (Long v : list) sum += v;
         return sum / list.size();
     }
 }

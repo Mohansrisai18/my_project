@@ -29,7 +29,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
     private ImageButton backButton;
 
     private String moduleType;
-
     private ApiService api;
 
     @Override
@@ -57,10 +56,11 @@ public class ModuleHomeActivity extends AppCompatActivity {
         checkPreStatusFromServer();
         checkPostStatusFromServer();
 
+        // Always allow re-attempt post
         btnStartPost.setOnClickListener(v -> openPostTask());
     }
 
-    // ---------------------- BACKEND CHECK: PRE STATUS ----------------------
+    // ---------------------- CHECK PRE STATUS ----------------------
     private void checkPreStatusFromServer() {
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "");
         String domain = getPreDomain();
@@ -72,6 +72,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(ModuleHomeActivity.this, "Error loading pre status", Toast.LENGTH_SHORT).show();
+                    applyPreUI(false);
                     return;
                 }
 
@@ -89,27 +90,26 @@ public class ModuleHomeActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {
                 Toast.makeText(ModuleHomeActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                applyPreUI(false);
             }
         });
     }
 
+    // Allow re-attempt always
     private void applyPreUI(boolean preDone) {
+
         if (preDone) {
-            btnStartPre.setEnabled(false);
-            btnStartPre.setText("Pre-Assessment Completed ✓");
-
-            btnStartPost.setEnabled(true);
-
+            btnStartPre.setText("Re-Attempt Pre-Assessment");
         } else {
-            btnStartPre.setEnabled(true);
-            btnStartPre.setOnClickListener(v -> {
-                Intent i = new Intent(this, PreAssessmentActivity.class);
-                i.putExtra("module_type", moduleType);
-                startActivity(i);
-            });
-
-            btnStartPost.setEnabled(false);
+            btnStartPre.setText("Start Pre-Assessment");
         }
+
+        btnStartPre.setEnabled(true);
+        btnStartPre.setOnClickListener(v -> {
+            Intent i = new Intent(this, PreAssessmentActivity.class);
+            i.putExtra("module_type", moduleType);
+            startActivity(i);
+        });
     }
 
     private String getPreDomain() {
@@ -124,7 +124,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
         return "maas";
     }
 
-    // ---------------------- BACKEND CHECK: POST STATUS ----------------------
+    // ---------------------- CHECK POST STATUS ----------------------
     private void checkPostStatusFromServer() {
 
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "");
@@ -136,6 +136,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
                 if (!response.isSuccessful()) {
+                    applyPostUI(false);
                     return;
                 }
 
@@ -152,15 +153,21 @@ public class ModuleHomeActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {}
+            public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {
+                applyPostUI(false);
+            }
         });
     }
 
+    // Allow reattempt always
     private void applyPostUI(boolean postDone) {
         if (postDone) {
-            btnStartPost.setEnabled(false);
-            btnStartPost.setText("Post-Assessment Completed ✓");
+            btnStartPost.setText("Re-Attempt Post-Assessment");
+        } else {
+            btnStartPost.setText("Start Post-Assessment");
         }
+
+        btnStartPost.setEnabled(true);
     }
 
     private String getPostDomain() {
@@ -202,6 +209,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
     // ---------------------- POST TASK ----------------------
     private void openPostTask() {
         Intent intent;
+
         switch (moduleType) {
             case "focused_attention":
                 intent = new Intent(this, SRTActivity.class);
@@ -218,6 +226,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
             default:
                 intent = new Intent(this, SARTActivity.class);
         }
+
         startActivity(intent);
     }
 

@@ -88,11 +88,9 @@ public class ModuleIntroActivity extends AppCompatActivity {
         }
     }
 
-    // ----------- MAIN CHANGE: Check server instead of SharedPreferences -----------
     private void checkPreAssessmentStatusFromServer() {
 
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "");
-
         String domain = getDomainForModule();
 
         Call<List<ScoreResponse>> call = api.getScoreHistory(email, domain);
@@ -139,17 +137,20 @@ public class ModuleIntroActivity extends AppCompatActivity {
         return "maas";
     }
 
-    // ----------- Apply UI logic based on server result -----------
     private void applyButtons(boolean preCompleted) {
 
         if (preCompleted) {
 
-            btnStartPre.setText("Pre-Assessment Completed ✓");
-            btnStartPre.setEnabled(false);
-            btnStartPre.setAlpha(0.6f);
+            btnStartPre.setText("Re-Attempt Pre-Assessment");
+            btnStartPre.setEnabled(true);
+            btnStartPre.setAlpha(1f);
+            btnStartPre.setOnClickListener(v -> {
+                Intent intent = new Intent(this, PreAssessmentActivity.class);
+                intent.putExtra("module_type", moduleType);
+                startActivity(intent);
+            });
 
             btnContinue.setVisibility(View.VISIBLE);
-
             btnContinue.setOnClickListener(v -> {
                 Intent i = new Intent(this, ModuleHomeActivity.class);
                 i.putExtra("module_type", moduleType);
@@ -158,8 +159,7 @@ public class ModuleIntroActivity extends AppCompatActivity {
 
         } else {
 
-            btnContinue.setVisibility(View.GONE);
-
+            btnStartPre.setText("Start Pre-Assessment");
             btnStartPre.setEnabled(true);
             btnStartPre.setAlpha(1f);
 
@@ -168,6 +168,8 @@ public class ModuleIntroActivity extends AppCompatActivity {
                 intent.putExtra("module_type", moduleType);
                 startActivity(intent);
             });
+
+            btnContinue.setVisibility(View.GONE);
         }
     }
 }

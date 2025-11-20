@@ -29,17 +29,14 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
 
         if (getSupportActionBar() != null) getSupportActionBar().hide();
+        super.onCreate(savedInstanceState);
 
-        // 🔥 AUTO LOGIN CHECK
+        // 🔥 AUTO LOGIN
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        boolean isLoggedIn = sp.getBoolean("isLoggedIn", false);
-
-        if (isLoggedIn) {
-            // user already logged in → go to home
-            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+        if (sp.getBoolean("isLoggedIn", false)) {
+            startActivity(new Intent(this, HomeActivity.class));
             finish();
             return;
         }
@@ -52,14 +49,19 @@ public class LoginActivity extends AppCompatActivity {
         signupText = findViewById(R.id.signupText);
 
         btnLogin.setOnClickListener(v -> performLogin());
-        signupText.setOnClickListener(v -> goToSignup());
+        signupText.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, SignupActivity.class));
+            finish();
+        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override public void handleOnBackPressed() { finishAffinity(); }
+            @Override
+            public void handleOnBackPressed() {
+                finishAffinity();
+            }
         });
     }
 
-    // STEP 1: LOGIN
     private void performLogin() {
         String email = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
@@ -78,7 +80,6 @@ public class LoginActivity extends AppCompatActivity {
         apiService.loginPatient(loginRequest).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-
                 if (response.isSuccessful()) {
                     fetchUserProfile(email);
                 } else {
@@ -97,7 +98,6 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    // STEP 2: FETCH USER PROFILE
     private void fetchUserProfile(String email) {
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
 
@@ -111,14 +111,13 @@ public class LoginActivity extends AppCompatActivity {
 
                     Patient user = response.body();
 
-                    // 🔥 Save login state + user info
                     SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sp.edit();
                     editor.putString("username", user.getFullName());
                     editor.putString("email", user.getEmail());
                     editor.putString("gender", user.getGender());
                     editor.putString("age", String.valueOf(user.getAge()));
-                    editor.putBoolean("isLoggedIn", true); // 🔥 AUTO LOGIN FLAG
+                    editor.putBoolean("isLoggedIn", true); // 🔥 FIXED
                     editor.apply();
 
                     Toast.makeText(LoginActivity.this, "Welcome " + user.getFullName(), Toast.LENGTH_SHORT).show();
@@ -139,10 +138,5 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(LoginActivity.this, "Profile fetch error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    private void goToSignup() {
-        startActivity(new Intent(LoginActivity.this, SignupActivity.class));
-        finish();
     }
 }

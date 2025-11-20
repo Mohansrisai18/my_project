@@ -13,24 +13,24 @@ public class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash_screen);   // you will create this XML
+        setContentView(R.layout.activity_splash_screen);
 
-        new Handler().postDelayed(() -> checkLoginStatus(), 1200);
+        new Handler().postDelayed(this::checkLoginStatus, 1200);
     }
 
     private void checkLoginStatus() {
 
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String email = sp.getString("email", null);
 
-        if (email != null && !email.isEmpty()) {
-            // ✅ User already logged in → go Home
-            Intent i = new Intent(SplashScreenActivity.this, HomeActivity.class);
-            startActivity(i);
+        boolean isLoggedIn = sp.getBoolean("isLoggedIn", false);
+
+        if (isLoggedIn) {
+            // ✅ Old user – go to Home
+            startActivity(new Intent(this, HomeActivity.class));
+
         } else {
-            // ❌ No login → go Login screen
-            Intent i = new Intent(SplashScreenActivity.this, LoginActivity.class);
-            startActivity(i);
+            // ❌ First time user – go to Login
+            startActivity(new Intent(this, LoginActivity.class));
         }
 
         finish();

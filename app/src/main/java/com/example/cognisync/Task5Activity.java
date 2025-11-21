@@ -32,7 +32,7 @@ public class Task5Activity extends AppCompatActivity {
     private AppCompatButton btnNext;
     private TextView q1, q2, q3, q4, q5;
     private Spinner s1, s2, s3, s4, s5;
-    private SharedPreferences sp;
+
     private SharedPreferences userSp;
 
     private final List<String> awarenessItems = Arrays.asList(
@@ -64,7 +64,6 @@ public class Task5Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task5);
 
-        sp = getSharedPreferences("Task5Answers", MODE_PRIVATE);
         userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         btnBack = findViewById(R.id.btnBack);
@@ -82,28 +81,17 @@ public class Task5Activity extends AppCompatActivity {
         s4 = findViewById(R.id.spinner4);
         s5 = findViewById(R.id.spinner5);
 
-        // Shuffle first time
-        if (!sp.contains("t5_q1")) {
-            List<String> shuffled = new ArrayList<>(awarenessItems);
-            Collections.shuffle(shuffled);
+        // SHUFFLE NEW QUESTIONS EVERY TIME
+        List<String> shuffled = new ArrayList<>(awarenessItems);
+        Collections.shuffle(shuffled);
 
-            sp.edit()
-                    .putString("t5_q1", shuffled.get(0))
-                    .putString("t5_q2", shuffled.get(1))
-                    .putString("t5_q3", shuffled.get(2))
-                    .putString("t5_q4", shuffled.get(3))
-                    .putString("t5_q5", shuffled.get(4))
-                    .apply();
-        }
+        q1.setText(shuffled.get(0));
+        q2.setText(shuffled.get(1));
+        q3.setText(shuffled.get(2));
+        q4.setText(shuffled.get(3));
+        q5.setText(shuffled.get(4));
 
-        // Set question text
-        q1.setText(sp.getString("t5_q1", ""));
-        q2.setText(sp.getString("t5_q2", ""));
-        q3.setText(sp.getString("t5_q3", ""));
-        q4.setText(sp.getString("t5_q4", ""));
-        q5.setText(sp.getString("t5_q5", ""));
-
-        // 🔥 FORCE ALL QUESTION TEXTS TO BLACK (important)
+        // Force black text
         int black = getResources().getColor(android.R.color.black);
         q1.setTextColor(black);
         q2.setTextColor(black);
@@ -111,7 +99,6 @@ public class Task5Activity extends AppCompatActivity {
         q4.setTextColor(black);
         q5.setTextColor(black);
 
-        // Spinner setup
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
@@ -121,20 +108,13 @@ public class Task5Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
-        s1.setSelection(sp.getInt("t5_a1", 0));
-        s2.setSelection(sp.getInt("t5_a2", 0));
-        s3.setSelection(sp.getInt("t5_a3", 0));
-        s4.setSelection(sp.getInt("t5_a4", 0));
-        s5.setSelection(sp.getInt("t5_a5", 0));
-
         // Back button
         btnBack.setOnClickListener(v -> {
-            saveSelections();
             startActivity(new Intent(Task5Activity.this, Task4Activity.class));
             finish();
         });
 
-        // Next button
+        // Next
         btnNext.setOnClickListener(v -> {
 
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
@@ -144,9 +124,6 @@ public class Task5Activity extends AppCompatActivity {
                 return;
             }
 
-            saveSelections();
-
-            // spinner pos 1..5 => value 1..5
             int v1 = s1.getSelectedItemPosition();
             int v2 = s2.getSelectedItemPosition();
             int v3 = s3.getSelectedItemPosition();
@@ -155,7 +132,7 @@ public class Task5Activity extends AppCompatActivity {
 
             int sum = v1 + v2 + v3 + v4 + v5; // 5..25
             float avg = sum / 5f;
-            int percent = (int) ((avg / 5f) * 100f);
+            int percent = (int)((avg / 5f) * 100f);
 
             String email = userSp.getString("email", null);
             if (email != null) sendPhlmsInitial(email, percent);
@@ -168,21 +145,10 @@ public class Task5Activity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                saveSelections();
                 startActivity(new Intent(Task5Activity.this, Task4Activity.class));
                 finish();
             }
         });
-    }
-
-    private void saveSelections() {
-        sp.edit()
-                .putInt("t5_a1", s1.getSelectedItemPosition())
-                .putInt("t5_a2", s2.getSelectedItemPosition())
-                .putInt("t5_a3", s3.getSelectedItemPosition())
-                .putInt("t5_a4", s4.getSelectedItemPosition())
-                .putInt("t5_a5", s5.getSelectedItemPosition())
-                .apply();
     }
 
     private void sendPhlmsInitial(String email, int percent) {
@@ -190,15 +156,13 @@ public class Task5Activity extends AppCompatActivity {
         ScoreRequest req = new ScoreRequest(email, percent);
 
         api.savePhlmsInitial(req).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(Task5Activity.this, "PHLMS initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            @Override public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(Task5Activity.this, "PHLMS initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

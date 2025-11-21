@@ -32,7 +32,7 @@ public class Task4Activity extends AppCompatActivity {
     private AppCompatButton btnNext;
     private TextView q1, q2, q3, q4, q5;
     private Spinner s1, s2, s3, s4, s5;
-    private SharedPreferences sp;
+
     private SharedPreferences userSp;
 
     private final List<String> emotionRegulationItems = Arrays.asList(
@@ -66,7 +66,6 @@ public class Task4Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task4);
 
-        sp = getSharedPreferences("Task4Answers", MODE_PRIVATE);
         userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         btnBack = findViewById(R.id.btnBack);
@@ -84,27 +83,17 @@ public class Task4Activity extends AppCompatActivity {
         s4 = findViewById(R.id.spinner4);
         s5 = findViewById(R.id.spinner5);
 
-        // First-time shuffle
-        if (!sp.contains("t4_q1")) {
-            List<String> shuffled = new ArrayList<>(emotionRegulationItems);
-            Collections.shuffle(shuffled);
-            sp.edit()
-                    .putString("t4_q1", shuffled.get(0))
-                    .putString("t4_q2", shuffled.get(1))
-                    .putString("t4_q3", shuffled.get(2))
-                    .putString("t4_q4", shuffled.get(3))
-                    .putString("t4_q5", shuffled.get(4))
-                    .apply();
-        }
+        // SHUFFLE new questions every time
+        List<String> shuffled = new ArrayList<>(emotionRegulationItems);
+        Collections.shuffle(shuffled);
 
-        // Set questions
-        q1.setText(sp.getString("t4_q1", ""));
-        q2.setText(sp.getString("t4_q2", ""));
-        q3.setText(sp.getString("t4_q3", ""));
-        q4.setText(sp.getString("t4_q4", ""));
-        q5.setText(sp.getString("t4_q5", ""));
+        q1.setText(shuffled.get(0));
+        q2.setText(shuffled.get(1));
+        q3.setText(shuffled.get(2));
+        q4.setText(shuffled.get(3));
+        q5.setText(shuffled.get(4));
 
-        // 🔥 FORCE BLACK TEXT FOR ALL QUESTIONS
+        // Set black text
         int black = getResources().getColor(android.R.color.black);
         q1.setTextColor(black);
         q2.setTextColor(black);
@@ -112,6 +101,7 @@ public class Task4Activity extends AppCompatActivity {
         q4.setTextColor(black);
         q5.setTextColor(black);
 
+        // Adapter for spinners
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
@@ -121,18 +111,13 @@ public class Task4Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
-        s1.setSelection(sp.getInt("t4_a1", 0));
-        s2.setSelection(sp.getInt("t4_a2", 0));
-        s3.setSelection(sp.getInt("t4_a3", 0));
-        s4.setSelection(sp.getInt("t4_a4", 0));
-        s5.setSelection(sp.getInt("t4_a5", 0));
-
+        // Back button
         btnBack.setOnClickListener(v -> {
-            saveSelections();
             startActivity(new Intent(Task4Activity.this, Task3Activity.class));
             finish();
         });
 
+        // Next button
         btnNext.setOnClickListener(v -> {
 
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
@@ -142,17 +127,14 @@ public class Task4Activity extends AppCompatActivity {
                 return;
             }
 
-            saveSelections();
-
-            // spinner pos (1..7) -> value (0..6)
             int v1 = s1.getSelectedItemPosition() - 1;
             int v2 = s2.getSelectedItemPosition() - 1;
             int v3 = s3.getSelectedItemPosition() - 1;
             int v4 = s4.getSelectedItemPosition() - 1;
             int v5 = s5.getSelectedItemPosition() - 1;
 
-            int raw = v1 + v2 + v3 + v4 + v5; // 0..30
-            float avg = raw / 5f; // 0..6
+            int raw = v1 + v2 + v3 + v4 + v5;
+            float avg = raw / 5f;
 
             int percent = (int)((avg / 6f) * 100f);
 
@@ -163,24 +145,13 @@ public class Task4Activity extends AppCompatActivity {
             finish();
         });
 
+        // System back
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                saveSelections();
+            @Override public void handleOnBackPressed() {
                 startActivity(new Intent(Task4Activity.this, Task3Activity.class));
                 finish();
             }
         });
-    }
-
-    private void saveSelections() {
-        sp.edit()
-                .putInt("t4_a1", s1.getSelectedItemPosition())
-                .putInt("t4_a2", s2.getSelectedItemPosition())
-                .putInt("t4_a3", s3.getSelectedItemPosition())
-                .putInt("t4_a4", s4.getSelectedItemPosition())
-                .putInt("t4_a5", s5.getSelectedItemPosition())
-                .apply();
     }
 
     private void sendErqInitial(String email, int percent) {
@@ -188,15 +159,13 @@ public class Task4Activity extends AppCompatActivity {
         ScoreRequest req = new ScoreRequest(email, percent);
 
         api.saveErqInitial(req).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(Task4Activity.this, "ERQ initial save failed: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            @Override public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(Task4Activity.this, "ERQ initial save error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

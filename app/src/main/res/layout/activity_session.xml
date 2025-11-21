@@ -12,45 +12,39 @@
         android:background="@null"/>
 
     <TextView
-        android:id="@+id/tvVideoTitle"
+        android:id="@+id/tvAudioTitle"
         android:layout_below="@id/backButton"
         android:layout_marginTop="12dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Video Title"
+        android:text="Audio Title"
         android:textSize="20sp"
         android:textStyle="bold"/>
 
     <TextView
-        android:id="@+id/tvVideoDesc"
-        android:layout_below="@id/tvVideoTitle"
+        android:id="@+id/tvAudioDesc"
+        android:layout_below="@id/tvAudioTitle"
         android:layout_marginTop="6dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Video description"/>
-
-    <VideoView
-        android:id="@+id/videoView"
-        android:layout_below="@id/tvVideoDesc"
-        android:layout_marginTop="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="240dp"/>
-
-    <SeekBar
-        android:id="@+id/progressBar"
-        android:layout_below="@id/videoView"
-        android:layout_marginTop="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:text="Audio description"/>
 
     <ImageButton
         android:id="@+id/playPauseButton"
-        android:layout_below="@id/progressBar"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginTop="12dp"
+        android:layout_below="@id/tvAudioDesc"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:src="@android:drawable/ic_media_play"
-        android:layout_centerHorizontal="true"/>
+        android:background="@null"/>
+
+    <SeekBar
+        android:id="@+id/progressBar"
+        android:layout_below="@id/playPauseButton"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <Button
         android:id="@+id/btnFinishSave"

@@ -1,5 +1,6 @@
 package com.example.cognisync.del;
 
+import com.example.cognisync.model.AudioResponse;
 import com.example.cognisync.model.LoginRequest;
 import com.example.cognisync.model.Patient;
 import com.example.cognisync.model.ScoreRequest;
@@ -38,7 +39,7 @@ public interface ApiService {
     @POST("user/save-phlms-initial/")
     Call<Void> savePhlmsInitial(@Body ScoreRequest body);
 
-    // PRE questionnaire endpoints (Option A)
+    // PRE questionnaire endpoints
     @POST("user/save-maas-pre/")
     Call<Void> saveMaasPre(@Body ScoreRequest body);
     @POST("user/save-panas-pre/")
@@ -69,4 +70,8 @@ public interface ApiService {
     // Fetch history
     @GET("user/scores/{email}/")
     Call<List<ScoreResponse>> getScoreHistory(@Path("email") String email, @Query("domain") String domain);
+
+    // NEW: fetch audios by module (module param optional)
+    @GET("user/audios/")
+    Call<List<AudioResponse>> getAudios(@Query("module") String module);
 }

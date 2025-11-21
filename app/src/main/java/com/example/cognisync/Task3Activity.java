@@ -32,7 +32,7 @@ public class Task3Activity extends AppCompatActivity {
     private AppCompatButton btnNext;
     private TextView q1, q2, q3, q4, q5;
     private Spinner s1, s2, s3, s4, s5;
-    private SharedPreferences sp;
+
     private SharedPreferences userSp;
 
     private final List<String> stressItems = Arrays.asList(
@@ -62,7 +62,6 @@ public class Task3Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task3);
 
-        sp = getSharedPreferences("Task3Answers", MODE_PRIVATE);
         userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         btnBack = findViewById(R.id.btnBack);
@@ -80,28 +79,17 @@ public class Task3Activity extends AppCompatActivity {
         s4 = findViewById(R.id.spinner4);
         s5 = findViewById(R.id.spinner5);
 
-        // CREATE QUESTIONS IF FIRST TIME
-        if (!sp.contains("t3_q1")) {
-            List<String> shuffled = new ArrayList<>(stressItems);
-            Collections.shuffle(shuffled);
+        // SHUFFLE QUESTIONS fresh
+        List<String> shuffled = new ArrayList<>(stressItems);
+        Collections.shuffle(shuffled);
 
-            sp.edit()
-                    .putString("t3_q1", shuffled.get(0))
-                    .putString("t3_q2", shuffled.get(1))
-                    .putString("t3_q3", shuffled.get(2))
-                    .putString("t3_q4", shuffled.get(3))
-                    .putString("t3_q5", shuffled.get(4))
-                    .apply();
-        }
+        q1.setText(shuffled.get(0));
+        q2.setText(shuffled.get(1));
+        q3.setText(shuffled.get(2));
+        q4.setText(shuffled.get(3));
+        q5.setText(shuffled.get(4));
 
-        // SET QUESTIONS
-        q1.setText(sp.getString("t3_q1", ""));
-        q2.setText(sp.getString("t3_q2", ""));
-        q3.setText(sp.getString("t3_q3", ""));
-        q4.setText(sp.getString("t3_q4", ""));
-        q5.setText(sp.getString("t3_q5", ""));
-
-        // 🔥 FORCE ALL QUESTION TEXTS TO BLACK
+        // Force black color
         int black = getResources().getColor(android.R.color.black);
         q1.setTextColor(black);
         q2.setTextColor(black);
@@ -109,7 +97,7 @@ public class Task3Activity extends AppCompatActivity {
         q4.setTextColor(black);
         q5.setTextColor(black);
 
-        // SPINNER ADAPTER
+        // Adapter for spinners
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_selected_item, stressOptions);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
@@ -119,24 +107,15 @@ public class Task3Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
-        // RESTORE SPINNER POSITIONS
-        s1.setSelection(sp.getInt("t3_a1", 0));
-        s2.setSelection(sp.getInt("t3_a2", 0));
-        s3.setSelection(sp.getInt("t3_a3", 0));
-        s4.setSelection(sp.getInt("t3_a4", 0));
-        s5.setSelection(sp.getInt("t3_a5", 0));
-
-        // BACK BUTTON
+        // Back button
         btnBack.setOnClickListener(v -> {
-            saveSelections();
             startActivity(new Intent(Task3Activity.this, Task2Activity.class));
             finish();
         });
 
-        // NEXT BUTTON
+        // Next button
         btnNext.setOnClickListener(v -> {
 
-            // VALIDATION
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
                     s3.getSelectedItemPosition()==0 || s4.getSelectedItemPosition()==0 ||
                     s5.getSelectedItemPosition()==0) {
@@ -144,9 +123,7 @@ public class Task3Activity extends AppCompatActivity {
                 return;
             }
 
-            saveSelections();
-
-            // CONVERT spinner pos -> values 0..3
+            // Convert spinner pos -> values 0..3
             int v1 = s1.getSelectedItemPosition() - 1;
             int v2 = s2.getSelectedItemPosition() - 1;
             int v3 = s3.getSelectedItemPosition() - 1;
@@ -164,25 +141,14 @@ public class Task3Activity extends AppCompatActivity {
             finish();
         });
 
-        // SYSTEM BACK OVERRIDE
+        // System back override
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                saveSelections();
                 startActivity(new Intent(Task3Activity.this, Task2Activity.class));
                 finish();
             }
         });
-    }
-
-    private void saveSelections() {
-        sp.edit()
-                .putInt("t3_a1", s1.getSelectedItemPosition())
-                .putInt("t3_a2", s2.getSelectedItemPosition())
-                .putInt("t3_a3", s3.getSelectedItemPosition())
-                .putInt("t3_a4", s4.getSelectedItemPosition())
-                .putInt("t3_a5", s5.getSelectedItemPosition())
-                .apply();
     }
 
     private void sendDassInitial(String email, int percent) {

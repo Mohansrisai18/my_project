@@ -32,7 +32,7 @@ public class Task2Activity extends AppCompatActivity {
     AppCompatButton btnNext;
     Spinner s1, s2, s3, s4, s5;
     TextView q1, q2, q3, q4, q5;
-    SharedPreferences sp;
+
     SharedPreferences userSp;
 
     List<String> panasItems = Arrays.asList(
@@ -56,7 +56,6 @@ public class Task2Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task2);
 
-        sp = getSharedPreferences("Task2Answers", MODE_PRIVATE);
         userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         btnBack = findViewById(R.id.btnBack);
@@ -74,27 +73,17 @@ public class Task2Activity extends AppCompatActivity {
         q4 = findViewById(R.id.q4);
         q5 = findViewById(R.id.q5);
 
-        // SHUFFLING QUESTIONS
-        if (!sp.contains("t2_q1")) {
-            List<String> shuffled = new ArrayList<>(panasItems);
-            Collections.shuffle(shuffled);
-            sp.edit()
-                    .putString("t2_q1", "I feel " + shuffled.get(0))
-                    .putString("t2_q2", "I feel " + shuffled.get(1))
-                    .putString("t2_q3", "I feel " + shuffled.get(2))
-                    .putString("t2_q4", "I feel " + shuffled.get(3))
-                    .putString("t2_q5", "I feel " + shuffled.get(4))
-                    .apply();
-        }
+        // SHUFFLE QUESTIONS FRESH EVERY TIME
+        List<String> shuffled = new ArrayList<>(panasItems);
+        Collections.shuffle(shuffled);
 
-        // SETTING TEXT
-        q1.setText(sp.getString("t2_q1", ""));
-        q2.setText(sp.getString("t2_q2", ""));
-        q3.setText(sp.getString("t2_q3", ""));
-        q4.setText(sp.getString("t2_q4", ""));
-        q5.setText(sp.getString("t2_q5", ""));
+        q1.setText("I feel " + shuffled.get(0));
+        q2.setText("I feel " + shuffled.get(1));
+        q3.setText("I feel " + shuffled.get(2));
+        q4.setText("I feel " + shuffled.get(3));
+        q5.setText("I feel " + shuffled.get(4));
 
-        // 🔥 FORCE ALL QUESTION TEXTS TO BLACK
+        // Force black color
         int black = getResources().getColor(android.R.color.black);
         q1.setTextColor(black);
         q2.setTextColor(black);
@@ -112,13 +101,6 @@ public class Task2Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
-        // RESTORE UI STATE
-        s1.setSelection(sp.getInt("t2_a1", 0));
-        s2.setSelection(sp.getInt("t2_a2", 0));
-        s3.setSelection(sp.getInt("t2_a3", 0));
-        s4.setSelection(sp.getInt("t2_a4", 0));
-        s5.setSelection(sp.getInt("t2_a5", 0));
-
         // BACK BUTTON
         btnBack.setOnClickListener(v -> {
             startActivity(new Intent(Task2Activity.this, Task1Activity.class));
@@ -128,16 +110,6 @@ public class Task2Activity extends AppCompatActivity {
         // NEXT BUTTON
         btnNext.setOnClickListener(v -> {
 
-            // SAVE SPINNER STATES
-            sp.edit()
-                    .putInt("t2_a1", s1.getSelectedItemPosition())
-                    .putInt("t2_a2", s2.getSelectedItemPosition())
-                    .putInt("t2_a3", s3.getSelectedItemPosition())
-                    .putInt("t2_a4", s4.getSelectedItemPosition())
-                    .putInt("t2_a5", s5.getSelectedItemPosition())
-                    .apply();
-
-            // VALIDATION
             if (s1.getSelectedItemPosition()==0 || s2.getSelectedItemPosition()==0 ||
                     s3.getSelectedItemPosition()==0 || s4.getSelectedItemPosition()==0 ||
                     s5.getSelectedItemPosition()==0) {
@@ -153,8 +125,8 @@ public class Task2Activity extends AppCompatActivity {
             int v5 = s5.getSelectedItemPosition();
 
             // PA/NA CALCULATION
-            int PA = v1 + v2 + v3; // 3–15
-            int NA = v4 + v5;      // 2–10
+            int PA = v1 + v2 + v3;
+            int NA = v4 + v5;
 
             int paPercent = (int)(((PA - 3f) / 12f) * 100f);
             int naPercent = (int)(((NA - 2f) / 8f) * 100f);

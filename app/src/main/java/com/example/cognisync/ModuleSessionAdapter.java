@@ -17,12 +17,17 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
         void onSessionClick(ModuleSessionItem item);
     }
 
-    private final List<ModuleSessionItem> list;
+    private List<ModuleSessionItem> list;
     private final OnSessionClickListener listener;
 
     public ModuleSessionAdapter(List<ModuleSessionItem> list, OnSessionClickListener listener) {
         this.list = list;
         this.listener = listener;
+    }
+
+    public void updateList(List<ModuleSessionItem> newList) {
+        this.list = newList;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -45,7 +50,7 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return list == null ? 0 : list.size();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

@@ -32,7 +32,6 @@ public class Task1Activity extends AppCompatActivity {
     private AppCompatButton btnNext;
     private Spinner s1, s2, s3, s4, s5;
     private TextView q1, q2, q3, q4, q5;
-    private SharedPreferences sp;
     private SharedPreferences userSp;
 
     @Override
@@ -42,7 +41,6 @@ public class Task1Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task1);
 
-        sp = getSharedPreferences("Task1Answers", MODE_PRIVATE);
         userSp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         btnBack = findViewById(R.id.btnBack);
@@ -74,24 +72,14 @@ public class Task1Activity extends AppCompatActivity {
         List<String> list = new ArrayList<>(Arrays.asList(questions));
         Collections.shuffle(list);
 
-        if (!sp.contains("t1_q1")) {
-            sp.edit()
-                    .putString("t1_q1", list.get(0))
-                    .putString("t1_q2", list.get(1))
-                    .putString("t1_q3", list.get(2))
-                    .putString("t1_q4", list.get(3))
-                    .putString("t1_q5", list.get(4))
-                    .apply();
-        }
+        // SET SHUFFLED TEXT
+        q1.setText(list.get(0));
+        q2.setText(list.get(1));
+        q3.setText(list.get(2));
+        q4.setText(list.get(3));
+        q5.setText(list.get(4));
 
-        // SET TEXT
-        q1.setText(sp.getString("t1_q1", ""));
-        q2.setText(sp.getString("t1_q2", ""));
-        q3.setText(sp.getString("t1_q3", ""));
-        q4.setText(sp.getString("t1_q4", ""));
-        q5.setText(sp.getString("t1_q5", ""));
-
-        // 🔥 FORCE TEXT COLOR TO BLACK (IMPORTANT FIX)
+        // SET TEXT COLOR BLACK
         int black = getResources().getColor(android.R.color.black);
         q1.setTextColor(black);
         q2.setTextColor(black);
@@ -119,13 +107,6 @@ public class Task1Activity extends AppCompatActivity {
         s4.setAdapter(adapter);
         s5.setAdapter(adapter);
 
-        // RESTORE SAVED UI SELECTIONS
-        s1.setSelection(sp.getInt("t1_a1", 0));
-        s2.setSelection(sp.getInt("t1_a2", 0));
-        s3.setSelection(sp.getInt("t1_a3", 0));
-        s4.setSelection(sp.getInt("t1_a4", 0));
-        s5.setSelection(sp.getInt("t1_a5", 0));
-
         // BACK BUTTON
         btnBack.setOnClickListener(v -> {
             startActivity(new Intent(Task1Activity.this, SignupActivity.class));
@@ -150,19 +131,10 @@ public class Task1Activity extends AppCompatActivity {
                 }
             }
 
-            sp.edit()
-                    .putInt("t1_a1", pos[0])
-                    .putInt("t1_a2", pos[1])
-                    .putInt("t1_a3", pos[2])
-                    .putInt("t1_a4", pos[3])
-                    .putInt("t1_a5", pos[4])
-                    .apply();
-
             // CALCULATE MAAS
             int sumReversed = 0;
             for (int p : pos) {
-                int reversed = 7 - p;
-                sumReversed += reversed;
+                sumReversed += (7 - p);
             }
 
             float avg = sumReversed / 5f;

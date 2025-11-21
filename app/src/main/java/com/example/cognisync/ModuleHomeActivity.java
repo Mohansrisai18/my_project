@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
+import com.example.cognisync.model.AudioResponse;
 import com.example.cognisync.model.ScoreResponse;
 
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ public class ModuleHomeActivity extends AppCompatActivity {
 
     private String moduleType;
     private ApiService api;
+
+    private List<ModuleSessionItem> audioList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,13 +55,65 @@ public class ModuleHomeActivity extends AppCompatActivity {
 
         backButton.setOnClickListener(v -> finish());
 
-        setupRecycler();
+        loadAudiosFromServer();   // 🔥 load audio list dynamically
         checkPreStatusFromServer();
         checkPostStatusFromServer();
 
-        // Always allow re-attempt post
         btnStartPost.setOnClickListener(v -> openPostTask());
     }
+
+    // ---------------------- LOAD AUDIOS ----------------------
+    private void loadAudiosFromServer() {
+
+        Call<List<AudioResponse>> call = api.getAudios(moduleType);
+
+        call.enqueue(new Callback<List<AudioResponse>>() {
+            @Override
+            public void onResponse(Call<List<AudioResponse>> call, Response<List<AudioResponse>> response) {
+                if (!response.isSuccessful()) {
+                    Toast.makeText(ModuleHomeActivity.this, "Error loading audios", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                audioList.clear();
+
+                for (AudioResponse a : response.body()) {
+                    audioList.add(new ModuleSessionItem(
+                            a.getTitle(),
+                            "Mindfulness Audio Session",
+                            a.getUrl()
+                    ));
+                }
+
+                setupRecycler(audioList);
+            }
+
+            @Override
+            public void onFailure(Call<List<AudioResponse>> call, Throwable t) {
+                Toast.makeText(ModuleHomeActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+    // ---------------------- RECYCLER ----------------------
+    private void setupRecycler(List<ModuleSessionItem> audioItems) {
+        sessionRecyclerView = findViewById(R.id.sessionRecyclerView);
+        sessionRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        ModuleSessionAdapter adapter = new ModuleSessionAdapter(
+                audioItems, session -> {
+
+            Intent i = new Intent(this, SessionActivity.class);
+            i.putExtra("audio_url", session.getAudioUrl());
+            i.putExtra("video_title", session.getTitle());
+            i.putExtra("video_desc", session.getDescription());
+            startActivity(i);
+        });
+
+        sessionRecyclerView.setAdapter(adapter);
+    }
+
 
     // ---------------------- CHECK PRE STATUS ----------------------
     private void checkPreStatusFromServer() {
@@ -71,7 +126,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
                 if (!response.isSuccessful()) {
-                    Toast.makeText(ModuleHomeActivity.this, "Error loading pre status", Toast.LENGTH_SHORT).show();
                     applyPreUI(false);
                     return;
                 }
@@ -89,15 +143,12 @@ public class ModuleHomeActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {
-                Toast.makeText(ModuleHomeActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 applyPreUI(false);
             }
         });
     }
 
-    // Allow re-attempt always
     private void applyPreUI(boolean preDone) {
-
         if (preDone) {
             btnStartPre.setText("Re-Attempt Pre-Assessment");
         } else {
@@ -159,7 +210,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
         });
     }
 
-    // Allow reattempt always
     private void applyPostUI(boolean postDone) {
         if (postDone) {
             btnStartPost.setText("Re-Attempt Post-Assessment");
@@ -182,29 +232,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
         return "srt";
     }
 
-    // ---------------------- RECYCLER ----------------------
-    private void setupRecycler() {
-        sessionRecyclerView = findViewById(R.id.sessionRecyclerView);
-        sessionRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        List<ModuleSessionItem> sessions = new ArrayList<>();
-        sessions.add(new ModuleSessionItem("Video 1", "Introduction session"));
-        sessions.add(new ModuleSessionItem("Video 2", "Guided practice"));
-        sessions.add(new ModuleSessionItem("Video 3", "Deep training"));
-        sessions.add(new ModuleSessionItem("Video 4", "Advanced practice"));
-        sessions.add(new ModuleSessionItem("Video 5", "Final session"));
-
-        ModuleSessionAdapter adapter = new ModuleSessionAdapter(
-                sessions, session -> {
-            Intent i = new Intent(this, SessionActivity.class);
-            i.putExtra("module_type", moduleType);
-            i.putExtra("video_title", session.getTitle());
-            i.putExtra("video_desc", session.getDescription());
-            startActivity(i);
-        });
-
-        sessionRecyclerView.setAdapter(adapter);
-    }
 
     // ---------------------- POST TASK ----------------------
     private void openPostTask() {

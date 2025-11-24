@@ -55,17 +55,34 @@ public class ModuleHomeActivity extends AppCompatActivity {
 
         backButton.setOnClickListener(v -> finish());
 
-        loadAudiosFromServer();   // 🔥 load audio list dynamically
+        loadAudiosFromServer();
         checkPreStatusFromServer();
         checkPostStatusFromServer();
 
         btnStartPost.setOnClickListener(v -> openPostTask());
     }
 
+    // ------------------------------------------------------------
+    // Convert Android module → backend module code (m-1, m-2...)
+    // ------------------------------------------------------------
+    private String toBackendModule(String t) {
+        switch (t) {
+            case "focused_attention": return "m-1";
+            case "working_memory": return "m-2";
+            case "emotional_regulation": return "m-3";
+            case "present_moment":
+            case "present_moment_awareness": return "m-4";
+            case "cognitive_flexibility": return "m-5";
+        }
+        return "m-1";
+    }
+
     // ---------------------- LOAD AUDIOS ----------------------
     private void loadAudiosFromServer() {
 
-        Call<List<AudioResponse>> call = api.getAudios(moduleType);
+        String backendModule = toBackendModule(moduleType);
+
+        Call<List<AudioResponse>> call = api.getAudios(backendModule);
 
         call.enqueue(new Callback<List<AudioResponse>>() {
             @Override
@@ -95,7 +112,6 @@ public class ModuleHomeActivity extends AppCompatActivity {
         });
     }
 
-
     // ---------------------- RECYCLER ----------------------
     private void setupRecycler(List<ModuleSessionItem> audioItems) {
         sessionRecyclerView = findViewById(R.id.sessionRecyclerView);
@@ -106,16 +122,15 @@ public class ModuleHomeActivity extends AppCompatActivity {
 
             Intent i = new Intent(this, SessionActivity.class);
             i.putExtra("audio_url", session.getAudioUrl());
-            i.putExtra("video_title", session.getTitle());
-            i.putExtra("video_desc", session.getDescription());
+            i.putExtra("audio_title", session.getTitle());
+            i.putExtra("audio_desc", session.getDescription());
             startActivity(i);
         });
 
         sessionRecyclerView.setAdapter(adapter);
     }
 
-
-    // ---------------------- CHECK PRE STATUS ----------------------
+    // ---------------------- PRE STATUS ----------------------
     private void checkPreStatusFromServer() {
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "");
         String domain = getPreDomain();
@@ -149,11 +164,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
     }
 
     private void applyPreUI(boolean preDone) {
-        if (preDone) {
-            btnStartPre.setText("Re-Attempt Pre-Assessment");
-        } else {
-            btnStartPre.setText("Start Pre-Assessment");
-        }
+        btnStartPre.setText(preDone ? "Re-Attempt Pre-Assessment" : "Start Pre-Assessment");
 
         btnStartPre.setEnabled(true);
         btnStartPre.setOnClickListener(v -> {
@@ -175,7 +186,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
         return "maas";
     }
 
-    // ---------------------- CHECK POST STATUS ----------------------
+    // ---------------------- POST STATUS ----------------------
     private void checkPostStatusFromServer() {
 
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "");
@@ -211,12 +222,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
     }
 
     private void applyPostUI(boolean postDone) {
-        if (postDone) {
-            btnStartPost.setText("Re-Attempt Post-Assessment");
-        } else {
-            btnStartPost.setText("Start Post-Assessment");
-        }
-
+        btnStartPost.setText(postDone ? "Re-Attempt Post-Assessment" : "Start Post-Assessment");
         btnStartPost.setEnabled(true);
     }
 
@@ -232,8 +238,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
         return "srt";
     }
 
-
-    // ---------------------- POST TASK ----------------------
+    // ---------------------- OPEN TASK ----------------------
     private void openPostTask() {
         Intent intent;
 

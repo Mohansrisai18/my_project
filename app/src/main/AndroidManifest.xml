@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -16,127 +17,47 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
 
-
-        <!-- Main Activity (Welcome Screen) -->
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            tools:ignore="MissingClass">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Authentication flow -->
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false" />
-        <activity
-            android:name=".SignupActivity"
-            android:exported="false" />
-
-        <!-- Task activities -->
-        <activity
-            android:name=".Task1Activity"
-            android:exported="false" />
-        <activity
-            android:name=".HomeActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Task2Activity"
-            android:exported="false" />
-        <activity
-            android:name=".Task3Activity"
-            android:exported="false" />
-
-        <!-- Intro/tutorial activities -->
-        <activity
-            android:name=".Intro1Activity"
-            android:exported="false" />
-        <activity
-            android:name=".Intro2Activity"
-            android:exported="false" />
-        <activity
-            android:name=".Intro3Activity"
-            android:exported="false" />
-
-
-
-        <!-- Additional Activities -->
-        <activity
-            android:name=".FeedbackActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LanguageActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".UpdateInfoActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ResetAccountActivity"
-            android:exported="false" />
-
-
-        <activity
-            android:name=".ProgressDashboardActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".Task5Activity"
-            android:exported="false" />
-
-
-        <activity
-            android:name=".Task4Activity"
-            android:exported="false" />
-
-        <activity
-            android:name=".NBackActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".SRTActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".StroopTaskActivity"
-            android:exported="false" />
-        <activity
-            android:name=".TaskSwitchActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".SARTActivity"
-            android:exported="false" />
-
-
+        <activity android:name=".LoginActivity" android:exported="false" />
+        <activity android:name=".SignupActivity" android:exported="false" />
+        <activity android:name=".Task1Activity" android:exported="false" />
+        <activity android:name=".Task2Activity" android:exported="false" />
+        <activity android:name=".Task3Activity" android:exported="false" />
+        <activity android:name=".Task4Activity" android:exported="false" />
+        <activity android:name=".Task5Activity" android:exported="false" />
+        <activity android:name=".HomeActivity" android:exported="false" />
+        <activity android:name=".Intro1Activity" android:exported="false" />
+        <activity android:name=".Intro2Activity" android:exported="false" />
+        <activity android:name=".Intro3Activity" android:exported="false" />
+        <activity android:name=".FeedbackActivity" android:exported="false" />
+        <activity android:name=".LanguageActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".UpdateInfoActivity" android:exported="false" />
+        <activity android:name=".ResetAccountActivity" android:exported="false" />
+        <activity android:name=".ProgressDashboardActivity" android:exported="false" />
+        <activity android:name=".ModuleIntroActivity" android:exported="false" />
+        <activity android:name=".ModuleHomeActivity" android:exported="false" />
+        <activity android:name=".SessionActivity" android:exported="false" />
         <activity
             android:name=".PreAssessmentActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity android:name=".NBackActivity" android:exported="false" />
+        <activity android:name=".SRTActivity" android:exported="false" />
+        <activity android:name=".StroopTaskActivity" android:exported="false" />
+        <activity android:name=".TaskSwitchActivity" android:exported="false" />
+        <activity android:name=".SARTActivity" android:exported="false" />
+        <activity android:name=".SplashScreenActivity" android:exported="false" />
 
-        />
-
-        <activity
-            android:name=".SplashScreenActivity"
-            android:exported="false" />
-
-
-        <activity
-            android:name=".SessionActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ModuleIntroActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ModuleHomeActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

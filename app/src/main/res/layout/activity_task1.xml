@@ -170,6 +170,7 @@
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNext"
             android:text="NEXT"
+            android:textColor="#000000"
             android:textStyle="bold"
             android:textSize="20sp"
             android:background="@drawable/btn_bg"

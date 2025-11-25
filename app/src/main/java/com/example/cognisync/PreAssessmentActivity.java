@@ -55,7 +55,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
     }
 
     //==============================================================
-    // 1️⃣ LOAD QUESTIONS (BIG POOL + RANDOM MIN 5)
+    // 1️⃣ LOAD QUESTIONS (POOL + RANDOM)
     //==============================================================
     private void loadQuestions(String type) {
         switch (type) {
@@ -97,7 +97,6 @@ public class PreAssessmentActivity extends AppCompatActivity {
         for (int i = 0; i < questions.size(); i++) {
             QuestionItem q = questions.get(i);
 
-            // parent card
             LinearLayout box = new LinearLayout(this);
             box.setOrientation(LinearLayout.VERTICAL);
             box.setBackgroundResource(R.drawable.rounded_grey_bg);
@@ -111,13 +110,11 @@ public class PreAssessmentActivity extends AppCompatActivity {
             params.setMargins(0, 20, 0, 0);
             box.setLayoutParams(params);
 
-            // question text
             TextView t = new TextView(this);
             t.setText((i + 1) + ". " + q.question);
             t.setTextSize(18);
             box.addView(t);
 
-            // spinner
             Spinner sp = new Spinner(this);
             ArrayAdapter<String> adapter = new ArrayAdapter<>(
                     this,
@@ -196,59 +193,87 @@ public class PreAssessmentActivity extends AppCompatActivity {
     }
 
     //==============================================================
-    // 5️⃣ ----- NORMALIZED SCORE LOGIC -----
+    // 5️⃣ ----- NORMALIZED SCORE LOGIC (0–100 for ALL) -----
     //==============================================================
     private float computeScore(String type) {
 
         switch (type) {
 
-            // MAAS 1→6 higher=better
-            case "focused_attention":
+            // MAAS 1→6 higher=better (mindfulness)
+            case "focused_attention": {
                 float maasSum = 0;
                 for (QuestionItem q : questions) maasSum += q.value();
-                float maasAvg = maasSum / questions.size();
-                return normalize(maasAvg, 1f, 6f);
+                float maasAvg = maasSum / questions.size();          // in [1,6]
+                return normalizeLinear(maasAvg, 1f, 6f);             // → [0,100]
+            }
 
-            // PANAS diff [-4 → +4]
-            case "emotional_regulation":
-                float pos = 0, neg = 0; int pc=0, nc=0;
+            // PANAS: positive − negative in approx [-4, +4]
+            // map diff linearly: -4 → 0, 0 → 50, 4 → 100
+            case "emotional_regulation": {
+                float pos = 0, neg = 0;
+                int pc = 0, nc = 0;
+
                 for (QuestionItem q : questions) {
                     if (q.positive) { pos += q.value(); pc++; }
-                    else { neg += q.value(); nc++; }
+                    else            { neg += q.value(); nc++; }
                 }
-                float diff = (pos/pc) - (neg/nc);
-                return normalize(diff, -4f, 4f);
 
-            // DASS lower=better convert to positive % wellness
-            case "cognitive_flexibility":
+                if (pc == 0 || nc == 0) {
+                    // fallback neutral
+                    return 50f;
+                }
+
+                float posAvg = pos / pc;
+                float negAvg = neg / nc;
+                float diff = posAvg - negAvg;           // ~[-4,4]
+                return normalizeLinear(diff, -4f, 4f);  // → [0,100]
+            }
+
+            // DASS lower=better; convert to "wellness" %
+            case "cognitive_flexibility": {
                 float dSum = 0;
                 for (QuestionItem q : questions) dSum += q.value();
-                float maxD = questions.size() * 3f;
-                float stressPct = (dSum/maxD) * 100f;
-                return 100f - stressPct;
+                float maxD = questions.size() * 3f;     // each item 0–3
+                if (maxD <= 0f) return 0f;
+                float stressPct = (dSum / maxD) * 100f; // 0–100 stress
+                float wellness = 100f - stressPct;      // 100 good, 0 bad
+                return clamp100(wellness);
+            }
 
-            // CFQ same idea: more mistakes = worse
-            case "working_memory":
+            // CFQ more mistakes = worse, scale to 0–100 and invert
+            case "working_memory": {
                 float cfqSum = 0;
                 for (QuestionItem q : questions) cfqSum += q.value();
-                float min = questions.size()*1f;
-                float max = questions.size()*5f;
-                float norm = (cfqSum-min)/(max-min) * 100f;
-                return 100f - norm;
+                float min = questions.size() * 1f;      // all "never"
+                float max = questions.size() * 5f;      // all "always"
+                if (max <= min) return 0f;
+                float raw = (cfqSum - min) / (max - min) * 100f; // 0–100 bad
+                float wmScore = 100f - raw;             // higher = better
+                return clamp100(wmScore);
+            }
 
             // PHLMS 1→5 high=better
             case "present_moment":
-            case "present_moment_awareness":
+            case "present_moment_awareness": {
                 float total = 0;
-                for (QuestionItem q:questions) total += q.value();
-                float avg = total/questions.size();
-                return normalize(avg,1f,5f);
+                for (QuestionItem q: questions) total += q.value();
+                float avg = total / questions.size();        // [1,5]
+                return normalizeLinear(avg, 1f, 5f);         // → [0,100]
+            }
         }
         return 0;
     }
 
-    private float normalize(float v, float min, float max) {
-        return Math.max(0f, Math.min(100f, (v-min)/(max-min) * 100f));
+    private float normalizeLinear(float v, float min, float max) {
+        if (max <= min) return 0f;
+        float norm = (v - min) / (max - min) * 100f;
+        return clamp100(norm);
+    }
+
+    private float clamp100(float v) {
+        if (v < 0f) return 0f;
+        if (v > 100f) return 100f;
+        return v;
     }
 
     //==============================================================
@@ -280,7 +305,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
     }
 
     //==============================================================
-    // 7️⃣ QUESTION POOLS — EXPANDED (≥5)
+    // 7️⃣ QUESTION POOLS — same as before (no logic lost)
     //==============================================================
     private List<QuestionItem> getMAAS(){
         return Arrays.asList(

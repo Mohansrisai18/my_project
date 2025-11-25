@@ -1,6 +1,5 @@
 package com.example.cognisync;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -28,13 +27,30 @@ public class StroopTaskActivity extends AppCompatActivity {
     private Button btnRed, btnBlue, btnGreen;
     private ImageButton backButton;
 
-    private final String[] words = {"ANGER","CALM","JOY","FEAR","LOVE"};
-    private final int[] colors = {0xFFF44336, 0xFF2196F3, 0xFF4CAF50};
+    // === WORD MAPPING ===
+    // Emotional → Always RED
+    private final String[] emotionalWords = {"ANGER", "FEAR"};
+
+    // Neutral words use BLUE or GREEN
+    private final String[] neutralWords = {"JOY", "LOVE", "CALM"};
+
+    // UI colors → for interference only
+    private final int[] colors = {
+            0xFFF44336, // RED
+            0xFF2196F3, // BLUE
+            0xFF4CAF50  // GREEN
+    };
 
     private final Random random = new Random();
     private final Handler handler = new Handler();
 
+    // Task flow
+    private static final int TOTAL_TRIALS = 12;
     private int trial = 0;
+
+    // Stats
+    private int correct = 0;
+    private int wrong = 0;
     private long startTime;
 
     private final List<Long> neutralTimes = new ArrayList<>();
@@ -46,6 +62,7 @@ public class StroopTaskActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stroop_task);
+
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         api = ApiClient.getClient().create(ApiService.class);
@@ -59,12 +76,25 @@ public class StroopTaskActivity extends AppCompatActivity {
 
         backButton.setOnClickListener(v -> finish());
 
+        // Player chooses the button according to the WORD category
         View.OnClickListener listener = v -> {
             long rt = System.currentTimeMillis() - startTime;
             String word = tvWord.getText().toString();
 
-            if (isEmotional(word)) emotionalTimes.add(rt);
-            else neutralTimes.add(rt);
+            int chosen;
+            if (v == btnRed) chosen = 0;
+            else if (v == btnBlue) chosen = 1;
+            else chosen = 2;
+
+            int correctColor = getCorrectColor(word);
+
+            // Accuracy
+            if (chosen == correctColor) {
+                correct++;
+                storeReaction(rt, word);
+            } else {
+                wrong++;
+            }
 
             nextTrial();
         };
@@ -76,70 +106,123 @@ public class StroopTaskActivity extends AppCompatActivity {
         nextTrial();
     }
 
+    // =========================================
+    // WORD → CORRECT BUTTON COLOR
+    // =========================================
+    private int getCorrectColor(String word) {
+        if (word.equals("ANGER") || word.equals("FEAR"))
+            return 0; // RED button
+        if (word.equals("JOY"))
+            return 2; // GREEN button
+        return 1; // CALM / LOVE → BLUE
+    }
+
+    // =========================================
+    // TRIAL FLOW
+    // =========================================
     private void nextTrial() {
-        if (trial >= 10) {
+        if (trial >= TOTAL_TRIALS) {
             showResult();
             return;
         }
 
-        String word = words[random.nextInt(words.length)];
-        int color = colors[random.nextInt(colors.length)];
+        trial++;
 
+        boolean emo = random.nextBoolean();
+        String word = emo ? emotionalWords[random.nextInt(emotionalWords.length)]
+                : neutralWords[random.nextInt(neutralWords.length)];
+
+        // UI color = random (not meaning)
+        int colorIndex = random.nextInt(colors.length);
         tvWord.setText(word);
-        tvWord.setTextColor(color);
+        tvWord.setTextColor(colors[colorIndex]);
 
         startTime = System.currentTimeMillis();
-        trial++;
     }
 
-    private boolean isEmotional(String word) {
-        return "ANGER".equals(word) || "FEAR".equals(word);
+    private void storeReaction(long rt, String word) {
+        if (word.equals("ANGER") || word.equals("FEAR"))
+            emotionalTimes.add(rt);
+        else
+            neutralTimes.add(rt);
     }
 
+    // =========================================
+    // SCORE CALCULATION
+    // =========================================
     private void showResult() {
+
+        int total = correct + wrong;
+
+        // 1️⃣ Accuracy → 70%
+        double accuracy = total == 0 ? 0 : (correct * 100.0 / total);
+
+        // 2️⃣ Speed → AVG RT → 20%
         long avgNeutral = average(neutralTimes);
         long avgEmotional = average(emotionalTimes);
+        long avgRT = (avgNeutral + avgEmotional) / 2;
+
+        double speedScore = 100 - (avgRT - 450) / 3.0;
+        speedScore = clamp(speedScore);
+
+        // 3️⃣ Interference → delta → 10%
         long delta = Math.abs(avgEmotional - avgNeutral);
+        double interferenceScore = 100 - (delta / 5.0);
+        interferenceScore = clamp(interferenceScore);
 
-        double emotionScore = 100.0 * Math.exp(-((double) delta) / 150.0);
-        emotionScore = Math.max(0, Math.min(100, emotionScore));
+        double finalScore =
+                (accuracy * 0.70)
+                        + (speedScore * 0.20)
+                        + (interferenceScore * 0.10);
 
-        String interpretation;
-        if (emotionScore >= 75) interpretation = "Excellent emotional regulation";
-        else if (emotionScore >= 40) interpretation = "Moderate emotion control";
-        else interpretation = "High emotional reactivity";
+        finalScore = clamp(finalScore);
 
         tvResult.setVisibility(View.VISIBLE);
         tvResult.setText(String.format(Locale.getDefault(),
-                "Δ Reaction Time = %d ms\nScore: %.1f /100\n%s",
-                delta, emotionScore, interpretation));
+                "Correct: %d  Wrong: %d\nΔ: %d ms\nScore: %.1f /100",
+                correct, wrong, delta, finalScore));
 
-        // 🔥 Backend only — no SharedPreferences
+        sendScore((float) finalScore);
+
+        handler.postDelayed(this::finish, 3000);
+    }
+
+    // =========================================
+    // BACKEND UPLOAD
+    // =========================================
+    private void sendScore(float score) {
+
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
                 .getString("email", "");
 
         if (email.isEmpty()) {
-            Toast.makeText(this, "Error: No user email saved!", Toast.LENGTH_LONG).show();
-        } else {
-            ScoreRequest req = new ScoreRequest(email, (float) emotionScore);
-            Call<Void> call = api.saveStroopPost(req);
-
-            ScoreUploader.uploadScore(
-                    this,
-                    email,
-                    (float) emotionScore,
-                    "Stroop post",
-                    call
-            );
+            Toast.makeText(this, "No user email saved!", Toast.LENGTH_LONG).show();
+            return;
         }
 
-        handler.postDelayed(this::finish, 2500);
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.saveStroopPost(req);
+
+        ScoreUploader.uploadScore(
+                this,
+                email,
+                score,
+                "Stroop Post",
+                call
+        );
     }
 
+    // =========================================
+    // HELPERS
+    // =========================================
     private long average(List<Long> list) {
-        if (list == null || list.isEmpty()) return 0;
+        if (list.isEmpty()) return 0;
         long sum = 0;
         for (Long v : list) sum += v;
         return sum / list.size();
+    }
+
+    private double clamp(double v) {
+        return Math.max(0, Math.min(100, v));
     }
 }

@@ -1,6 +1,5 @@
 package com.example.cognisync;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Button;
@@ -13,6 +12,9 @@ import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
 import com.example.cognisync.model.ScoreRequest;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
@@ -23,23 +25,34 @@ public class SARTActivity extends AppCompatActivity {
     private TextView tvNumber, tvInstruction, tvProgress;
     private Button btnStart;
 
-    private static final int TOTAL_TRIALS = 40;
+    private ApiService api;
+
+    // ===============================
+    // CONFIG
+    // ===============================
+    private static final int TOTAL_TRIALS = 50;
     private int currentTrial = 0;
 
-    private int commissionErrors = 0;   // tapped when should NOT tap (3)
-    private int omissionErrors = 0;     // did NOT tap when should tap
-    private int correctResponses = 0;   // correct taps
-    private long reactionTimeSum = 0;
+    // two forbidden numbers
+    private int noGo1;
+    private int noGo2;
 
-    private long lastShownTime = 0;
     private boolean canTap = false;
+    private long lastTime = 0;
 
     private final Handler handler = new Handler();
     private final Random random = new Random();
 
-    private String moduleType = "present_moment";
+    // METRICS
+    private int commissionErrors = 0; // tapped forbidden
+    private int omissionErrors = 0;   // failed to tap allowed
+    private int correctResponses = 0;
+    private long rtSum = 0;
+    private int streak = 0;
 
-    private ApiService api;
+    private List<Integer> sequence = new ArrayList<>();
+    private List<Long> reactionTimes = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,126 +63,184 @@ public class SARTActivity extends AppCompatActivity {
 
         api = ApiClient.getClient().create(ApiService.class);
 
-        Intent i = getIntent();
-        if (i != null && i.hasExtra("module_type"))
-            moduleType = i.getStringExtra("module_type");
-
         tvNumber = findViewById(R.id.tvNumber);
         tvInstruction = findViewById(R.id.tvInstruction);
         tvProgress = findViewById(R.id.tvProgress);
         btnStart = findViewById(R.id.btnStart);
 
         btnStart.setOnClickListener(v -> startTask());
-
         tvNumber.setOnClickListener(v -> handleTap());
     }
 
+    // ============================================================
+    // START TASK
+    // ============================================================
     private void startTask() {
+
         btnStart.setVisibility(Button.GONE);
 
-        tvInstruction.setText("Tap for every number EXCEPT 3!");
+        // ------------------------
+        // Generate random forbidden numbers
+        // ------------------------
+        noGo1 = random.nextInt(10);
+        do {
+            noGo2 = random.nextInt(10);
+        } while (noGo2 == noGo1);
 
-        currentTrial = 0;
+        tvInstruction.setText("Tap all numbers EXCEPT " + noGo1 + " & " + noGo2);
+
         commissionErrors = 0;
         omissionErrors = 0;
         correctResponses = 0;
-        reactionTimeSum = 0;
+        rtSum = 0;
+        currentTrial = 0;
+        streak = 0;
+        reactionTimes.clear();
 
-        runNextTrial();
+        generateSequence();
+        nextTrial();
     }
 
-    private void runNextTrial() {
+    // ============================================================
+    // GENERATE SEQUENCE
+    // (Higher % of go trials for difficulty)
+    // ============================================================
+    private void generateSequence() {
+        sequence.clear();
+
+        int noGoTarget = TOTAL_TRIALS / 5;  // 20% forbidden trials
+
+        // Insert forbidden
+        for (int i = 0; i < noGoTarget; i++) {
+            sequence.add(noGo1);
+            sequence.add(noGo2);
+        }
+
+        // Insert allowed digits
+        while (sequence.size() < TOTAL_TRIALS) {
+            int n = random.nextInt(10);
+            if (n == noGo1 || n == noGo2) continue;
+            sequence.add(n);
+        }
+
+        Collections.shuffle(sequence);
+    }
+
+    // ============================================================
+    // RUN TRIAL
+    // ============================================================
+    private void nextTrial() {
+
         if (currentTrial >= TOTAL_TRIALS) {
             endTask();
             return;
         }
 
-        int number = random.nextInt(10);
-        tvNumber.setText(String.valueOf(number));
-        tvProgress.setText("Trial " + (currentTrial + 1) + " / " + TOTAL_TRIALS);
-
-        lastShownTime = System.currentTimeMillis();
-        canTap = true;
-
+        int number = sequence.get(currentTrial);
         currentTrial++;
 
+        tvNumber.setText(String.valueOf(number));
+        tvProgress.setText("Trial " + currentTrial + " / " + TOTAL_TRIALS);
+
+        lastTime = System.currentTimeMillis();
+        canTap = true;
+
+        // HARDER: variable presentation
+        int delay = 600 + random.nextInt(500);
+
         handler.postDelayed(() -> {
+
             if (canTap) {
-                int n = Integer.parseInt(tvNumber.getText().toString());
-                if (n != 3) {
-                    omissionErrors++;  // should tap but didn't
+                if (number != noGo1 && number != noGo2) {
+                    // should tap
+                    omissionErrors++;
+                    streak = 0;
                 }
             }
-            canTap = false;
-            runNextTrial();
 
-        }, 800);
+            canTap = false;
+            nextTrial();
+        }, delay);
     }
 
+    // ============================================================
+    // TAP ACTION
+    // ============================================================
     private void handleTap() {
         if (!canTap) return;
 
-        int n = Integer.parseInt(tvNumber.getText().toString());
-        long rt = System.currentTimeMillis() - lastShownTime;
+        long rt = System.currentTimeMillis() - lastTime;
+        int number = Integer.parseInt(tvNumber.getText().toString());
 
-        if (n == 3) {
-            commissionErrors++; // tapped but SHOULD NOT
+        if (number == noGo1 || number == noGo2) {
+            commissionErrors++;
+            streak = 0;
         } else {
-            correctResponses++; // tapped correctly
-            reactionTimeSum += rt;
+            correctResponses++;
+            rtSum += rt;
+            reactionTimes.add(rt);
+            streak++;
         }
 
         canTap = false;
     }
 
+    // ============================================================
+    // END — SCORE
+    // ============================================================
     private void endTask() {
+
         tvNumber.setText("-");
-        tvInstruction.setText("Task Completed!");
         tvProgress.setText("");
+        tvInstruction.setText("Task complete ✓");
 
-        int totalResponses = commissionErrors + correctResponses;
-        double accuracy = totalResponses == 0 ? 0 : (correctResponses * 100.0 / totalResponses);
-        long avgRT = correctResponses == 0 ? 0 : reactionTimeSum / correctResponses;
+        long avgRT = (correctResponses == 0) ? 0 : rtSum / correctResponses;
 
-        // Score calculations
-        double errorScore = 100.0 - (commissionErrors * 10.0) - (omissionErrors * 5.0);
-        errorScore = Math.max(0, Math.min(100, errorScore));
+        int totalResp = correctResponses + omissionErrors + commissionErrors;
+        double accuracy = totalResp == 0 ? 0 : (correctResponses * 100.0 / totalResp);
 
-        double rtScore = 100.0 - ((avgRT - 300.0) * 0.15);
-        rtScore = Math.max(0, Math.min(100, rtScore));
+        // PENALTIES — stronger
+        double penalty = commissionErrors * 15 + omissionErrors * 4;
 
-        double awarenessScore = (0.7 * errorScore) + (0.3 * rtScore);
-        awarenessScore = Math.max(0, Math.min(100, awarenessScore));
+        // SPEED BONUS
+        double speedBonus = Math.max(0, (350 - avgRT) / 3);
 
-        String text = "Accuracy: " + String.format(Locale.getDefault(), "%.1f", accuracy) + "%\n"
-                + "Commission: " + commissionErrors + "\n"
-                + "Omissions: " + omissionErrors + "\n"
-                + "Avg RT: " + avgRT + " ms\n"
-                + "Awareness Score: " + (int) awarenessScore + "/100";
+        // STREAK BONUS
+        double streakBonus = 0;
+        if (streak >= 4) streakBonus += 5;
+        if (streak >= 7) streakBonus += 12;
+        if (streak >= 10) streakBonus += 20;
 
-        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+        double finalScore = (accuracy * 0.55) + speedBonus + streakBonus - penalty;
+        if (finalScore < 0) finalScore = 0;
+        if (finalScore > 100) finalScore = 100;
 
-        // ---------------------------
-        // 🔥 SEND SCORE TO BACKEND
-        // ---------------------------
+        Toast.makeText(this,
+                String.format(Locale.getDefault(),
+                        "NoGo: %d & %d\nCorrect: %d\nOmissions: %d\nCommissions: %d\nAvgRT: %dms\nScore: %.1f /100",
+                        noGo1, noGo2,
+                        correctResponses, omissionErrors, commissionErrors,
+                        avgRT, finalScore),
+                Toast.LENGTH_LONG).show();
+
+        sendScore((float) finalScore);
+
+        handler.postDelayed(this::finish, 3000);
+    }
+
+    // ============================================================
+    // API
+    // ============================================================
+    private void sendScore(float score) {
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
                 .getString("email", "");
 
-        if (email.isEmpty()) {
-            Toast.makeText(this, "Error: No email saved!", Toast.LENGTH_LONG).show();
-        } else {
-            ScoreRequest req = new ScoreRequest(email, (float) awarenessScore);
-            Call<Void> call = api.saveSartPost(req);
+        if (email.isEmpty()) return;
 
-            ScoreUploader.uploadScore(
-                    this,
-                    email,
-                    (float) awarenessScore,
-                    "SART Post",
-                    call
-            );
-        }
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.saveSartPost(req);
 
-        handler.postDelayed(this::finish, 2500);
+        ScoreUploader.uploadScore(this, email, score, "SART Post", call);
     }
+
 }

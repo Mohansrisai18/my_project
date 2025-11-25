@@ -1,6 +1,5 @@
 package com.example.cognisync;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Button;
@@ -28,17 +27,20 @@ public class TaskSwitchActivity extends AppCompatActivity {
     private final Random random = new Random();
     private final Handler handler = new Handler();
 
+    private static final int TOTAL_TRIALS = 14;
     private int trial = 0;
-    private static final int TOTAL_TRIALS = 12;
 
     private long startTime;
     private int prevColor = -1;
+
+    private int correctCount = 0;
+    private int wrongCount = 0;
 
     private final List<Long> sameRuleTimes = new ArrayList<>();
     private final List<Long> switchRuleTimes = new ArrayList<>();
 
     private int currentNumber;
-    private int currentColor;
+    private int currentColor; // 0 = RED, 1 = BLUE
 
     private ApiService api;
 
@@ -57,6 +59,11 @@ public class TaskSwitchActivity extends AppCompatActivity {
         btnLeft = findViewById(R.id.btnLeft);
         btnRight = findViewById(R.id.btnRight);
 
+        // keep UI text same
+        tvInstruction.setText(
+                "RED → Left(<5), Right(≥5)\nBLUE → Left(Odd), Right(Even)"
+        );
+
         btnLeft.setOnClickListener(v -> handleResponse(true));
         btnRight.setOnClickListener(v -> handleResponse(false));
 
@@ -69,8 +76,8 @@ public class TaskSwitchActivity extends AppCompatActivity {
             return;
         }
 
-        currentNumber = random.nextInt(9) + 1; // 1–9
-        currentColor = random.nextBoolean() ? 0 : 1; // Red=0, Blue=1
+        currentNumber = random.nextInt(9) + 1;
+        currentColor = random.nextBoolean() ? 0 : 1; // 0=Red, 1=Blue
 
         tvNumber.setText(String.valueOf(currentNumber));
         tvNumber.setTextColor(currentColor == 0 ? 0xFFFF0000 : 0xFF2196F3);
@@ -82,74 +89,105 @@ public class TaskSwitchActivity extends AppCompatActivity {
     private void handleResponse(boolean leftPressed) {
         long rt = System.currentTimeMillis() - startTime;
 
+        // ignore spam taps
+        if (rt < 200) return;
+
+        // store switch or same rule
         if (prevColor != -1) {
             if (prevColor == currentColor) sameRuleTimes.add(rt);
             else switchRuleTimes.add(rt);
         }
-
         prevColor = currentColor;
 
         boolean isCorrect;
 
-        if (currentColor == 0) {  // Red → small/large
+        // 🔴 RED = quantity rule
+        if (currentColor == 0) {
             isCorrect = (currentNumber < 5 && leftPressed) ||
-                    (currentNumber > 5 && !leftPressed);
-        } else {  // Blue → even/odd
-            isCorrect = ((currentNumber % 2 == 0) && leftPressed) ||
-                    ((currentNumber % 2 != 0) && !leftPressed);
+                    (currentNumber >= 5 && !leftPressed);
+        }
+        // 🔵 BLUE = parity rule
+        else {
+            isCorrect = ((currentNumber % 2 != 0) && leftPressed) ||
+                    ((currentNumber % 2 == 0) && !leftPressed);
         }
 
-        tvResult.setText(isCorrect ? "" : "Incorrect!");
+        if (isCorrect) correctCount++;
+        else wrongCount++;
 
-        handler.postDelayed(this::nextTrial, 700);
+        tvResult.setText(isCorrect ? "" : "Incorrect!");
+        handler.postDelayed(this::nextTrial, 500);
     }
 
     private void showResult() {
+
         long avgSame = average(sameRuleTimes);
         long avgSwitch = average(switchRuleTimes);
 
         long switchCost = Math.abs(avgSwitch - avgSame);
 
-        double flexibilityScore = 100.0 * Math.exp(-((double) switchCost) / 180.0);
-        flexibilityScore = Math.max(0, Math.min(100, flexibilityScore));
+        // -----------------------------
+        // 1️⃣ Accuracy (60%)
+        // -----------------------------
+        double accuracy = correctCount / (double) (correctCount + wrongCount);
+        double accuracyScore = accuracy * 60.0;
 
-        String interpretation;
-        if (flexibilityScore >= 75) interpretation = "Excellent flexibility";
-        else if (flexibilityScore >= 45) interpretation = "Average";
-        else interpretation = "Low flexibility";
+        // -----------------------------
+        // 2️⃣ Reaction Time (25%)
+        // linear (mild penalty)
+        // -----------------------------
+        double avgRT = (avgSame + avgSwitch) / 2.0;
+        avgRT = Math.min(avgRT, 1200);  // cap slow RT
 
-        tvResult.setText(
-                String.format(Locale.getDefault(),
-                        "Switch Cost: %d ms\nScore: %.1f /100\n%s",
-                        switchCost, flexibilityScore, interpretation)
-        );
+        double reactionScore = 25.0 * (1.0 - avgRT / 1200.0);
 
-        // --------- 🔥 SEND TO BACKEND ONLY ---------
+        // -----------------------------
+        // 3️⃣ Switch Cost (15%)
+        // small penalty
+        // -----------------------------
+        switchCost = Math.min(switchCost, 600);  // cap switch cost
+        double switchScore = 15.0 * (1.0 - switchCost / 600.0);
+
+        double finalScore = accuracyScore + reactionScore + switchScore;
+        finalScore = clamp(finalScore);
+
+        tvResult.setText(String.format(Locale.getDefault(),
+                "Correct: %d  Wrong: %d\nSwitch Cost: %d ms\nScore: %.1f /100",
+                correctCount, wrongCount, switchCost, finalScore));
+
+        sendScore((float) finalScore);
+        handler.postDelayed(this::finish, 2500);
+    }
+
+    private void sendScore(float score) {
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
                 .getString("email", "");
 
         if (email.isEmpty()) {
             Toast.makeText(this, "Error: No user email saved!", Toast.LENGTH_LONG).show();
-        } else {
-            ScoreRequest req = new ScoreRequest(email, (float) flexibilityScore);
-            Call<Void> call = api.saveTaskSwitchPost(req);
-
-            ScoreUploader.uploadScore(
-                    this,
-                    email,
-                    (float) flexibilityScore,
-                    "TaskSwitch post",
-                    call
-            );
+            return;
         }
 
-        handler.postDelayed(this::finish, 2500);
+        ScoreRequest req = new ScoreRequest(email, score);
+        Call<Void> call = api.saveTaskSwitchPost(req);
+
+        ScoreUploader.uploadScore(
+                this,
+                email,
+                score,
+                "TaskSwitch Post",
+                call
+        );
     }
 
     private long average(List<Long> list) {
-        if (list == null || list.isEmpty()) return 0;
+        if (list.isEmpty()) return 0;
         long sum = 0;
-        for (Long v : list) sum += v;
+        for (long value : list) sum += value;
         return sum / list.size();
+    }
+
+    private double clamp(double v) {
+        return Math.max(0, Math.min(100, v));
     }
 }

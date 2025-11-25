@@ -46,10 +46,8 @@ public class SRTActivity extends AppCompatActivity {
         setContentView(R.layout.activity_srt);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
-        // Retrofit
         api = ApiClient.getClient().create(ApiService.class);
 
-        // get module type
         Intent i = getIntent();
         if (i != null && i.hasExtra("module_type"))
             moduleType = i.getStringExtra("module_type");
@@ -89,7 +87,7 @@ public class SRTActivity extends AppCompatActivity {
         trialCount++;
         tvInstruction.setText("Get ready...");
 
-        int delay = random.nextInt(2000) + 1000;
+        int delay = random.nextInt(1800) + 700;
 
         handler.postDelayed(() -> {
             moveDotToRandomPosition();
@@ -111,47 +109,62 @@ public class SRTActivity extends AppCompatActivity {
 
     private void showResult() {
 
-        long avgRT = (long) reactionTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        long avgRT = (long) reactionTimes.stream()
+                .mapToLong(Long::longValue)
+                .average()
+                .orElse(0);
 
-        // Exponential normalization
-        double attentionScore = 100.0 * Math.exp(-((double) (avgRT - 250L)) / 250.0);
-        attentionScore = Math.max(0, Math.min(100, attentionScore));
+        // ============= NEW NORMALIZATION ==============
+        double mu = 350.0;     // baseline human reaction
+        double sigma = 180.0;  // allowed variance
 
+        // Gaussian model
+        double gaussian = Math.exp(
+                -Math.pow((avgRT - mu), 2) / (2 * sigma * sigma)
+        );
+
+        double attentionScore = clamp100(gaussian * 100);
+
+        // interpretation
         String performance;
-        if (attentionScore >= 80) performance = "Excellent Focus";
-        else if (attentionScore >= 50) performance = "Normal Performance";
-        else performance = "Reduced Vigilance";
+        if (attentionScore >= 85) performance = "Elite Attention";
+        else if (attentionScore >= 65) performance = "Strong Focus";
+        else if (attentionScore >= 45) performance = "Normal Performance";
+        else if (attentionScore >= 25) performance = "Reduced Vigilance";
+        else performance = "Cognitive Fatigue";
 
         tvInstruction.setText("Task Complete!");
 
         tvResult.setText(String.format(Locale.getDefault(),
-                "Avg RT: %d ms\nScore: %.1f /100\n%s",
+                "Avg RT: %d ms\nScore: %.1f/100\n%s",
                 avgRT, attentionScore, performance));
         tvResult.setVisibility(TextView.VISIBLE);
 
-        // -------------------------------------------
-        // 🔥 SEND SCORE TO BACKEND (server-only)
-        // -------------------------------------------
+        // -----------------------------------------
+        // Backend upload (unchanged)
+        // -----------------------------------------
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
                 .getString("email", "");
 
         if (email.isEmpty()) {
-            Toast.makeText(this, "Error: No user email saved!", Toast.LENGTH_LONG).show();
-            return;
+            Toast.makeText(this, "Error: No user email stored!", Toast.LENGTH_LONG).show();
+        } else {
+            ScoreRequest req = new ScoreRequest(email, (float) attentionScore);
+            Call<Void> call = api.saveSrtPost(req);
+
+            ScoreUploader.uploadScore(
+                    this,
+                    email,
+                    (float) attentionScore,
+                    "SRT Post",
+                    call
+            );
         }
 
-        ScoreRequest req = new ScoreRequest(email, (float) attentionScore);
-        Call<Void> call = api.saveSrtPost(req);
-
-        ScoreUploader.uploadScore(
-                this,
-                email,
-                (float) attentionScore,
-                "SRT Post",
-                call
-        );
-
-        // Finish automatically
         handler.postDelayed(this::finish, 2500);
+    }
+
+    private double clamp100(double v) {
+        return Math.max(0, Math.min(100, v));
     }
 }

@@ -22,7 +22,6 @@
             android:paddingEnd="16dp"
             android:paddingTop="8dp">
 
-            <!-- Back Button -->
             <ImageButton
                 android:id="@+id/backButton"
                 android:layout_width="60dp"
@@ -32,7 +31,6 @@
                 android:contentDescription="@string/Back"
                 android:src="@drawable/chevron_right" />
 
-            <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -60,7 +58,6 @@
                 android:orientation="vertical"
                 android:padding="24dp">
 
-                <!-- Profile Picture -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -96,7 +93,6 @@
                         android:text="@string/age_20_male"
                         android:textColor="#666666"
                         android:textSize="14sp" />
-
                 </LinearLayout>
 
                 <!-- Stats Cards Container -->
@@ -106,7 +102,6 @@
                     android:layout_marginTop="20dp"
                     android:orientation="horizontal">
 
-                    <!-- Session Count Card -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="0dp"
                         android:layout_height="100dp"
@@ -149,7 +144,6 @@
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
-                    <!-- Total Minutes Card -->
                     <androidx.cardview.widget.CardView
                         android:layout_width="0dp"
                         android:layout_height="100dp"
@@ -170,8 +164,8 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_marginBottom="4dp"
-                                android:contentDescription="@string/minutes"
-                                android:src="@drawable/ic_timer" />
+                                android:src="@drawable/ic_timer"
+                                android:contentDescription="@string/minutes" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -218,7 +212,7 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Feedback Option -->
+                <!-- Feedback -->
                 <LinearLayout
                     android:id="@+id/feedbackOption"
                     android:layout_width="match_parent"
@@ -272,65 +266,7 @@
                     android:layout_marginStart="56dp"
                     android:background="#E0E0E0" />
 
-                <!-- Language Option -->
-                <LinearLayout
-                    android:id="@+id/languageOption"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_language"
-                        android:contentDescription="Language" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Language"
-                            android:textColor="#000000"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <!-- Selected Language TextView -->
-                        <TextView
-                            android:id="@+id/selectedLanguage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="English"
-                            android:textColor="#666666"
-                            android:textSize="12sp"
-                            android:paddingTop="2dp" />
-
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/chevron_right"
-                        android:contentDescription="@string/navigate" />
-                </LinearLayout>
-
-                <!-- Divider -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="56dp"
-                    android:background="#E0E0E0" />
-
-                <!-- Account Settings Option -->
+                <!-- Account Settings -->
                 <LinearLayout
                     android:id="@+id/accountSettingsOption"
                     android:layout_width="match_parent"
@@ -384,7 +320,7 @@
                     android:layout_marginStart="56dp"
                     android:background="#E0E0E0" />
 
-                <!-- Reset Progress Option -->
+                <!-- Reset Progress -->
                 <LinearLayout
                     android:id="@+id/resetProgressOption"
                     android:layout_width="match_parent"
@@ -426,7 +362,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Sign Out Button -->
+        <!-- Sign Out -->
         <Button
             android:id="@+id/signOutButton"
             android:layout_width="match_parent"

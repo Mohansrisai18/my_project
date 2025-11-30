@@ -31,7 +31,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:text="Reset Account"
-        android:textColor="#FFFFFF"
+        android:textColor="#000000"
         android:background="@drawable/btn_bg" />
 
 </LinearLayout>

@@ -16,12 +16,11 @@ public class ProfileActivity extends AppCompatActivity {
 
     private ImageButton backButton;
     private Button signOutButton;
-    private LinearLayout feedbackOption, languageOption, accountSettingsOption, resetProgressOption;
-    private TextView userName, userInfo, sessionCount, totalMinutes, selectedLanguage;
+    private LinearLayout feedbackOption, accountSettingsOption, resetProgressOption;
+    private TextView userName, userInfo, sessionCount, totalMinutes;
 
     private SharedPreferences sharedPreferences;
     private static final String PREFS_NAME = "UserPrefs";
-    private static final String LANGUAGE_KEY = "selectedLanguage";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,64 +31,53 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        // Initialize views
+        // Init views
         backButton = findViewById(R.id.backButton);
         signOutButton = findViewById(R.id.signOutButton);
         feedbackOption = findViewById(R.id.feedbackOption);
-        languageOption = findViewById(R.id.languageOption);
         accountSettingsOption = findViewById(R.id.accountSettingsOption);
         resetProgressOption = findViewById(R.id.resetProgressOption);
         userName = findViewById(R.id.userName);
         userInfo = findViewById(R.id.userInfo);
         sessionCount = findViewById(R.id.sessionCount);
         totalMinutes = findViewById(R.id.totalMinutes);
-        selectedLanguage = findViewById(R.id.selectedLanguage);
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // Load user info
+        // Load profile data
         String name = sharedPreferences.getString("username", "User");
         String age = sharedPreferences.getString("age", "--");
         String gender = sharedPreferences.getString("gender", "--");
+
         userName.setText(name);
         userInfo.setText("Age: " + age + ", " + gender);
 
-        // Optional static placeholders
+        // Static placeholders
         sessionCount.setText("4");
         totalMinutes.setText("67 Minutes");
 
-        // Load selected language
-        String language = sharedPreferences.getString(LANGUAGE_KEY, "English");
-        selectedLanguage.setText(language);
-
-        // Back button
+        // Back
         backButton.setOnClickListener(v -> onBackPressed());
 
         // Feedback
-        feedbackOption.setOnClickListener(v -> {
-            startActivity(new Intent(ProfileActivity.this, FeedbackActivity.class));
-        });
-
-        // Language
-        languageOption.setOnClickListener(v -> {
-            startActivity(new Intent(ProfileActivity.this, LanguageActivity.class));
-        });
+        feedbackOption.setOnClickListener(v ->
+                startActivity(new Intent(ProfileActivity.this, FeedbackActivity.class))
+        );
 
         // Account Settings
-        accountSettingsOption.setOnClickListener(v -> {
-            startActivity(new Intent(ProfileActivity.this, UpdateInfoActivity.class));
-        });
+        accountSettingsOption.setOnClickListener(v ->
+                startActivity(new Intent(ProfileActivity.this, UpdateInfoActivity.class))
+        );
 
         // Reset Progress
-        resetProgressOption.setOnClickListener(v -> {
-            startActivity(new Intent(ProfileActivity.this, ResetAccountActivity.class));
-        });
+        resetProgressOption.setOnClickListener(v ->
+                startActivity(new Intent(ProfileActivity.this, ResetAccountActivity.class))
+        );
 
         // Sign Out
         signOutButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("isLoggedIn", false);  // 🔥 IMPORTANT (logout)
-            editor.clear();
+            editor.clear();   // Clear all stored data
             editor.apply();
 
             Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show();
@@ -99,12 +87,5 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        String language = sharedPreferences.getString(LANGUAGE_KEY, "English");
-        selectedLanguage.setText(language);
     }
 }

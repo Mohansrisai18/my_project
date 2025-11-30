@@ -113,7 +113,7 @@ public class HomeActivity extends AppCompatActivity {
         tvGreeting = findViewById(R.id.tvGreeting);
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String username = sp.getString("username", "User");
-        tvGreeting.setText("Hi, " + username);
+        tvGreeting.setText("Hi " + username);
     }
 
     private void loadEmptyMinutes() {

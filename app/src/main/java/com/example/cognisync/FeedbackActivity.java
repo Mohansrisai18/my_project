@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class FeedbackActivity extends AppCompatActivity {
@@ -15,13 +16,18 @@ public class FeedbackActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Hide Action Bar if present
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
+
+        // Light status bar icons
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
-        super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_feedback);
 
         feedbackInput = findViewById(R.id.feedbackInput);
@@ -36,7 +42,6 @@ public class FeedbackActivity extends AppCompatActivity {
                 Toast.makeText(this, "Thank you for your feedback!", Toast.LENGTH_SHORT).show();
                 feedbackInput.setText("");
 
-                // Navigate back to profile
                 Intent intent = new Intent(FeedbackActivity.this, ProfileActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);

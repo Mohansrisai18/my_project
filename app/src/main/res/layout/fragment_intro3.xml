@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5E6E6">
+
+    <!-- CARD CONTAINER -->
+    <LinearLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:elevation="8dp"
+        android:padding="24dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/intro_card_bg"
+        app:layout_constraintWidth_percent="0.88"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- ICON -->
+        <ImageView
+            android:id="@+id/progressIcon"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/ic_progress_chart"
+            android:scaleType="fitCenter"
+            android:contentDescription="Progress Chart" />
+
+        <!-- TITLE -->
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="How your progress is tracked"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#000"
+            android:gravity="center"
+            android:layout_marginTop="8dp"/>
+
+        <!-- DESCRIPTION -->
+        <TextView
+            android:id="@+id/descriptionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="We use validated psychological scales and cognitive tasks to measure your progress over time, giving you clear insights into your mental wellness journey."
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="#555"
+            android:gravity="center"
+            android:layout_marginTop="10dp"/>
+
+        <!-- SPACER -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="12dp"/>
+
+        <!-- BUTTON ROW -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btnBack"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Back"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:background="@drawable/btn_bg"
+                android:layout_marginEnd="6dp"/>
+
+            <Button
+                android:id="@+id/btnFinish"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Finish"
+                android:textStyle="bold"
+                android:textColor="#FFF"
+                android:backgroundTint="#7F39FB"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

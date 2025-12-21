@@ -24,6 +24,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -44,12 +45,18 @@ public class ProfileActivity extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // Load profile data
-        String name = sharedPreferences.getString("username", "User");
+        // --------------------------------------------------
+        // ✅ BACKWARD-COMPATIBLE USER NAME FETCH
+        // --------------------------------------------------
+        String userId = sharedPreferences.getString("user_id", null);
+        if (userId == null || userId.isEmpty()) {
+            userId = sharedPreferences.getString("username", "User");
+        }
+
         String age = sharedPreferences.getString("age", "--");
         String gender = sharedPreferences.getString("gender", "--");
 
-        userName.setText(name);
+        userName.setText(userId);
         userInfo.setText("Age: " + age + ", " + gender);
 
         // Static placeholders
@@ -77,7 +84,7 @@ public class ProfileActivity extends AppCompatActivity {
         // Sign Out
         signOutButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.clear();   // Clear all stored data
+            editor.clear();
             editor.apply();
 
             Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show();

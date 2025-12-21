@@ -2,6 +2,7 @@ package com.example.cognisync;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.Animation;
@@ -14,9 +15,23 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // 🔥 AUTO LOGIN CHECK
+        SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        boolean isLoggedIn = sp.getBoolean("isLoggedIn", false);
+
+        if (isLoggedIn) {
+            // User already logged in → skip intro + login
+            startActivity(new Intent(MainActivity.this, HomeActivity.class));
+            finish();
+            return;
+        }
+
+        // Set light status bar
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 

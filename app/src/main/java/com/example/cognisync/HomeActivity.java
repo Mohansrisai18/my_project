@@ -17,7 +17,6 @@ import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
 import com.example.cognisync.model.ScoreResponse;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
@@ -70,7 +69,7 @@ public class HomeActivity extends AppCompatActivity {
         email = sp.getString("email", "");
 
         initViews();
-        setGreeting();
+        setGreeting();          // ✅ updated
         loadEmptyMinutes();
         setClickActions();
 
@@ -88,6 +87,8 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+
+        tvGreeting = findViewById(R.id.tvGreeting);
 
         tvMinutesFocused = findViewById(R.id.tvMinutesFocused);
         tvMinutesWorking = findViewById(R.id.tvMinutesWorking);
@@ -109,11 +110,20 @@ public class HomeActivity extends AppCompatActivity {
         );
     }
 
+    // ----------------------------------------------------
+    // ✅ BACKWARD-COMPATIBLE GREETING
+    // ----------------------------------------------------
     private void setGreeting() {
-        tvGreeting = findViewById(R.id.tvGreeting);
+
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String username = sp.getString("username", "User");
-        tvGreeting.setText("Hi " + username);
+
+        String userId = sp.getString("user_id", null);
+
+        if (userId == null || userId.isEmpty()) {
+            userId = sp.getString("username", "User"); // fallback for old users
+        }
+
+        tvGreeting.setText("Hi " + userId);
     }
 
     private void loadEmptyMinutes() {
@@ -125,6 +135,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void setClickActions() {
+
         cvFocusedAttention.setOnClickListener(v -> openModule("focused_attention"));
         cvWorkingMemory.setOnClickListener(v -> openModule("working_memory"));
         cvPresentMoment.setOnClickListener(v -> openModule("present_moment"));
@@ -151,15 +162,14 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // 🔥 Fetch only POST scores for each cognitive category
+    // 🔥 Fetch only POST scores
     // ----------------------------------------------------
     private void fetchPostScoresFromBackend() {
-
-        fetchScoreForDomain("srt");          // Attention
-        fetchScoreForDomain("nback");        // Memory
-        fetchScoreForDomain("stroop");       // Emotion Regulation
-        fetchScoreForDomain("task_switch");  // Cognitive Integration
-        fetchScoreForDomain("sart");         // Awareness
+        fetchScoreForDomain("srt");
+        fetchScoreForDomain("nback");
+        fetchScoreForDomain("stroop");
+        fetchScoreForDomain("task_switch");
+        fetchScoreForDomain("sart");
     }
 
     private void fetchScoreForDomain(String domain) {
@@ -170,10 +180,8 @@ public class HomeActivity extends AppCompatActivity {
 
                 if (!res.isSuccessful() || res.body() == null) return;
 
-                // find latest POST score
                 for (ScoreResponse s : res.body()) {
                     if ("post".equalsIgnoreCase(s.getScore_type())) {
-
                         switch (domain) {
                             case "srt": attentionPost = s.getScore(); break;
                             case "nback": memoryPost = s.getScore(); break;
@@ -194,7 +202,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // 🔥 Draw line graph using ONLY POST scores
+    // 🔥 Draw graph using POST scores
     // ----------------------------------------------------
     private void drawGraph() {
 

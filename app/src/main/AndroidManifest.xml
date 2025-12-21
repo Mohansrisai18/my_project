@@ -17,6 +17,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
 
+        <!-- App Launch Screen -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -26,37 +27,47 @@
             </intent-filter>
         </activity>
 
+        <!-- Normal Activities -->
         <activity android:name=".LoginActivity" android:exported="false" />
         <activity android:name=".SignupActivity" android:exported="false" />
-        <activity android:name=".Task1Activity" android:exported="false" />
-        <activity android:name=".Task2Activity" android:exported="false" />
-        <activity android:name=".Task3Activity" android:exported="false" />
-        <activity android:name=".Task4Activity" android:exported="false" />
-        <activity android:name=".Task5Activity" android:exported="false" />
         <activity android:name=".HomeActivity" android:exported="false" />
-        <activity android:name=".Intro1Activity" android:exported="false" />
-        <activity android:name=".Intro2Activity" android:exported="false" />
-        <activity android:name=".Intro3Activity" android:exported="false" />
-        <activity android:name=".FeedbackActivity" android:exported="false" />
-
+        <activity android:name=".IntroActivity" android:exported="false" />
         <activity android:name=".ProfileActivity" android:exported="false" />
         <activity android:name=".UpdateInfoActivity" android:exported="false" />
+        <activity android:name=".FeedbackActivity" android:exported="false" />
         <activity android:name=".ResetAccountActivity" android:exported="false" />
         <activity android:name=".ProgressDashboardActivity" android:exported="false" />
         <activity android:name=".ModuleIntroActivity" android:exported="false" />
         <activity android:name=".ModuleHomeActivity" android:exported="false" />
         <activity android:name=".SessionActivity" android:exported="false" />
-        <activity
-            android:name=".PreAssessmentActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".NBackActivity" android:exported="false" />
         <activity android:name=".SRTActivity" android:exported="false" />
         <activity android:name=".StroopTaskActivity" android:exported="false" />
         <activity android:name=".TaskSwitchActivity" android:exported="false" />
         <activity android:name=".SARTActivity" android:exported="false" />
         <activity android:name=".SplashScreenActivity" android:exported="false" />
+        <activity android:name=".TaskAActivity" android:exported="false" />
+        <activity android:name=".TaskBActivity" android:exported="false" />
+
+        <!-- Assessment -->
+        <activity
+            android:name=".PreAssessmentActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!--  ✅ NEW OTP FLOW ACTIVITIES -->
+        <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".OtpVerifyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ResetPasswordActivity"
+            android:exported="false" />
 
     </application>
 

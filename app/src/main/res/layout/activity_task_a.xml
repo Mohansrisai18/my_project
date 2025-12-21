@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:fillViewport="true"
     android:background="@drawable/background_gradient">
 
     <LinearLayout
@@ -11,159 +12,170 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/circle_bg"
-            android:src="@drawable/ic_arrow_back" />
-
         <TextView
-            android:text="Task 2"
-            android:textSize="28sp"
+            android:id="@+id/tvTitle"
+            android:text="Task A"
             android:textColor="#000000"
+            android:textSize="28sp"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"/>
+            android:layout_marginTop="10dp" />
 
         <TextView
-            android:text="Rate how you feel right now (1 = Very Slightly → 5 = Extremely)"
+            android:id="@+id/tvSubtitle"
+            android:text="Rate each statement carefully"
             android:textSize="16sp"
             android:textColor="#000000"
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="8dp" />
 
-
-        <!-- REPEATED 5 BOXES -->
-
-        <!-- Box Template -->
         <LinearLayout
-            android:id="@+id/box1"
             android:background="@drawable/rounded_grey_bg"
             android:orientation="vertical"
             android:padding="20dp"
-            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
             android:layout_height="wrap_content">
 
             <TextView
                 android:id="@+id/q1"
+                android:textColor="#000000"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <Spinner
-                android:id="@+id/spinner1"
+                android:id="@+id/s1"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginTop="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="48dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@drawable/rounded_white_bg" />
         </LinearLayout>
 
-
-        <!-- Box 2 -->
         <LinearLayout
             android:background="@drawable/rounded_grey_bg"
             android:orientation="vertical"
             android:padding="20dp"
-            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
             android:layout_height="wrap_content">
 
-            <TextView android:id="@+id/q2"
+            <TextView
+                android:id="@+id/q2"
+                android:textColor="#000000"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <Spinner
-                android:id="@+id/spinner2"
+                android:id="@+id/s2"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginTop="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="48dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@drawable/rounded_white_bg" />
         </LinearLayout>
 
-
-        <!-- Box 3 -->
         <LinearLayout
             android:background="@drawable/rounded_grey_bg"
             android:orientation="vertical"
             android:padding="20dp"
-            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
             android:layout_height="wrap_content">
 
-            <TextView android:id="@+id/q3"
+            <TextView
+                android:id="@+id/q3"
+                android:textColor="#000000"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <Spinner
-                android:id="@+id/spinner3"
+                android:id="@+id/s3"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginTop="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="48dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@drawable/rounded_white_bg" />
         </LinearLayout>
 
-
-        <!-- Box 4 -->
         <LinearLayout
             android:background="@drawable/rounded_grey_bg"
             android:orientation="vertical"
             android:padding="20dp"
-            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
             android:layout_height="wrap_content">
 
-            <TextView android:id="@+id/q4"
+            <TextView
+                android:id="@+id/q4"
+                android:textColor="#000000"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <Spinner
-                android:id="@+id/spinner4"
+                android:id="@+id/s4"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginTop="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="48dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@drawable/rounded_white_bg" />
         </LinearLayout>
 
-
-        <!-- Box 5 -->
         <LinearLayout
             android:background="@drawable/rounded_grey_bg"
             android:orientation="vertical"
             android:padding="20dp"
-            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
             android:layout_height="wrap_content">
 
-            <TextView android:id="@+id/q5"
+            <TextView
+                android:id="@+id/q5"
+                android:textColor="#000000"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <Spinner
-                android:id="@+id/spinner5"
+                android:id="@+id/s5"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginTop="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="48dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@drawable/rounded_white_bg" />
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatButton
@@ -175,7 +187,7 @@
             android:background="@drawable/btn_bg"
             android:layout_marginTop="30dp"
             android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+            android:layout_height="60dp" />
 
     </LinearLayout>
 </ScrollView>

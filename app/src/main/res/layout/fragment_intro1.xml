@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FDECEC">
+
+    <LinearLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center"
+        android:background="@drawable/intro_card_bg"
+        android:elevation="6dp"
+        app:layout_constraintWidth_percent="0.88"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Birds -->
+        <ImageView
+            android:id="@+id/birdsImage"
+            android:layout_width="200dp"
+            android:layout_height="90dp"
+            android:src="@drawable/ic_birds_1"
+            android:scaleType="fitCenter"
+            android:layout_marginBottom="6dp"/>
+
+        <!-- Logo -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/logo_1"
+            android:scaleType="fitCenter"
+            android:layout_marginBottom="4dp"/>
+
+        <!-- Title - App name -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CogniSync"
+            android:textStyle="bold"
+            android:textColor="#805332"
+            android:textSize="18sp"/>
+
+        <!-- Subtitle -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="What is CogniSync?"
+            android:layout_marginTop="6dp"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#000"
+            android:gravity="center"/>
+
+        <!-- Description -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CogniSync combines mindfulness practices with cognitive training to enhance your focus, memory, and emotional well-being."
+            android:layout_marginTop="6dp"
+            android:textSize="14sp"
+            android:textColor="#444"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"/>
+
+        <!-- Spacer -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="12dp"/>
+
+        <!-- Button -->
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="NEXT"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#8A2BE2"
+            android:layout_marginTop="6dp"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

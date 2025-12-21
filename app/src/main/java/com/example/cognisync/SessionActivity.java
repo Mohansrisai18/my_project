@@ -1,7 +1,6 @@
 package com.example.cognisync;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -27,27 +26,25 @@ public class SessionActivity extends AppCompatActivity {
     private Button btnFinish;
     private TextView tvTitle, tvDesc;
 
-    private Handler handler = new Handler();
+    private final Handler handler = new Handler();
     private Runnable updateSeekBar;
-    private int SEEK_STEP = 10000; // 10 seconds skip
+    private final int SEEK_STEP = 10000; // 10 seconds
+
+    private boolean isReleased = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // ************* REMOVE TOP BAR *************
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
-        if(getSupportActionBar()!=null){
-            getSupportActionBar().hide();
-        }
-        // ******************************************
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        // UI refs
         progressBar = findViewById(R.id.progressBar);
         playPause = findViewById(R.id.playPauseButton);
         btnPrev = findViewById(R.id.btnPrev);
@@ -56,11 +53,9 @@ public class SessionActivity extends AppCompatActivity {
         tvTitle = findViewById(R.id.tvAudioTitle);
         tvDesc = findViewById(R.id.tvAudioDesc);
 
-        // Back button
         ImageButton back = findViewById(R.id.backButton);
-        back.setOnClickListener(v -> finishSession());
+        back.setOnClickListener(v -> finishWithPercent());
 
-        // Get extras
         String audioUrl = getIntent().getStringExtra("audio_url");
         String audioTitle = getIntent().getStringExtra("audio_title");
         String audioDesc = getIntent().getStringExtra("audio_desc");
@@ -81,13 +76,12 @@ public class SessionActivity extends AppCompatActivity {
         try {
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-
             mediaPlayer.setDataSource(this, Uri.parse(url));
             mediaPlayer.prepareAsync();
 
             mediaPlayer.setOnPreparedListener(mp -> {
-                progressBar.setMax(mediaPlayer.getDuration());
-                mediaPlayer.start();
+                progressBar.setMax(mp.getDuration());
+                mp.start();
                 playPause.setImageResource(R.drawable.ic_pause);
                 startSeekBarUpdate();
             });
@@ -96,15 +90,14 @@ public class SessionActivity extends AppCompatActivity {
                     playPause.setImageResource(R.drawable.ic_play));
 
         } catch (IOException e) {
-            Toast.makeText(this, "Audio error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Audio error", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void setupButtons() {
 
-        // Play pause toggle
         playPause.setOnClickListener(v -> {
-            if (mediaPlayer == null) return;
+            if (mediaPlayer == null || isReleased) return;
 
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
@@ -115,59 +108,51 @@ public class SessionActivity extends AppCompatActivity {
             }
         });
 
-        // 10 sec rewind
         btnPrev.setOnClickListener(v -> {
-            if (mediaPlayer == null) return;
-            int newPos = mediaPlayer.getCurrentPosition() - SEEK_STEP;
-            mediaPlayer.seekTo(Math.max(newPos, 0));
+            if (mediaPlayer == null || isReleased) return;
+            mediaPlayer.seekTo(Math.max(mediaPlayer.getCurrentPosition() - SEEK_STEP, 0));
         });
 
-        // 10 sec forward
         btnNext.setOnClickListener(v -> {
-            if (mediaPlayer == null) return;
-            int newPos = mediaPlayer.getCurrentPosition() + SEEK_STEP;
-            mediaPlayer.seekTo(Math.min(newPos, mediaPlayer.getDuration()));
+            if (mediaPlayer == null || isReleased) return;
+            mediaPlayer.seekTo(Math.min(
+                    mediaPlayer.getCurrentPosition() + SEEK_STEP,
+                    mediaPlayer.getDuration()
+            ));
         });
 
-        // SeekBar drag
         progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mediaPlayer != null) {
+                if (fromUser && mediaPlayer != null && !isReleased) {
                     mediaPlayer.seekTo(progress);
                 }
             }
-
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        // Finish action
         btnFinish.setOnClickListener(v -> finishWithPercent());
     }
 
     private void startSeekBarUpdate() {
-        updateSeekBar = new Runnable() {
-            @Override
-            public void run() {
-                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    progressBar.setProgress(mediaPlayer.getCurrentPosition());
-                }
-                handler.postDelayed(this, 400);
+        updateSeekBar = () -> {
+            if (mediaPlayer != null && mediaPlayer.isPlaying() && !isReleased) {
+                progressBar.setProgress(mediaPlayer.getCurrentPosition());
+                handler.postDelayed(updateSeekBar, 400);
             }
         };
         handler.post(updateSeekBar);
     }
 
     private void finishZero() {
-        Intent out = new Intent();
-        out.putExtra("listened_percent", 0f);
-        setResult(Activity.RESULT_OK, out);
-        finishSession();
+        setResult(Activity.RESULT_OK);
+        safeRelease();
+        finish();
     }
 
     private void finishWithPercent() {
-        if (mediaPlayer == null) {
+        if (mediaPlayer == null || isReleased) {
             finishZero();
             return;
         }
@@ -176,29 +161,32 @@ public class SessionActivity extends AppCompatActivity {
         int dur = mediaPlayer.getDuration();
         float percent = dur > 0 ? (pos * 100f) / dur : 0f;
 
-        Intent out = new Intent();
-        out.putExtra("listened_percent", percent);
-        setResult(Activity.RESULT_OK, out);
+        getIntent().putExtra("listened_percent", percent);
+        setResult(Activity.RESULT_OK, getIntent());
 
-        finishSession();
+        safeRelease();
+        finish();
     }
 
-    private void finishSession() {
+    private void safeRelease() {
+        if (isReleased) return;
+        isReleased = true;
+
+        if (updateSeekBar != null) handler.removeCallbacks(updateSeekBar);
+
         try {
             if (mediaPlayer != null) {
-                mediaPlayer.stop();
+                if (mediaPlayer.isPlaying()) mediaPlayer.pause();
                 mediaPlayer.release();
             }
         } catch (Exception ignored) {}
-        mediaPlayer = null;
 
-        if (updateSeekBar != null) handler.removeCallbacks(updateSeekBar);
-        finish();
+        mediaPlayer = null;
     }
 
     @Override
     protected void onDestroy() {
-        finishSession();
+        safeRelease();
         super.onDestroy();
     }
 }

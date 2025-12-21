@@ -1,22 +1,27 @@
 package com.example.cognisync.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Patient {
-    private String full_name;
+
+    @SerializedName("user_id")   // ✅ MUST MATCH BACKEND
+    private String userId;
+
     private int age;
     private String gender;
     private String email;
     private String password;
 
-    public Patient(String full_name, int age, String gender, String email, String password) {
-        this.full_name = full_name;
+    public Patient(String userId, int age, String gender, String email, String password) {
+        this.userId = userId;
         this.age = age;
         this.gender = gender;
         this.email = email;
         this.password = password;
     }
 
-    public String getFullName() {
-        return full_name;
+    public String getUserId() {
+        return userId;
     }
 
     public int getAge() {

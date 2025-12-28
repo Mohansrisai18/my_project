@@ -24,12 +24,14 @@ import retrofit2.Response;
 
 public class TaskAActivity extends AppCompatActivity {
 
-    TextView q1, q2, q3, q4, q5;
-    Spinner s1, s2, s3, s4, s5;
-    Button btnNext;
+    // Views
+    private TextView q1, q2, q3, q4, q5;
+    private Spinner s1, s2, s3, s4, s5;
+    private Button btnNext;
 
-    // NOTE: These arrays are kept static as they are large, constant definitions
-    public static String[] questions = {
+    // ---------------- QUESTIONS ----------------
+    public static final String[] questions = {
+            // MAAS
             "I find it difficult to stay focused on the present.",
             "I rush through activities without paying attention.",
             "I do things automatically without awareness.",
@@ -38,18 +40,21 @@ public class TaskAActivity extends AppCompatActivity {
             "I act without paying attention.",
             "I notice I'm not present in the moment.",
 
+            // PANAS (Positive)
             "I feel Interested",
             "I feel Excited",
             "I feel Enthusiastic",
             "I feel Inspired",
             "I feel Active",
 
+            // PANAS (Negative)
             "I feel Distressed",
             "I feel Upset",
             "I feel Nervous",
             "I feel Irritable",
             "I feel Jittery",
 
+            // DASS
             "I found it hard to wind down.",
             "I tended to over-react to situations.",
             "I used a lot of nervous energy.",
@@ -60,14 +65,16 @@ public class TaskAActivity extends AppCompatActivity {
             "I had trouble relaxing.",
             "I felt overwhelmed by everything to do.",
 
+            // ERQ
             "I control emotions by changing how I think.",
             "I keep my emotions to myself.",
 
+            // PHLMS
             "I was aware of my emotions as they arose.",
             "I ignored my emotions."
     };
 
-    public static int[] scaleMin = {
+    public static final int[] scaleMin = {
             1,1,1,1,1,1,1,
             1,1,1,1,1,
             1,1,1,1,1,
@@ -76,7 +83,7 @@ public class TaskAActivity extends AppCompatActivity {
             1,1
     };
 
-    public static int[] scaleMax = {
+    public static final int[] scaleMax = {
             6,6,6,6,6,6,6,
             5,5,5,5,5,
             5,5,5,5,5,
@@ -85,7 +92,7 @@ public class TaskAActivity extends AppCompatActivity {
             5,5
     };
 
-    public static boolean[] reverse = {
+    public static final boolean[] reverse = {
             true,true,true,true,true,true,true,
             false,false,false,false,false,
             true,true,true,true,true,
@@ -94,7 +101,7 @@ public class TaskAActivity extends AppCompatActivity {
             false,true
     };
 
-    // Keep 'selected' static for use within this class methods
+    // Randomly selected question indices
     public static int[] selected = new int[10];
 
     @Override
@@ -104,6 +111,7 @@ public class TaskAActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_a);
 
+        // Bind views
         q1 = findViewById(R.id.q1);
         q2 = findViewById(R.id.q2);
         q3 = findViewById(R.id.q3);
@@ -124,15 +132,16 @@ public class TaskAActivity extends AppCompatActivity {
         btnNext.setOnClickListener(v -> processTaskA());
     }
 
+    // ---------------- RANDOM SELECTION ----------------
     private void generateRandom10() {
         ArrayList<Integer> list = new ArrayList<>();
-        for (int i = 0; i < questions.length; i++)
+        for (int i = 0; i < questions.length; i++) {
             list.add(i);
-
+        }
         Collections.shuffle(list);
-
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++) {
             selected[i] = list.get(i);
+        }
     }
 
     private void loadQuestions() {
@@ -150,19 +159,20 @@ public class TaskAActivity extends AppCompatActivity {
         ArrayList<String> items = new ArrayList<>();
         items.add("Select");
 
-        for (int i = scaleMin[idx]; i <= scaleMax[idx]; i++)
+        for (int i = scaleMin[idx]; i <= scaleMax[idx]; i++) {
             items.add(String.valueOf(i));
+        }
 
-        ArrayAdapter<String> ad =
+        ArrayAdapter<String> adapter =
                 new ArrayAdapter<>(this, R.layout.spinner_selected_item, items);
-
-        ad.setDropDownViewResource(R.layout.spinner_dropdown_item);
-        sp.setAdapter(ad);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        sp.setAdapter(adapter);
     }
 
+    // ---------------- PROCESS & SCORE ----------------
     private void processTaskA() {
 
-        Spinner[] arr = {s1, s2, s3, s4, s5};
+        Spinner[] spinners = {s1, s2, s3, s4, s5};
 
         float maas = 0, panas = 0, dass = 0, erq = 0, phlms = 0;
         float maasMax = 0, panasMax = 0, dassMax = 0, erqMax = 0, phlmsMax = 0;
@@ -170,10 +180,11 @@ public class TaskAActivity extends AppCompatActivity {
         for (int i = 0; i < 5; i++) {
 
             int idx = selected[i];
-            int pos = arr[i].getSelectedItemPosition();
+            int pos = spinners[i].getSelectedItemPosition();
 
             if (pos == 0) {
-                Toast.makeText(this, "Please answer all questions", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Please answer all questions", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -193,23 +204,20 @@ public class TaskAActivity extends AppCompatActivity {
         }
 
         sendToBackend(
-                (int)(maas / maasMax * 100),
-                (int)(panas / panasMax * 100),
-                (int)(dass / dassMax * 100),
-                (int)(erq / erqMax * 100),
-                (int)(phlms / phlmsMax * 100)
+                (int) (maas / maasMax * 100),
+                (int) (panas / panasMax * 100),
+                (int) (dass / dassMax * 100),
+                (int) (erq / erqMax * 100),
+                (int) (phlms / phlmsMax * 100)
         );
 
-        // --- CRITICAL FIX APPLIED HERE ---
         Intent intent = new Intent(this, TaskBActivity.class);
-        // Pass the array of question indices to the next activity
         intent.putExtra("SELECTED_QUESTIONS", selected);
         startActivity(intent);
-        // --- END CRITICAL FIX ---
-
         finish();
     }
 
+    // ---------------- BACKEND ----------------
     private void sendToBackend(int maas, int panas, int dass, int erq, int phlms) {
 
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
@@ -217,29 +225,17 @@ public class TaskAActivity extends AppCompatActivity {
 
         ApiService api = ApiClient.getClient().create(ApiService.class);
 
-        api.saveMaasInitial(new ScoreRequest(email, maas)).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {}
-            @Override public void onFailure(Call<Void> call, Throwable t) {}
-        });
+        api.saveMaasInitial(new ScoreRequest(email, maas)).enqueue(emptyCallback());
+        api.savePanasInitial(new ScoreRequest(email, panas)).enqueue(emptyCallback());
+        api.saveDassInitial(new ScoreRequest(email, dass)).enqueue(emptyCallback());
+        api.saveErqInitial(new ScoreRequest(email, erq)).enqueue(emptyCallback());
+        api.savePhlmsInitial(new ScoreRequest(email, phlms)).enqueue(emptyCallback());
+    }
 
-        api.savePanasInitial(new ScoreRequest(email, panas)).enqueue(new Callback<Void>() {
+    private Callback<Void> emptyCallback() {
+        return new Callback<Void>() {
             @Override public void onResponse(Call<Void> call, Response<Void> response) {}
             @Override public void onFailure(Call<Void> call, Throwable t) {}
-        });
-
-        api.saveDassInitial(new ScoreRequest(email, dass)).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {}
-            @Override public void onFailure(Call<Void> call, Throwable t) {}
-        });
-
-        api.saveErqInitial(new ScoreRequest(email, erq)).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {}
-            @Override public void onFailure(Call<Void> call, Throwable t) {}
-        });
-
-        api.savePhlmsInitial(new ScoreRequest(email, phlms)).enqueue(new Callback<Void>() {
-            @Override public void onResponse(Call<Void> call, Response<Void> response) {}
-            @Override public void onFailure(Call<Void> call, Throwable t) {}
-        });
+        };
     }
 }

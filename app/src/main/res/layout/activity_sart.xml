@@ -24,11 +24,11 @@
         android:id="@+id/tvProgress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Trial 0/50"
         android:textColor="#000000"
         android:textSize="14sp"
         android:layout_below="@id/tvInstruction"
         android:layout_centerHorizontal="true"
-        android:text="Trial 0/50"
         android:layout_marginTop="10dp"/>
 
     <!-- Number display -->
@@ -49,8 +49,8 @@
         android:layout_height="wrap_content"
         android:text="Start"
         android:textSize="18sp"
-        android:textColor="#FFFFFF"
         android:textStyle="bold"
+        android:textColor="#FFFFFF"
         android:backgroundTint="#3F51B5"
         android:layout_below="@id/tvNumber"
         android:layout_centerHorizontal="true"

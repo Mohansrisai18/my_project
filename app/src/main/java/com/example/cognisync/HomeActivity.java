@@ -33,13 +33,18 @@ import retrofit2.Response;
 
 public class HomeActivity extends AppCompatActivity {
 
+    // Header
     private TextView tvGreeting;
-    private TextView tvMinutesFocused, tvMinutesWorking, tvMinutesPresent,
-            tvMinutesCognitive, tvMinutesEmotional;
 
+    // Module cards
     private CardView cvFocusedAttention, cvWorkingMemory, cvPresentMoment,
             cvCognitiveIntegration, cvEmotionalRegulation;
 
+    // Score cards
+    private CardView cvAttentionScore, cvMemoryScore,
+            cvEmotionScore, cvCognitiveScore, cvPresentMomentScore;
+
+    // Graph
     private LineChart lineChart;
 
     private ApiService api;
@@ -59,9 +64,12 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        // Status bar styling
         getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
 
         api = ApiClient.getClient().create(ApiService.class);
 
@@ -69,8 +77,7 @@ public class HomeActivity extends AppCompatActivity {
         email = sp.getString("email", "");
 
         initViews();
-        setGreeting();          // ✅ updated
-        loadEmptyMinutes();
+        setGreeting();
         setClickActions();
 
         if (!email.isEmpty()) {
@@ -86,21 +93,24 @@ public class HomeActivity extends AppCompatActivity {
         fetchPostScoresFromBackend();
     }
 
+    // ----------------------------------------------------
+    // INIT VIEWS (MATCHES XML)
+    // ----------------------------------------------------
     private void initViews() {
 
         tvGreeting = findViewById(R.id.tvGreeting);
-
-        tvMinutesFocused = findViewById(R.id.tvMinutesFocused);
-        tvMinutesWorking = findViewById(R.id.tvMinutesWorking);
-        tvMinutesPresent = findViewById(R.id.tvMinutesPresent);
-        tvMinutesCognitive = findViewById(R.id.tvMinutesCognitive);
-        tvMinutesEmotional = findViewById(R.id.tvMinutesEmotional);
 
         cvFocusedAttention = findViewById(R.id.cvFocusedAttention);
         cvWorkingMemory = findViewById(R.id.cvWorkingMemory);
         cvPresentMoment = findViewById(R.id.cvPresentMoment);
         cvCognitiveIntegration = findViewById(R.id.cvCognitiveIntegration);
         cvEmotionalRegulation = findViewById(R.id.cvEmotionalRegulation);
+
+        cvAttentionScore = findViewById(R.id.cvAttentionScore);
+        cvMemoryScore = findViewById(R.id.cvMemoryScore);
+        cvEmotionScore = findViewById(R.id.cvEmotionScore);
+        cvCognitiveScore = findViewById(R.id.cvCognitiveScore);
+        cvPresentMomentScore = findViewById(R.id.cvPresentMomentScore);
 
         lineChart = findViewById(R.id.lineChart);
 
@@ -111,42 +121,37 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // ✅ BACKWARD-COMPATIBLE GREETING
+    // GREETING (BACKWARD-COMPATIBLE)
     // ----------------------------------------------------
     private void setGreeting() {
-
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         String userId = sp.getString("user_id", null);
-
         if (userId == null || userId.isEmpty()) {
-            userId = sp.getString("username", "User"); // fallback for old users
+            userId = sp.getString("username", "User"); // fallback
         }
 
         tvGreeting.setText("Hi " + userId);
     }
 
-    private void loadEmptyMinutes() {
-        tvMinutesFocused.setText("--");
-        tvMinutesWorking.setText("--");
-        tvMinutesPresent.setText("--");
-        tvMinutesCognitive.setText("--");
-        tvMinutesEmotional.setText("--");
-    }
-
+    // ----------------------------------------------------
+    // CLICK ACTIONS
+    // ----------------------------------------------------
     private void setClickActions() {
 
+        // Modules
         cvFocusedAttention.setOnClickListener(v -> openModule("focused_attention"));
         cvWorkingMemory.setOnClickListener(v -> openModule("working_memory"));
         cvPresentMoment.setOnClickListener(v -> openModule("present_moment"));
         cvCognitiveIntegration.setOnClickListener(v -> openModule("cognitive_flexibility"));
         cvEmotionalRegulation.setOnClickListener(v -> openModule("emotional_regulation"));
 
-        findViewById(R.id.cvAttentionScore).setOnClickListener(v -> openScore("Attention"));
-        findViewById(R.id.cvMemoryScore).setOnClickListener(v -> openScore("Memory"));
-        findViewById(R.id.cvPresentMomentScore).setOnClickListener(v -> openScore("Awareness"));
-        findViewById(R.id.cvCognitiveScore).setOnClickListener(v -> openScore("Cognitive"));
-        findViewById(R.id.cvEmotionScore).setOnClickListener(v -> openScore("Emotional"));
+        // Scores
+        cvAttentionScore.setOnClickListener(v -> openScore("Attention"));
+        cvMemoryScore.setOnClickListener(v -> openScore("Memory"));
+        cvEmotionScore.setOnClickListener(v -> openScore("Emotional"));
+        cvCognitiveScore.setOnClickListener(v -> openScore("Cognitive"));
+        cvPresentMomentScore.setOnClickListener(v -> openScore("Awareness"));
     }
 
     private void openModule(String type) {
@@ -162,47 +167,58 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // 🔥 Fetch only POST scores
+    // FETCH ONLY POST SCORES
     // ----------------------------------------------------
     private void fetchPostScoresFromBackend() {
-        fetchScoreForDomain("srt");
-        fetchScoreForDomain("nback");
-        fetchScoreForDomain("stroop");
-        fetchScoreForDomain("task_switch");
-        fetchScoreForDomain("sart");
+        fetchScoreForDomain("srt");         // Attention
+        fetchScoreForDomain("nback");       // Memory
+        fetchScoreForDomain("stroop");      // Emotion
+        fetchScoreForDomain("task_switch"); // Cognitive
+        fetchScoreForDomain("sart");        // Awareness
     }
 
     private void fetchScoreForDomain(String domain) {
 
         api.getScoreHistory(email, domain).enqueue(new Callback<List<ScoreResponse>>() {
             @Override
-            public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> res) {
+            public void onResponse(Call<List<ScoreResponse>> call,
+                                   Response<List<ScoreResponse>> response) {
 
-                if (!res.isSuccessful() || res.body() == null) return;
+                if (!response.isSuccessful() || response.body() == null) return;
 
-                for (ScoreResponse s : res.body()) {
+                for (ScoreResponse s : response.body()) {
                     if ("post".equalsIgnoreCase(s.getScore_type())) {
                         switch (domain) {
-                            case "srt": attentionPost = s.getScore(); break;
-                            case "nback": memoryPost = s.getScore(); break;
-                            case "stroop": emotionPost = s.getScore(); break;
-                            case "task_switch": cognitivePost = s.getScore(); break;
-                            case "sart": awarenessPost = s.getScore(); break;
+                            case "srt":
+                                attentionPost = s.getScore();
+                                break;
+                            case "nback":
+                                memoryPost = s.getScore();
+                                break;
+                            case "stroop":
+                                emotionPost = s.getScore();
+                                break;
+                            case "task_switch":
+                                cognitivePost = s.getScore();
+                                break;
+                            case "sart":
+                                awarenessPost = s.getScore();
+                                break;
                         }
                         break;
                     }
                 }
-
                 drawGraph();
             }
 
             @Override
-            public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {}
+            public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {
+            }
         });
     }
 
     // ----------------------------------------------------
-    // 🔥 Draw graph using POST scores
+    // DRAW GRAPH (POST SCORES ONLY)
     // ----------------------------------------------------
     private void drawGraph() {
 
@@ -227,19 +243,19 @@ public class HomeActivity extends AppCompatActivity {
         entries.add(new Entry(3, c));
         entries.add(new Entry(4, w));
 
-        LineDataSet ds = new LineDataSet(entries, "Your Mindfulness Growth");
-        ds.setColor(Color.parseColor("#7C4DFF"));
-        ds.setLineWidth(3f);
-        ds.setCircleRadius(6f);
-        ds.setCircleColor(Color.parseColor("#7C4DFF"));
-        ds.setDrawFilled(true);
-        ds.setFillColor(Color.parseColor("#BCA7FF"));
-        ds.setValueTextSize(10f);
+        LineDataSet dataSet = new LineDataSet(entries, "Your Mindfulness Growth");
+        dataSet.setColor(Color.parseColor("#7C4DFF"));
+        dataSet.setLineWidth(3f);
+        dataSet.setCircleRadius(6f);
+        dataSet.setCircleColor(Color.parseColor("#7C4DFF"));
+        dataSet.setDrawFilled(true);
+        dataSet.setFillColor(Color.parseColor("#BCA7FF"));
+        dataSet.setValueTextSize(10f);
 
-        LineData data = new LineData(ds);
-        lineChart.setData(data);
+        lineChart.setData(new LineData(dataSet));
 
-        final String[] labels = {"Attention", "Memory", "Emotion", "Cognitive", "Awareness"};
+        final String[] labels =
+                {"Attention", "Memory", "Emotion", "Cognitive", "Awareness"};
 
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -247,8 +263,8 @@ public class HomeActivity extends AppCompatActivity {
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                if (value >= 0 && value < labels.length) return labels[(int) value];
-                return "";
+                return (value >= 0 && value < labels.length)
+                        ? labels[(int) value] : "";
             }
         });
 

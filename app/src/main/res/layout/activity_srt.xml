@@ -9,10 +9,10 @@
     <!-- 🔙 Back Button -->
     <ImageButton
         android:id="@+id/backButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:background="@android:color/transparent"
         android:rotation="180"
         android:src="@drawable/chevron_right"
@@ -24,17 +24,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Tap when you see the dot"
-        android:textColor="#000"
+        android:textColor="#222222"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="80dp" />
+        android:layout_marginTop="96dp" />
 
     <!-- Dot (Stimulus) -->
     <TextView
         android:id="@+id/tvDot"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
         android:layout_centerInParent="true"
         android:background="@drawable/red_dot"
         android:visibility="invisible" />
@@ -44,13 +44,13 @@
         android:id="@+id/tvResult"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#000"
+        android:textColor="#333333"
         android:textSize="18sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_centerHorizontal="true"
         android:layout_below="@id/tvDot"
-        android:layout_marginTop="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
         android:visibility="gone" />
 
 </RelativeLayout>

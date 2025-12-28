@@ -8,6 +8,7 @@
     android:fitsSystemWindows="true"
     android:padding="24dp">
 
+    <!-- Instruction -->
     <TextView
         android:id="@+id/tvInstruction"
         android:layout_width="wrap_content"
@@ -16,8 +17,10 @@
         android:textColor="#000"
         android:textSize="18sp"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:layout_marginBottom="30dp" />
 
+    <!-- Letter Display -->
     <TextView
         android:id="@+id/tvLetter"
         android:layout_width="match_parent"
@@ -27,18 +30,22 @@
         android:textSize="120sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginBottom="40dp" />
+        android:includeFontPadding="false"
+        android:layout_marginBottom="40dp"
+        android:contentDescription="Current letter" />
 
+    <!-- Match Button -->
     <Button
         android:id="@+id/btnMatch"
         android:layout_width="180dp"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:text="MATCH"
         android:textStyle="bold"
         android:textSize="18sp"
-        android:backgroundTint="#7BC47F"
-        android:textColor="#FFF" />
+        android:textColor="#FFFFFF"
+        android:background="@drawable/btn_bg" />
 
+    <!-- Score -->
     <TextView
         android:id="@+id/tvScore"
         android:layout_width="wrap_content"
@@ -48,6 +55,7 @@
         android:textSize="16sp"
         android:layout_marginTop="30dp" />
 
+    <!-- Info -->
     <TextView
         android:id="@+id/tvInfo"
         android:layout_width="wrap_content"
@@ -56,5 +64,6 @@
         android:textColor="#777"
         android:textSize="16sp"
         android:layout_marginTop="5dp"
-        android:gravity="center"/>
+        android:gravity="center" />
+
 </LinearLayout>

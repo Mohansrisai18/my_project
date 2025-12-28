@@ -18,7 +18,7 @@
             android:id="@+id/tvSessionTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sub-Video"
+            android:text="Sub-Audio"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#000000" />

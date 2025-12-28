@@ -14,83 +14,89 @@
         android:orientation="vertical"
         android:padding="24dp"
         android:gravity="center"
-        android:elevation="8dp"
         android:background="@drawable/intro_card_bg"
-        app:layout_constraintWidth_percent="0.88"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Icon -->
-        <ImageView
-            android:id="@+id/iconTarget"
-            android:layout_width="140dp"
-            android:layout_height="140dp"
-            android:src="@drawable/target_icon"
-            android:scaleType="fitCenter"
-            android:layout_marginBottom="8dp" />
 
-        <!-- TITLE -->
-        <TextView
-            android:id="@+id/heading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="How mindfulness enhances memory focus"
+    android:elevation="0dp"
+
+
+    android:layout_marginVertical="16dp"
+
+    app:layout_constraintWidth_percent="0.88"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+
+    <!-- Icon -->
+    <ImageView
+        android:id="@+id/iconTarget"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:src="@drawable/target_icon"
+        android:scaleType="fitCenter"
+        android:layout_marginBottom="8dp" />
+
+    <!-- TITLE -->
+    <TextView
+        android:id="@+id/heading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="How mindfulness enhances memory focus"
+        android:textStyle="bold"
+        android:textColor="#000"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp" />
+
+    <!-- DESCRIPTION -->
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mindfulness strengthens neural pathways related to attention and working memory, helping you stay focused and remember information better."
+        android:gravity="center"
+        android:textColor="#555"
+        android:layout_marginTop="8dp"
+        android:textSize="14sp"
+        android:lineSpacingExtra="4dp"/>
+
+    <!-- SPACER -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="12dp"/>
+
+    <!-- BUTTONS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Back"
             android:textStyle="bold"
             android:textColor="#000"
-            android:textSize="18sp"
-            android:gravity="center"
-            android:layout_marginTop="8dp" />
+            android:background="@drawable/btn_bg"
+            android:layout_marginEnd="6dp"/>
 
-        <!-- DESCRIPTION -->
-        <TextView
-            android:id="@+id/description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Mindfulness strengthens neural pathways related to attention and working memory, helping you stay focused and remember information better."
-            android:gravity="center"
-            android:textColor="#555"
-            android:layout_marginTop="8dp"
-            android:textSize="14sp"
-            android:lineSpacingExtra="4dp"/>
-
-        <!-- SPACER -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="12dp"/>
-
-        <!-- BUTTONS -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="8dp">
-
-            <Button
-                android:id="@+id/btnBack"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="Back"
-                android:textStyle="bold"
-                android:textColor="#000"
-                android:background="@drawable/btn_bg"
-                android:layout_marginEnd="6dp"/>
-
-            <Button
-                android:id="@+id/btnNext"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="Next"
-                android:textStyle="bold"
-                android:textColor="#FFF"
-                android:backgroundTint="#7F39FB"/>
-
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="Next"
+            android:textStyle="bold"
+            android:textColor="#FFF"
+            android:backgroundTint="#7F39FB"/>
 
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

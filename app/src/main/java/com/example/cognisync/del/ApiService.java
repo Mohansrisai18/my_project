@@ -8,6 +8,7 @@ import com.example.cognisync.model.LoginRequest;
 import com.example.cognisync.model.Patient;
 import com.example.cognisync.model.ScoreRequest;
 import com.example.cognisync.model.ScoreResponse;
+import com.example.cognisync.model.UserProfileResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -26,9 +27,17 @@ public interface ApiService {
     // ===============================
     @POST("user/signup/")
     Call<Void> registerPatient(@Body Patient patient);
+    @GET("user/profile")
+    Call<UserProfileResponse> getUserProfile(@Query("email") String email);
+
 
     @POST("user/login/")
     Call<Void> loginPatient(@Body LoginRequest request);
+
+    // Add under AUTH / PROFILE section
+    @POST("user/update-profile/")
+    Call<Void> updateUserProfile(@Body Map<String, String> body);
+
 
     @GET("user/profile/{email}/")
     Call<Patient> getPatientProfile(@Path("email") String email);

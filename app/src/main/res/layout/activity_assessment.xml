@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_gradient"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:fillViewport="true">
 
     <LinearLayout
         android:id="@+id/rootLayout"
@@ -14,49 +15,50 @@
 
         <ImageButton
             android:id="@+id/backButton"
-            android:background="@drawable/circle_bg"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_arrow_back" />
+            android:background="@drawable/circle_bg"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Back" />
 
         <TextView
             android:id="@+id/titleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Task"
             android:textColor="#000000"
             android:textSize="28sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginTop="10dp" />
 
         <TextView
             android:id="@+id/instructionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Instructions"
             android:textSize="16sp"
             android:textColor="#000000"
             android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginTop="6dp" />
 
         <LinearLayout
             android:id="@+id/questionContainer"
-            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:layout_marginTop="20dp" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNext"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="30dp"
             android:text="SUBMIT"
             android:textColor="#000000"
             android:textStyle="bold"
             android:textSize="20sp"
-            android:background="@drawable/btn_bg"
-            android:layout_marginTop="30dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp" />
+            android:background="@drawable/btn_bg" />
 
     </LinearLayout>
 </ScrollView>

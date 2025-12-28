@@ -6,8 +6,6 @@
     android:layout_height="match_parent"
     android:background="#FDFDFD"
     android:fillViewport="true"
-    android:fitsSystemWindows="true"
-
     tools:context=".HomeActivity">
 
     <LinearLayout
@@ -36,8 +34,10 @@
                 <ImageView
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:src="@drawable/ic_leaf"
-                    android:layout_marginEnd="12dp" />
+                    android:layout_marginEnd="12dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_leaf" />
 
                 <TextView
                     android:id="@+id/tvGreeting"
@@ -55,9 +55,9 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="16dp"
                 android:background="@drawable/menu_bg"
-                android:src="@drawable/ic_menu"
+                android:padding="12dp"
                 android:scaleType="centerInside"
-                android:padding="12dp" />
+                android:src="@drawable/ic_menu" />
         </LinearLayout>
 
         <!-- =============== MODULES CARD =============== -->
@@ -101,8 +101,11 @@
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1"
-                            android:src="@drawable/ic_mindfulness"
-                            android:scaleType="fitCenter"/>
+                            android:layout_marginTop="8dp"
+                            android:layout_gravity="center"
+                            android:adjustViewBounds="true"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_mindfulness"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -140,19 +143,13 @@
                                 android:textStyle="bold"
                                 android:textColor="#000"/>
 
-                            <TextView
-                                android:id="@+id/tvMinutesFocused"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textColor="#555"
-                                android:textSize="14sp"
-                                android:layout_marginTop="2dp"
-                                android:background="@drawable/bg_minutes"/>
-
                             <ImageView
                                 android:layout_width="60dp"
                                 android:layout_height="60dp"
+                                android:layout_marginTop="8dp"
+                                android:layout_gravity="center"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
                                 android:src="@drawable/ic_bukky"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
@@ -183,19 +180,13 @@
                                 android:textStyle="bold"
                                 android:textColor="#000"/>
 
-                            <TextView
-                                android:id="@+id/tvMinutesWorking"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:background="@drawable/bg_minutes"
-                                android:text="--"
-                                android:textColor="#555"
-                                android:textSize="14sp" />
-
                             <ImageView
                                 android:layout_width="60dp"
                                 android:layout_height="60dp"
+                                android:layout_marginTop="8dp"
+                                android:layout_gravity="center"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
                                 android:src="@drawable/ic_working_memory"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
@@ -235,19 +226,13 @@
                                 android:textStyle="bold"
                                 android:textColor="#000"/>
 
-                            <TextView
-                                android:id="@+id/tvMinutesPresent"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textColor="#555"
-                                android:textSize="14sp"
-                                android:layout_marginTop="2dp"
-                                android:background="@drawable/bg_minutes"/>
-
                             <ImageView
                                 android:layout_width="60dp"
                                 android:layout_height="60dp"
+                                android:layout_marginTop="8dp"
+                                android:layout_gravity="center"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
                                 android:src="@drawable/ic_present_moment"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
@@ -278,22 +263,14 @@
                                 android:textStyle="bold"
                                 android:textColor="#000"/>
 
-                            <TextView
-                                android:id="@+id/tvMinutesCognitive"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textColor="#555"
-                                android:textSize="14sp"
-                                android:layout_marginTop="2dp"
-                                android:background="@drawable/bg_minutes"/>
-
                             <ImageView
                                 android:layout_width="98dp"
                                 android:layout_height="44dp"
-                                android:src="@drawable/extracted_image"
+                                android:layout_marginTop="8dp"
+                                android:layout_gravity="center"
                                 android:adjustViewBounds="true"
-                                android:scaleType="fitEnd"/>
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/extracted_image"/>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
@@ -323,26 +300,18 @@
                             android:textStyle="bold"
                             android:textColor="#000"/>
 
-                        <TextView
-                            android:id="@+id/tvMinutesEmotional"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#555"
-                            android:textSize="14sp"
-                            android:layout_marginTop="2dp"
-                            android:background="@drawable/bg_minutes"/>
-
                         <ImageView
                             android:layout_width="60dp"
                             android:layout_height="60dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_gravity="center"
+                            android:adjustViewBounds="true"
+                            android:scaleType="fitCenter"
                             android:src="@drawable/ic_er"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
-
-        <!-- Progress Dashboard -->
 
         <!-- Progress Dashboard -->
         <androidx.cardview.widget.CardView
@@ -357,8 +326,7 @@
             android:clickable="false"
             android:focusable="false">
 
-
-        <LinearLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -384,14 +352,16 @@
                 <ImageView
                     android:layout_width="50dp"
                     android:layout_height="38dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_gravity="end"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/ic_dashboard_graph"
-                    android:contentDescription="Dashboard graph"
-                    android:layout_gravity="end" />
+                    android:contentDescription="Dashboard graph" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
         <!-- Scores Section -->
-        <!-- Memory Score -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvMemoryScore"
             android:layout_width="match_parent"
@@ -415,17 +385,13 @@
                     android:textStyle="bold"
                     android:textColor="#292929"/>
 
-                <TextView
-                    android:id="@+id/tvScoreMemory"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="--"
-                    android:textColor="#222"
-                    android:textSize="15sp" />
-
                 <ImageView
                     android:layout_width="36dp"
                     android:layout_height="36dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/ic_memory"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -462,17 +428,13 @@
                         android:textStyle="bold"
                         android:textColor="#292929"/>
 
-                    <TextView
-                        android:id="@+id/tvScoreAttention"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textSize="15sp"
-                        android:textColor="#222"/>
-
                     <ImageView
                         android:layout_width="34dp"
                         android:layout_height="34dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"
                         android:src="@drawable/target_icon"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -502,17 +464,13 @@
                         android:textStyle="bold"
                         android:textColor="#292929"/>
 
-                    <TextView
-                        android:id="@+id/tvScoreEmotional"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textSize="15sp"
-                        android:textColor="#222"/>
-
                     <ImageView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"
                         android:src="@drawable/ic_emotion"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -550,17 +508,13 @@
                         android:textStyle="bold"
                         android:textColor="#292929"/>
 
-                    <TextView
-                        android:id="@+id/tvScoreCognitive"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textSize="15sp"
-                        android:textColor="#222"/>
-
                     <ImageView
                         android:layout_width="34dp"
                         android:layout_height="34dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"
                         android:src="@drawable/target_icon"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -590,26 +544,20 @@
                         android:textStyle="bold"
                         android:textColor="#292929"/>
 
-                    <TextView
-                        android:id="@+id/tvScorePresent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textSize="15sp"
-                        android:textColor="#222"/>
-
                     <ImageView
                         android:layout_width="34dp"
                         android:layout_height="34dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"
                         android:src="@drawable/ic_emotion"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
         </LinearLayout>
 
-        <!-- ✅ ADDED CHART SECTION HERE -->
-
-        <!-- ✅ GRAPH SECTION BELOW DASHBOARD -->
+        <!-- GRAPH SECTION -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvGraphSection"
             android:layout_width="match_parent"
@@ -642,7 +590,6 @@
                     android:padding="8dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
-
 
     </LinearLayout>
 

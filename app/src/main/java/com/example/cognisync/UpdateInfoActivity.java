@@ -3,56 +3,67 @@ package com.example.cognisync;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.cognisync.del.ApiClient;
+import com.example.cognisync.del.ApiService;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class UpdateInfoActivity extends AppCompatActivity {
 
-    private EditText editName, editAge, editOldPassword, editNewPassword, editConfirmPassword;
+    private EditText editName, editAge;
     private Spinner genderSpinner;
+    private Button updateBtn;
+
+    // SharedPreferences keys
+    private static final String PREFS_NAME = "UserPrefs";
+    private static final String KEY_USER_ID = "user_id";   // backend field
+    private static final String KEY_NAME = "userName";     // legacy/local
+    private static final String KEY_AGE = "age";
+    private static final String KEY_GENDER = "gender";
+    private static final String KEY_EMAIL = "email";
 
     private SharedPreferences sharedPreferences;
-    private static final String PREFS_NAME = "UserPrefs";
-    private static final String NAME_KEY = "userName";
-    private static final String AGE_KEY = "userAge";
-    private static final String GENDER_KEY = "userGender";
-    private static final String PASSWORD_KEY = "userPassword";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Hide Action Bar
         if (getSupportActionBar() != null) getSupportActionBar().hide();
-
         setContentView(R.layout.activity_account_settings);
 
-        // Light Statusbar
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // Views
         editName = findViewById(R.id.editName);
         editAge = findViewById(R.id.editAge);
         genderSpinner = findViewById(R.id.genderSpinner);
-        editOldPassword = findViewById(R.id.editOldPassword);
-        editNewPassword = findViewById(R.id.editNewPassword);
-        editConfirmPassword = findViewById(R.id.editConfirmPassword);
-
-        findViewById(R.id.updateInfoButton).setOnClickListener(v -> saveInfo());
+        updateBtn = findViewById(R.id.updateInfoButton);
 
         setupGenderSpinner();
-        loadData();
+        loadLocalData();
+
+        updateBtn.setOnClickListener(v -> updateProfile());
     }
 
+    // ---------------- GENDER SPINNER ----------------
     private void setupGenderSpinner() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
@@ -63,32 +74,36 @@ public class UpdateInfoActivity extends AppCompatActivity {
         genderSpinner.setAdapter(adapter);
     }
 
-    private void loadData() {
-        editName.setText(sharedPreferences.getString(NAME_KEY, ""));
-        editAge.setText(sharedPreferences.getString(AGE_KEY, ""));
+    // ---------------- LOAD LOCAL DATA ----------------
+    private void loadLocalData() {
 
-        String savedGender = sharedPreferences.getString(GENDER_KEY, "");
+        String name = sharedPreferences.getString(KEY_USER_ID, "");
+        if (name.isEmpty()) {
+            name = sharedPreferences.getString(KEY_NAME, "");
+        }
 
-        if (!savedGender.isEmpty()) {
-            savedGender = savedGender.substring(0,1).toUpperCase() + savedGender.substring(1);
+        editName.setText(name);
+        editAge.setText(sharedPreferences.getString(KEY_AGE, ""));
+
+        String gender = sharedPreferences.getString(KEY_GENDER, "");
+        if (!gender.isEmpty()) {
+            String normalized =
+                    gender.substring(0, 1).toUpperCase() + gender.substring(1);
             ArrayAdapter adapter = (ArrayAdapter) genderSpinner.getAdapter();
-            int pos = adapter.getPosition(savedGender);
+            int pos = adapter.getPosition(normalized);
             if (pos >= 0) genderSpinner.setSelection(pos);
         }
     }
 
-    private void saveInfo() {
+    // ---------------- BACKEND-FIRST UPDATE ----------------
+    private void updateProfile() {
 
-        String name = editName.getText().toString().trim();
+        String userId = editName.getText().toString().trim();
         String age = editAge.getText().toString().trim();
         String gender = genderSpinner.getSelectedItem().toString();
+        String email = sharedPreferences.getString(KEY_EMAIL, "");
 
-        String oldPass = editOldPassword.getText().toString().trim();
-        String newPass = editNewPassword.getText().toString().trim();
-        String confirmPass = editConfirmPassword.getText().toString().trim();
-
-        // Validation
-        if (name.isEmpty()) {
+        if (userId.isEmpty()) {
             editName.setError("Enter your name");
             return;
         }
@@ -98,40 +113,66 @@ public class UpdateInfoActivity extends AppCompatActivity {
             return;
         }
 
-        // Handle password update
-        String storedPass = sharedPreferences.getString(PASSWORD_KEY, "");
-
-        if (!oldPass.isEmpty() || !newPass.isEmpty() || !confirmPass.isEmpty()) {
-
-            if (!oldPass.equals(storedPass)) {
-                editOldPassword.setError("Incorrect password");
-                return;
-            }
-
-            if (newPass.length() < 4) {
-                editNewPassword.setError("Min 4 characters");
-                return;
-            }
-
-            if (!newPass.equals(confirmPass)) {
-                editConfirmPassword.setError("Passwords do not match");
-                return;
-            }
-
-            sharedPreferences.edit().putString(PASSWORD_KEY, newPass).apply();
+        if (email.isEmpty()) {
+            Toast.makeText(this,
+                    "Email missing. Please login again.",
+                    Toast.LENGTH_LONG).show();
+            return;
         }
 
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(NAME_KEY, name);
-        editor.putString(AGE_KEY, age);
-        editor.putString(GENDER_KEY, gender);
-        editor.apply();
+        updateBtn.setEnabled(false);
 
-        Toast.makeText(this, "Account Updated", Toast.LENGTH_SHORT).show();
+        // ✅ PAYLOAD MUST MATCH DJANGO MODEL
+        Map<String, String> body = new HashMap<>();
+        body.put("email", email);
+        body.put("user_id", userId);   // 🔥 FIXED
+        body.put("age", age);
+        body.put("gender", gender);
 
-        Intent intent = new Intent(this, ProfileActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(intent);
-        finish();
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+
+        api.updateUserProfile(body).enqueue(new Callback<Void>() {
+
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                updateBtn.setEnabled(true);
+
+                if (!response.isSuccessful()) {
+                    Toast.makeText(UpdateInfoActivity.this,
+                            "Server update failed",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // ✅ SAVE LOCALLY ONLY AFTER BACKEND SUCCESS
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString(KEY_USER_ID, userId);
+                editor.putString(KEY_NAME, userId);
+                editor.putString(KEY_AGE, age);
+                editor.putString(KEY_GENDER, gender);
+                editor.apply();
+
+                Toast.makeText(UpdateInfoActivity.this,
+                        "Account updated successfully",
+                        Toast.LENGTH_SHORT).show();
+
+                Intent intent =
+                        new Intent(UpdateInfoActivity.this, ProfileActivity.class);
+                intent.setFlags(
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                );
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                updateBtn.setEnabled(true);
+                Toast.makeText(UpdateInfoActivity.this,
+                        "Network error. Try again.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

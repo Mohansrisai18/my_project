@@ -2,7 +2,7 @@
 
 
 package com.example.cognisync.del;
-
+import com.example.cognisync.model.TimetableResponse;
 import com.example.cognisync.model.AudioResponse;
 import com.example.cognisync.model.LoginRequest;
 import com.example.cognisync.model.Patient;
@@ -37,6 +37,11 @@ public interface ApiService {
     // Add under AUTH / PROFILE section
     @POST("user/update-profile/")
     Call<Void> updateUserProfile(@Body Map<String, String> body);
+
+    @POST("user/predict/")
+    Call<TimetableResponse> getTimetable(
+            @Body Map<String, Float> scores
+    );
 
 
     @GET("user/profile/{email}/")

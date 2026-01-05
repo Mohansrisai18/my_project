@@ -13,8 +13,8 @@
         <domain includeSubdomains="true">10.208.180.26</domain>
         <domain includeSubdomains="true">10.115.82.187</domain>
         <domain includeSubdomains="true">192.168.1.4</domain>
+        <domain includeSubdomains="true">10.190.101.221</domain>
 
-
-
+        10.190.101.221
     </domain-config>
 </network-security-config>

@@ -50,7 +50,7 @@ public class HomeActivity extends AppCompatActivity {
     private ApiService api;
     private String email;
 
-    // POST scores only
+    // TASK scores only
     private Float attentionPost = null;
     private Float memoryPost = null;
     private Float emotionPost = null;
@@ -65,7 +65,9 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         // Status bar styling
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.white));
+        getWindow().setStatusBarColor(
+                ContextCompat.getColor(this, android.R.color.white)
+        );
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -94,7 +96,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // INIT VIEWS (MATCHES XML)
+    // INIT VIEWS
     // ----------------------------------------------------
     private void initViews() {
 
@@ -121,14 +123,14 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // GREETING (BACKWARD-COMPATIBLE)
+    // GREETING
     // ----------------------------------------------------
     private void setGreeting() {
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
 
         String userId = sp.getString("user_id", null);
         if (userId == null || userId.isEmpty()) {
-            userId = sp.getString("username", "User"); // fallback
+            userId = sp.getString("username", "User");
         }
 
         tvGreeting.setText("Hi " + userId);
@@ -167,7 +169,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // FETCH ONLY POST SCORES
+    // FETCH TASK SCORES
     // ----------------------------------------------------
     private void fetchPostScoresFromBackend() {
         fetchScoreForDomain("srt");         // Attention
@@ -187,7 +189,10 @@ public class HomeActivity extends AppCompatActivity {
                 if (!response.isSuccessful() || response.body() == null) return;
 
                 for (ScoreResponse s : response.body()) {
-                    if ("post".equalsIgnoreCase(s.getScore_type())) {
+
+                    // ✅ FIX: backend uses "task"
+                    if ("task".equalsIgnoreCase(s.getScore_type())) {
+
                         switch (domain) {
                             case "srt":
                                 attentionPost = s.getScore();
@@ -218,7 +223,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // ----------------------------------------------------
-    // DRAW GRAPH (POST SCORES ONLY)
+    // DRAW GRAPH
     // ----------------------------------------------------
     private void drawGraph() {
 

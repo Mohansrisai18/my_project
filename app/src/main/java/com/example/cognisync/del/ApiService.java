@@ -2,13 +2,14 @@
 
 
 package com.example.cognisync.del;
-import com.example.cognisync.model.TimetableResponse;
 import com.example.cognisync.model.AudioResponse;
 import com.example.cognisync.model.LoginRequest;
 import com.example.cognisync.model.Patient;
 import com.example.cognisync.model.ScoreRequest;
 import com.example.cognisync.model.ScoreResponse;
 import com.example.cognisync.model.UserProfileResponse;
+import com.example.cognisync.model.MLPredictRequest;
+import com.example.cognisync.model.MLPredictResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,7 @@ public interface ApiService {
     @POST("user/update-profile/")
     Call<Void> updateUserProfile(@Body Map<String, String> body);
 
-    @POST("user/predict/")
-    Call<TimetableResponse> getTimetable(
-            @Body Map<String, Float> scores
-    );
+
 
 
     @GET("user/profile/{email}/")
@@ -64,20 +62,6 @@ public interface ApiService {
     // ===============================
     // INITIAL QUESTIONNAIRES
     // ===============================
-    @POST("user/save-maas-initial/")
-    Call<Void> saveMaasInitial(@Body ScoreRequest body);
-
-    @POST("user/save-panas-initial/")
-    Call<Void> savePanasInitial(@Body ScoreRequest body);
-
-    @POST("user/save-dass-initial/")
-    Call<Void> saveDassInitial(@Body ScoreRequest body);
-
-    @POST("user/save-erq-initial/")
-    Call<Void> saveErqInitial(@Body ScoreRequest body);
-
-    @POST("user/save-phlms-initial/")
-    Call<Void> savePhlmsInitial(@Body ScoreRequest body);
 
     // ===============================
     // PRE QUESTIONNAIRES
@@ -128,6 +112,12 @@ public interface ApiService {
     Call<List<ScoreResponse>> getScoreHistory(
             @Path("email") String email,
             @Query("domain") String domain
+    );
+
+
+    @POST("user/predict/")
+    Call<MLPredictResponse> predictMentalState(
+            @Body MLPredictRequest request
     );
 
     // ===============================

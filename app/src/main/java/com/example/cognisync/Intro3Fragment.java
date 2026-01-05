@@ -3,6 +3,7 @@ package com.example.cognisync;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -31,7 +32,8 @@ public class Intro3Fragment extends Fragment {
         );
 
         view.findViewById(R.id.btnFinish).setOnClickListener(v -> {
-            startActivity(new Intent(requireActivity(), HomeActivity.class));
+            // ✅ START TASK FLOW (NOT HOME)
+            startActivity(new Intent(requireActivity(), TaskAActivity.class));
             requireActivity().finish();
         });
     }

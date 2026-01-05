@@ -34,7 +34,9 @@ public class ApiClient {
 //    private static final String BASE_URL = "http://127.0.0.1:8000/";
 //    private static final String BASE_URL = "http://10.208.180.26:8000/";
 //    private static final String BASE_URL = "http://10.115.82.187:8000/";
-    private static final String BASE_URL = "http://192.168.1.4:8000/";
+//    private static final String BASE_URL = "http://192.168.1.4:8000/";
+
+    private static final String BASE_URL = "http://10.190.101.221:8000/";
     private static Retrofit retrofit;
 
     public static Retrofit getClient() {

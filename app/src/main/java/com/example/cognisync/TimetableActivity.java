@@ -1,69 +1,53 @@
 package com.example.cognisync;
 
+import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.widget.Button;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cognisync.del.ApiClient;
-import com.example.cognisync.del.ApiService;
-import com.example.cognisync.model.TimetableResponse;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import com.example.cognisync.model.MLPredictResponse;
+import com.example.cognisync.util.TimetableStore;
+import com.google.gson.Gson;
 
 public class TimetableActivity extends AppCompatActivity {
-
-    private RecyclerView recyclerView;
-    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timetable);
 
-        recyclerView = findViewById(R.id.recyclerTimetable);
+        // -------------------------
+        // RecyclerView setup
+        // -------------------------
+        RecyclerView recyclerView = findViewById(R.id.recyclerTimetable);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        apiService = ApiClient.getClient().create(ApiService.class);
+        String json = TimetableStore.load(this);
 
-        Map<String, Float> scores = new HashMap<>();
-        scores.put("maas", 32f);
-        scores.put("panas_pos", 21f);
-        scores.put("panas_neg", 29f);
-        scores.put("dass", 44f);
-        scores.put("erq", 27f);
-        scores.put("phlms", 30f);
+        if (json == null) {
+            Toast.makeText(this, "No timetable found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
-        apiService.getTimetable(scores)
-                .enqueue(new Callback<TimetableResponse>() {
+        MLPredictResponse response =
+                new Gson().fromJson(json, MLPredictResponse.class);
 
-                    @Override
-                    public void onResponse(
-                            @NonNull Call<TimetableResponse> call,
-                            @NonNull Response<TimetableResponse> response
-                    ) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            TimetableAdapter adapter =
-                                    new TimetableAdapter(
-                                            response.body().getTimetable()
-                                    );
-                            recyclerView.setAdapter(adapter);
-                        }
-                    }
+        recyclerView.setAdapter(
+                new TimetableListAdapter(response.timetable)
+        );
 
-                    @Override
-                    public void onFailure(
-                            @NonNull Call<TimetableResponse> call,
-                            @NonNull Throwable t
-                    ) {
-                        t.printStackTrace();
-                    }
-                });
+        // -------------------------
+        // ✅ DONE BUTTON HANDLER
+        // -------------------------
+        Button btnDone = findViewById(R.id.btnDone);
+        btnDone.setOnClickListener(v -> {
+            startActivity(new Intent(TimetableActivity.this, HomeActivity.class));
+            finish();
+        });
     }
 }

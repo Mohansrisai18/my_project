@@ -236,7 +236,8 @@ public class SignupActivity extends AppCompatActivity {
                             "Account created!",
                             Toast.LENGTH_SHORT).show();
 
-                    navigateToTaskAActivity();
+                    navigateToIntroActivity();
+
                 } else {
                     Toast.makeText(SignupActivity.this,
                             "Signup failed (" + response.code() + ")",
@@ -255,8 +256,8 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
-    private void navigateToTaskAActivity() {
-        startActivity(new Intent(this, TaskAActivity.class));
+    private void navigateToIntroActivity() {
+        startActivity(new Intent(this, IntroActivity.class));
         finish();
     }
 

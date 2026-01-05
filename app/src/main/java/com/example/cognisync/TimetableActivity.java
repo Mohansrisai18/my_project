@@ -2,6 +2,8 @@ package com.example.cognisync;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -20,11 +22,7 @@ public class TimetableActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timetable);
 
-        // -------------------------
-        // RecyclerView setup
-        // -------------------------
-        RecyclerView recyclerView = findViewById(R.id.recyclerTimetable);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // ❌ DO NOT call setSupportActionBar()
 
         String json = TimetableStore.load(this);
 
@@ -37,17 +35,46 @@ public class TimetableActivity extends AppCompatActivity {
         MLPredictResponse response =
                 new Gson().fromJson(json, MLPredictResponse.class);
 
+        if (response == null || response.timetable == null) {
+            Toast.makeText(this, "Invalid timetable", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerTimetable);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(
                 new TimetableListAdapter(response.timetable)
         );
 
-        // -------------------------
-        // ✅ DONE BUTTON HANDLER
-        // -------------------------
         Button btnDone = findViewById(R.id.btnDone);
         btnDone.setOnClickListener(v -> {
-            startActivity(new Intent(TimetableActivity.this, HomeActivity.class));
+            startActivity(new Intent(this, HomeActivity.class));
             finish();
         });
+    }
+
+    // ---------------- MENU ----------------
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_timetable, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (item.getItemId() == R.id.action_regenerate) {
+
+            TimetableStore.clear(this);
+
+            Intent i = new Intent(this, TaskAActivity.class);
+            i.putExtra("REGENERATE", true);
+            startActivity(i);
+            finish();
+
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -69,7 +69,10 @@
             android:name=".ResetPasswordActivity"
             android:exported="false" />
 
-        <activity android:name=".TimetableActivity" />
+        <activity
+            android:name=".TimetableActivity"
+            android:exported="false" />
+
 
 
     </application>

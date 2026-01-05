@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
 import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
 import com.example.cognisync.model.ScoreResponse;
+import com.example.cognisync.util.TimetableStore;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -43,6 +44,9 @@ public class HomeActivity extends AppCompatActivity {
     // Score cards
     private CardView cvAttentionScore, cvMemoryScore,
             cvEmotionScore, cvCognitiveScore, cvPresentMomentScore;
+
+    // ✅ Timetable card
+    private CardView cvTimetable;
 
     // Graph
     private LineChart lineChart;
@@ -114,6 +118,9 @@ public class HomeActivity extends AppCompatActivity {
         cvCognitiveScore = findViewById(R.id.cvCognitiveScore);
         cvPresentMomentScore = findViewById(R.id.cvPresentMomentScore);
 
+        // ✅ Bind timetable card
+        cvTimetable = findViewById(R.id.cvTimetable);
+
         lineChart = findViewById(R.id.lineChart);
 
         ImageButton btnMenu = findViewById(R.id.btnMenu);
@@ -154,6 +161,28 @@ public class HomeActivity extends AppCompatActivity {
         cvEmotionScore.setOnClickListener(v -> openScore("Emotional"));
         cvCognitiveScore.setOnClickListener(v -> openScore("Cognitive"));
         cvPresentMomentScore.setOnClickListener(v -> openScore("Awareness"));
+
+        // ✅ Timetable card click
+        cvTimetable.setOnClickListener(v -> {
+
+            // 1️⃣ Check if timetable exists
+            if (TimetableStore.exists(this)) {
+
+                // 2️⃣ Open timetable
+                startActivity(
+                        new Intent(this, TimetableActivity.class)
+                );
+
+            } else {
+
+                // 3️⃣ Not generated yet
+                Toast.makeText(
+                        this,
+                        "Complete assessment to generate your timetable",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
     }
 
     private void openModule(String type) {
@@ -172,11 +201,11 @@ public class HomeActivity extends AppCompatActivity {
     // FETCH TASK SCORES
     // ----------------------------------------------------
     private void fetchPostScoresFromBackend() {
-        fetchScoreForDomain("srt");         // Attention
-        fetchScoreForDomain("nback");       // Memory
-        fetchScoreForDomain("stroop");      // Emotion
-        fetchScoreForDomain("task_switch"); // Cognitive
-        fetchScoreForDomain("sart");        // Awareness
+        fetchScoreForDomain("srt");
+        fetchScoreForDomain("nback");
+        fetchScoreForDomain("stroop");
+        fetchScoreForDomain("task_switch");
+        fetchScoreForDomain("sart");
     }
 
     private void fetchScoreForDomain(String domain) {
@@ -190,7 +219,6 @@ public class HomeActivity extends AppCompatActivity {
 
                 for (ScoreResponse s : response.body()) {
 
-                    // ✅ FIX: backend uses "task"
                     if ("task".equalsIgnoreCase(s.getScore_type())) {
 
                         switch (domain) {

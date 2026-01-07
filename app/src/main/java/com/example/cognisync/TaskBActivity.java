@@ -1,5 +1,6 @@
 package com.example.cognisync;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
@@ -18,6 +19,7 @@ import com.example.cognisync.util.TimetableStore;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,6 +32,7 @@ public class TaskBActivity extends AppCompatActivity {
     private Button btnFinish;
 
     private int[] selected;
+    private ProgressDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +57,12 @@ public class TaskBActivity extends AppCompatActivity {
         btnFinish = findViewById(R.id.btnNext);
         btnFinish.setText("FINISH");
 
+        // -------- LOADING DIALOG --------
+        loadingDialog = new ProgressDialog(this);
+        loadingDialog.setMessage("Generating your 21-day timetable...");
+        loadingDialog.setCancelable(false);
+
+        // -------- GET QUESTIONS --------
         selected = getIntent().getIntArrayExtra("SELECTED_QUESTIONS");
         if (selected == null) {
             Toast.makeText(this, "Survey error", Toast.LENGTH_LONG).show();
@@ -61,9 +70,25 @@ public class TaskBActivity extends AppCompatActivity {
             return;
         }
 
+        generateTaskBQuestions();
         loadQuestions();
 
         btnFinish.setOnClickListener(v -> submit());
+    }
+
+    // --------------------------------------------------
+    // Generate Task B questions (NO repetition)
+    // --------------------------------------------------
+    private void generateTaskBQuestions() {
+
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int i : TaskAActivity.TASK_B_POOL) list.add(i);
+
+        Collections.shuffle(list);
+
+        for (int i = 0; i < 5; i++) {
+            selected[i + 5] = list.get(i);
+        }
     }
 
     // --------------------------------------------------
@@ -78,10 +103,13 @@ public class TaskBActivity extends AppCompatActivity {
     }
 
     private void load(TextView tv, Spinner sp, int idx) {
+
         tv.setText(TaskAActivity.questions[idx]);
+        tv.setTextColor(getResources().getColor(android.R.color.black));
 
         ArrayList<String> items = new ArrayList<>();
         items.add("Select");
+
         for (int i = TaskAActivity.scaleMin[idx];
              i <= TaskAActivity.scaleMax[idx]; i++) {
             items.add(String.valueOf(i));
@@ -89,6 +117,7 @@ public class TaskBActivity extends AppCompatActivity {
 
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<>(this, R.layout.spinner_selected_item, items);
+
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         sp.setAdapter(adapter);
     }
@@ -143,7 +172,6 @@ public class TaskBActivity extends AppCompatActivity {
             }
         }
 
-        // -------- CREATE REQUEST --------
         MLPredictRequest request = new MLPredictRequest(
                 (int) (maas / maasMax * 100),
                 (int) (panasPos / panasPosMax * 100),
@@ -155,46 +183,46 @@ public class TaskBActivity extends AppCompatActivity {
 
         ApiService api = ApiClient.getClient().create(ApiService.class);
 
-        // -------- API CALL --------
+        // 🔒 UI LOCK + LOADING
+        btnFinish.setEnabled(false);
+        loadingDialog.show();
+
         api.predictMentalState(request).enqueue(new Callback<MLPredictResponse>() {
 
             @Override
-            public void onResponse(
-                    Call<MLPredictResponse> call,
-                    Response<MLPredictResponse> response
-            ) {
+            public void onResponse(Call<MLPredictResponse> call,
+                                   Response<MLPredictResponse> response) {
+
+                loadingDialog.dismiss();
+                btnFinish.setEnabled(true);
+
                 if (!response.isSuccessful() || response.body() == null) {
-                    Toast.makeText(
-                            TaskBActivity.this,
-                            "Prediction failed",
-                            Toast.LENGTH_LONG
-                    ).show();
+                    Toast.makeText(TaskBActivity.this,
+                            "Prediction failed", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                // 🔴 CLEAR OLD TIMETABLE
+                // SAVE TIMETABLE
                 TimetableStore.clear(TaskBActivity.this);
-
-                // SAVE NEW TIMETABLE
                 String json = new Gson().toJson(response.body());
                 TimetableStore.save(TaskBActivity.this, json);
 
                 // OPEN TIMETABLE
-                Intent i = new Intent(
-                        TaskBActivity.this,
-                        TimetableActivity.class
+                startActivity(
+                        new Intent(TaskBActivity.this, TimetableActivity.class)
                 );
-                startActivity(i);
                 finish();
             }
 
             @Override
             public void onFailure(Call<MLPredictResponse> call, Throwable t) {
-                Toast.makeText(
-                        TaskBActivity.this,
-                        "Network error: " + t.getMessage(),
-                        Toast.LENGTH_LONG
-                ).show();
+
+                loadingDialog.dismiss();
+                btnFinish.setEnabled(true);
+
+                Toast.makeText(TaskBActivity.this,
+                        "Network error. Try again.",
+                        Toast.LENGTH_LONG).show();
             }
         });
     }

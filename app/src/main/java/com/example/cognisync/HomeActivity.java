@@ -45,7 +45,7 @@ public class HomeActivity extends AppCompatActivity {
     private CardView cvAttentionScore, cvMemoryScore,
             cvEmotionScore, cvCognitiveScore, cvPresentMomentScore;
 
-    // ✅ Timetable card
+    // Timetable card
     private CardView cvTimetable;
 
     // Graph
@@ -53,6 +53,9 @@ public class HomeActivity extends AppCompatActivity {
 
     private ApiService api;
     private String email;
+
+    // 🔒 Prevent score API spam
+    private boolean scoresLoaded = false;
 
     // TASK scores only
     private Float attentionPost = null;
@@ -88,6 +91,7 @@ public class HomeActivity extends AppCompatActivity {
 
         if (!email.isEmpty()) {
             fetchPostScoresFromBackend();
+            scoresLoaded = true; // ✅ mark loaded on first fetch
         } else {
             Toast.makeText(this, "Email missing!", Toast.LENGTH_SHORT).show();
         }
@@ -96,7 +100,12 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        fetchPostScoresFromBackend();
+
+        // ✅ Prevent repeated /user/scores API calls
+        if (!scoresLoaded) {
+            fetchPostScoresFromBackend();
+            scoresLoaded = true;
+        }
     }
 
     // ----------------------------------------------------
@@ -118,7 +127,6 @@ public class HomeActivity extends AppCompatActivity {
         cvCognitiveScore = findViewById(R.id.cvCognitiveScore);
         cvPresentMomentScore = findViewById(R.id.cvPresentMomentScore);
 
-        // ✅ Bind timetable card
         cvTimetable = findViewById(R.id.cvTimetable);
 
         lineChart = findViewById(R.id.lineChart);
@@ -162,20 +170,11 @@ public class HomeActivity extends AppCompatActivity {
         cvCognitiveScore.setOnClickListener(v -> openScore("Cognitive"));
         cvPresentMomentScore.setOnClickListener(v -> openScore("Awareness"));
 
-        // ✅ Timetable card click
+        // Timetable
         cvTimetable.setOnClickListener(v -> {
-
-            // 1️⃣ Check if timetable exists
             if (TimetableStore.exists(this)) {
-
-                // 2️⃣ Open timetable
-                startActivity(
-                        new Intent(this, TimetableActivity.class)
-                );
-
+                startActivity(new Intent(this, TimetableActivity.class));
             } else {
-
-                // 3️⃣ Not generated yet
                 Toast.makeText(
                         this,
                         "Complete assessment to generate your timetable",

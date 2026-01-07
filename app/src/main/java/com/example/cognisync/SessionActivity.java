@@ -72,6 +72,9 @@ public class SessionActivity extends AppCompatActivity {
         setupButtons();
     }
 
+    // --------------------------------------------------
+    // MEDIA SETUP
+    // --------------------------------------------------
     private void setupMedia(String url) {
         try {
             mediaPlayer = new MediaPlayer();
@@ -94,6 +97,9 @@ public class SessionActivity extends AppCompatActivity {
         }
     }
 
+    // --------------------------------------------------
+    // BUTTON CONTROLS
+    // --------------------------------------------------
     private void setupButtons() {
 
         playPause.setOnClickListener(v -> {
@@ -110,31 +116,44 @@ public class SessionActivity extends AppCompatActivity {
 
         btnPrev.setOnClickListener(v -> {
             if (mediaPlayer == null || isReleased) return;
-            mediaPlayer.seekTo(Math.max(mediaPlayer.getCurrentPosition() - SEEK_STEP, 0));
+            mediaPlayer.seekTo(
+                    Math.max(mediaPlayer.getCurrentPosition() - SEEK_STEP, 0)
+            );
         });
 
         btnNext.setOnClickListener(v -> {
             if (mediaPlayer == null || isReleased) return;
-            mediaPlayer.seekTo(Math.min(
-                    mediaPlayer.getCurrentPosition() + SEEK_STEP,
-                    mediaPlayer.getDuration()
-            ));
+            mediaPlayer.seekTo(
+                    Math.min(
+                            mediaPlayer.getCurrentPosition() + SEEK_STEP,
+                            mediaPlayer.getDuration()
+                    )
+            );
         });
 
-        progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mediaPlayer != null && !isReleased) {
-                    mediaPlayer.seekTo(progress);
+        progressBar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(
+                            SeekBar seekBar,
+                            int progress,
+                            boolean fromUser
+                    ) {
+                        if (fromUser && mediaPlayer != null && !isReleased) {
+                            mediaPlayer.seekTo(progress);
+                        }
+                    }
+                    @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                    @Override public void onStopTrackingTouch(SeekBar seekBar) {}
                 }
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
+        );
 
         btnFinish.setOnClickListener(v -> finishWithPercent());
     }
 
+    // --------------------------------------------------
+    // SEEK BAR UPDATES
+    // --------------------------------------------------
     private void startSeekBarUpdate() {
         updateSeekBar = () -> {
             if (mediaPlayer != null && mediaPlayer.isPlaying() && !isReleased) {
@@ -145,6 +164,9 @@ public class SessionActivity extends AppCompatActivity {
         handler.post(updateSeekBar);
     }
 
+    // --------------------------------------------------
+    // FINISH HELPERS
+    // --------------------------------------------------
     private void finishZero() {
         setResult(Activity.RESULT_OK);
         safeRelease();
@@ -168,11 +190,16 @@ public class SessionActivity extends AppCompatActivity {
         finish();
     }
 
+    // --------------------------------------------------
+    // 🔒 SAFE RELEASE (USED EVERYWHERE)
+    // --------------------------------------------------
     private void safeRelease() {
         if (isReleased) return;
         isReleased = true;
 
-        if (updateSeekBar != null) handler.removeCallbacks(updateSeekBar);
+        if (updateSeekBar != null) {
+            handler.removeCallbacks(updateSeekBar);
+        }
 
         try {
             if (mediaPlayer != null) {
@@ -182,6 +209,15 @@ public class SessionActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
 
         mediaPlayer = null;
+    }
+
+    // --------------------------------------------------
+    // ✅ CRITICAL: STOP HALF-OPEN STREAMS
+    // --------------------------------------------------
+    @Override
+    protected void onStop() {
+        super.onStop();
+        safeRelease();
     }
 
     @Override

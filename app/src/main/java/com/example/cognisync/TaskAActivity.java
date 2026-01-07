@@ -19,7 +19,7 @@ public class TaskAActivity extends AppCompatActivity {
     private Spinner s1, s2, s3, s4, s5;
     private Button btnNext;
 
-    // ---------------- QUESTIONS ----------------
+    // ---------------- ALL QUESTIONS ----------------
     public static final String[] questions = {
             // MAAS (0–6)
             "I find it difficult to stay focused on the present.",
@@ -64,6 +64,7 @@ public class TaskAActivity extends AppCompatActivity {
             "I ignored my emotions."
     };
 
+    // ---------------- SCALE CONFIG ----------------
     public static final int[] scaleMin = {
             1,1,1,1,1,1,1,
             1,1,1,1,1,
@@ -91,7 +92,22 @@ public class TaskAActivity extends AppCompatActivity {
             false,true
     };
 
-    // 10 random question indices
+    // ---------------- QUESTION POOLS ----------------
+    // Task A → MAAS + PANAS only
+    public static final int[] TASK_A_POOL = {
+            0,1,2,3,4,5,6,
+            7,8,9,10,11,
+            12,13,14,15,16
+    };
+
+    // Task B → DASS + ERQ + PHLMS
+    public static final int[] TASK_B_POOL = {
+            17,18,19,20,21,22,23,24,25,
+            26,27,
+            28,29
+    };
+
+    // Shared array (A uses 0–4, B uses 5–9)
     public static int[] selected = new int[10];
 
     @Override
@@ -115,7 +131,7 @@ public class TaskAActivity extends AppCompatActivity {
 
         btnNext = findViewById(R.id.btnNext);
 
-        generateRandom10();
+        generateTaskAQuestions();
         loadQuestions();
 
         btnNext.setOnClickListener(v -> {
@@ -128,11 +144,14 @@ public class TaskAActivity extends AppCompatActivity {
         });
     }
 
-    private void generateRandom10() {
+    private void generateTaskAQuestions() {
         ArrayList<Integer> list = new ArrayList<>();
-        for (int i = 0; i < questions.length; i++) list.add(i);
+        for (int i : TASK_A_POOL) list.add(i);
         Collections.shuffle(list);
-        for (int i = 0; i < 10; i++) selected[i] = list.get(i);
+
+        for (int i = 0; i < 5; i++) {
+            selected[i] = list.get(i);
+        }
     }
 
     private void loadQuestions() {

@@ -21,6 +21,9 @@
 //}
 package com.example.cognisync.del;
 
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 public class ApiClient {
@@ -41,8 +44,16 @@ public class ApiClient {
 
     public static Retrofit getClient() {
         if (retrofit == null) {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .retryOnConnectionFailure(true)
+                    .build();
+
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
+                    .client(client) // 🔥 attach timeout-enabled client
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }

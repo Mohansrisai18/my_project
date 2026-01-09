@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,10 +31,16 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // keep action bar hidden as before
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
 
-        // 🔥 AUTO LOGIN
+        // ✅ Keyboard resize fix
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        );
+
+        // 🔥 AUTO LOGIN (no change)
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         if (sp.getBoolean("isLoggedIn", false)) {
             startActivity(new Intent(this, HomeActivity.class));
@@ -43,28 +50,31 @@ public class LoginActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
-        // UI
+        // -------- UI BINDING --------
         emailInput = findViewById(R.id.mailInput);
         passwordInput = findViewById(R.id.passwordInput);
         btnLogin = findViewById(R.id.btnLogin);
         signupText = findViewById(R.id.signupText);
         forgotPasswordText = findViewById(R.id.forgotPasswordText);
 
-        // LOGIN
+        // ensure initial button text (defensive)
+        btnLogin.setText("Login");
+
+        // -------- LOGIN --------
         btnLogin.setOnClickListener(v -> performLogin());
 
-        // SIGNUP
+        // -------- SIGNUP --------
         signupText.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, SignupActivity.class));
             finish();
         });
 
-        // FORGOT PASSWORD
+        // -------- FORGOT PASSWORD --------
         forgotPasswordText.setOnClickListener(v ->
                 startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class))
         );
 
-        // BACK PRESS → EXIT APP
+        // -------- BACK → EXIT APP --------
         getOnBackPressedDispatcher().addCallback(this,
                 new OnBackPressedCallback(true) {
                     @Override
@@ -74,9 +84,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    // ===============================
-    // LOGIN API
-    // ===============================
+    // ================= LOGIN =================
     private void performLogin() {
 
         String email = emailInput.getText().toString().trim();
@@ -96,7 +104,6 @@ public class LoginActivity extends AppCompatActivity {
         apiService.loginPatient(request).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-
                 if (response.isSuccessful()) {
                     fetchUserProfile(email);
                 } else {
@@ -119,9 +126,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    // ===============================
-    // FETCH PROFILE AFTER LOGIN
-    // ===============================
+    // ================= FETCH PROFILE =================
     private void fetchUserProfile(String email) {
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
@@ -136,17 +141,14 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
 
                     Patient user = response.body();
-                    String userId = user.getUserId();   // ✅ NEW FIELD
 
-                    SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                    SharedPreferences sp =
+                            getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sp.edit();
 
-                    // ✅ NEW STANDARD KEY
-                    editor.putString("user_id", userId);
-
-                    // ✅ BACKWARD COMPATIBILITY
-                    editor.putString("username", userId);
-
+                    // store profile fields
+                    editor.putString("user_id", user.getUserId());
+                    editor.putString("username", user.getUserId());
                     editor.putString("email", user.getEmail());
                     editor.putString("gender", user.getGender());
                     editor.putString("age", String.valueOf(user.getAge()));
@@ -154,12 +156,10 @@ public class LoginActivity extends AppCompatActivity {
                     editor.apply();
 
                     Toast.makeText(LoginActivity.this,
-                            "Welcome " + userId,
+                            "Welcome " + user.getUserId(),
                             Toast.LENGTH_SHORT).show();
 
-                    Intent i = new Intent(LoginActivity.this, HomeActivity.class);
-                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(i);
+                    startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                     finish();
 
                 } else {

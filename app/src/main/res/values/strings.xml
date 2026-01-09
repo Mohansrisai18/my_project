@@ -1,107 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- APP -->
+    <string name="app_name">CogniSync</string>
+
+    <!-- ARRAYS -->
     <string-array name="gender_array">
         <item>Male</item>
         <item>Female</item>
         <item>Other</item>
     </string-array>
 
-    <string name="app_name">CogniSync</string>
+    <!-- NAVIGATION -->
+    <string name="back">Back</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+
+    <!-- TASKS -->
+    <string name="task_1">Task 1</string>
+    <string name="task_2">Task 2</string>
+    <string name="task_3">Task 3</string>
+
+    <string name="rate_instruction">
+        Rate each statement (1 = Almost Always, 6 = Almost Never)
+    </string>
+
+    <string name="question_1">
+        I find myself doing things without paying attention
+    </string>
+
+    <string name="question_2">
+        I am easily distracted and lose track of what I am doing
+    </string>
+
+    <string name="question_3">
+        I could experience emotions without noticing them immediately
+    </string>
+
+    <string name="enter_rating_hint">Enter rating (1-6)</string>
+
+    <!-- MEMORY -->
+    <string name="memory_instruction">Complete these memory tasks in order</string>
+
+    <string name="question_task1_1">
+        Repeat these numbers in order: 5, 2, 7, 6, 4, 9
+    </string>
+
+    <string name="question_task1_2">
+        Repeat these numbers in reverse order: 9, 3, 6, 1, 2, 8
+    </string>
+
+    <string name="question_task1_3">
+        Repeat these words in order: apple, train, mirror, cloud, lemon
+    </string>
+
+    <string name="enter_here">Enter here</string>
+
+    <!-- MODULES -->
     <string name="working_memory">Working Memory</string>
     <string name="present_moment">Present-Moment Awareness</string>
     <string name="cognitive_integration">Cognitive Integration</string>
     <string name="emotional_regulation">Emotional Regulation</string>
 
-    <!-- Module descriptions -->
-    <string name="focused_attention_desc">Learn to direct and sustain your attention.</string>
-    <string name="working_memory_desc">Strengthen your working memory and recall.</string>
-    <string name="present_moment_desc">Anchor yourself in the present.</string>
-    <string name="cognitive_integration_desc">Integrate and align cognitive processes.</string>
-    <string name="emotional_regulation_desc">Manage and regulate your emotions.</string>
+    <string name="focused_attention_desc">Learn to sustain your attention</string>
+    <string name="working_memory_desc">Strengthen working memory and recall</string>
+    <string name="present_moment_desc">Anchor yourself in the present</string>
+    <string name="cognitive_integration_desc">Integrate cognitive processes</string>
+    <string name="emotional_regulation_desc">Regulate emotional responses</string>
 
-    <!-- Durations -->
-    <string name="duration_13_minutes">Duration: 13 minutes</string>
-    <string name="duration_20_minutes">Duration: 20 minutes</string>
-    <string name="duration_15_minutes">Duration: 15 minutes</string>
+    <!-- DURATIONS -->
+    <string name="duration_12_minutes">Duration ~12 minutes</string>
+    <string name="duration_13_minutes">Duration 13 minutes</string>
+    <string name="duration_15_minutes">Duration 15 minutes</string>
+    <string name="duration_20_minutes">Duration 20 minutes</string>
 
-    <!-- Focus descriptions -->
-    <string name="focus_memory_exercises">Focus: Memory exercises</string>
-    <string name="focus_awareness_practices">Focus: Awareness practices</string>
-    <string name="focus_integration_techniques">Focus: Integration techniques</string>
-    <string name="focus_emotional_control">Focus: Emotional control</string>
-
-    <string name="get_started_arrow">Get Started</string>
-    <string name="create_account">Create Account</string>
-    <string name="full_name">Full Name</string>
-    <string name="enter_name">enter name</string>
-    <string name="age">Age</string>
-    <string name="enter_age">enter age</string>
-    <string name="gender">Gender</string>
-    <string name="enter_gender">enter gender</string>
-    <string name="email">E-mail</string>
-    <string name="enter_mail">enter mail id</string>
-    <string name="password">Password</string>
-    <string name="enter_password">enter password</string>
-    <string name="sign_up">Sign up</string>
-    <string name="already_have_account">Already have an account?</string>
-    <string name="log_in">Log in</string>
-
-    <string name="back">Back</string>
-    <string name="Back">Back</string>
-    <string name="lets_start_with_quiz">Lets start with quiz</string>
-    <string name="back_button">Back</string>
-    <string name="task_2">Task 2</string>
-    <string name="rate_instruction">Rate each statement (e.g. 1 = Almost Always to 6 = Almost Never)</string>
-    <string name="question_1">I find myself doing things without paying attention</string>
-    <string name="question_2">I am easily distracted and lose track of what I\'m doing.</string>
-
-    <string name="question_3">I could be experiencing some emotion and not be conscious of it until later</string>
-    <string name="enter_rating_hint">Enter rating (1–6)</string>
-    <string name="next">Next</string>
-    <string name="task_3">Task 3</string>
-    <string name="question_task3_1">How interested and engaged do you feel in your daily activities</string>
-    <string name="question_task3_2">How much do you feel stressed, upset, or overwhelmed</string>
-    <string name="question_task3_3">To what extent do you feel enthusiastic or motivated about your goals</string>
-    <string name="task_1">Task 1</string>
-    <string name="memory_instruction">Complete these memory tasks in order</string>
-    <string name="question_task1_1">Please repeat these numbers in the same order: 5,2,7,6,4,9</string>
-    <string name="question_task1_2">Please repeat these numbers in reverse order: 9,3,6,1,2,8</string>
-    <string name="question_task1_3">Please repeat these words in the same order: apple, train, mirror, cloud, lemon.</string>
-    <string name="enter_here">Enter here</string>
-
+    <!-- UI -->
     <string name="logo">LOGO</string>
-    <string name="login">Login</string>
-    <string name="how_mindfulness_enhances_nmemory_focus">How mindfulness enhances memory focus</string>
-    <string name="regular_mindfulness_practice_strengthens_neural_pathways_related_to_attention_and_working_memory_helping_you_stay_focused_and_remember_information_more_effectively">Regular mindfulness practice strengthens neural pathways related to attention and working memory helping you stay focused and remember information more effectively</string>
-    <string name="how_your_progress_is_tracked">How your progress is tracked</string>
-    <string name="we_use_validated_psychological_scales_and_cognitive_tasks_to_measure_your_progress_over_time_giving_you_clear_insights_into_your_mental_wellness_journey">We use validated psychological scales and cognitive tasks to measure your progress over time, giving you clear insights into your mental wellness journey</string>
-    <string name="leaf">LEAF</string>
-    <string name="working_memory_icon">Working Memory Icon</string>
-    <string name="emotion_icon">Emotion Icon</string>
-    <string name="_5_1_7">5.1/7</string>
-    <string name="memory_icon">Memory Icon</string>
-    <string name="mindfulness_session">Mindfulness Session</string>
-    <string name="focused_attention">Focused Attention</string>
-    <string name="previous">Previous</string>
-    <string name="start_assessment">Start Assessment</string>
-    <string name="level_beginner_friendly">• Level: Beginner friendly</string>
-    <string name="focus_attention_training">• Focus: Attention training</string>
-    <string name="duration_12_minutes">• Duration: ~12 minutes</string>
-    <string name="learn_basic_techniques_to_improve_your_attention">Learn basic techniques to improve your attention</string>
-    <string name="about_this_session">About This Session</string>
     <string name="profile">Profile</string>
-    <string name="profile_picture">Profile Picture</string>
-    <string name="mohan">Mohan</string>
-    <string name="age_20_male">Age: 20 Male</string>
     <string name="minutes">Minutes</string>
-    <string name="total_minutes">Total minutes</string>
-    <string name="_67_minutes">67 minutes</string>
-    <string name="_4">4</string>
-    <string name="session_count">Session count</string>
     <string name="sessions">Sessions</string>
-    <string name="practiced">practiced</string>
-    <string name="navigate">Navigate</string>
-    <string name="choose_your_setting">Choose your setting</string>
-    <string name="manage_your_app_settings">Manage your app settings</string>
-    <string name="birds_illustration">Birds illustration</string>
+
 </resources>

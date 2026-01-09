@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:clipToPadding="false"
     android:background="@drawable/background_gradient">
 
     <LinearLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
         <!-- TITLE -->
         <TextView
@@ -20,8 +27,7 @@
             android:textColor="#000000"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginTop="10dp" />
+            android:gravity="center" />
 
         <TextView
             android:id="@+id/tvSubtitle"
@@ -59,8 +65,7 @@
                 android:background="@drawable/edittext_bg"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
-                android:spinnerMode="dropdown"
-                android:popupBackground="@drawable/rounded_white_bg" />
+                android:spinnerMode="dropdown" />
         </LinearLayout>
 
         <!-- ================= QUESTION 2 ================= -->
@@ -89,8 +94,7 @@
                 android:background="@drawable/edittext_bg"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
-                android:spinnerMode="dropdown"
-                android:popupBackground="@drawable/rounded_white_bg" />
+                android:spinnerMode="dropdown" />
         </LinearLayout>
 
         <!-- ================= QUESTION 3 ================= -->
@@ -119,8 +123,7 @@
                 android:background="@drawable/edittext_bg"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
-                android:spinnerMode="dropdown"
-                android:popupBackground="@drawable/rounded_white_bg" />
+                android:spinnerMode="dropdown" />
         </LinearLayout>
 
         <!-- ================= QUESTION 4 ================= -->
@@ -149,8 +152,7 @@
                 android:background="@drawable/edittext_bg"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
-                android:spinnerMode="dropdown"
-                android:popupBackground="@drawable/rounded_white_bg" />
+                android:spinnerMode="dropdown" />
         </LinearLayout>
 
         <!-- ================= QUESTION 5 ================= -->
@@ -179,8 +181,7 @@
                 android:background="@drawable/edittext_bg"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
-                android:spinnerMode="dropdown"
-                android:popupBackground="@drawable/rounded_white_bg" />
+                android:spinnerMode="dropdown" />
         </LinearLayout>
 
         <!-- NEXT BUTTON -->
@@ -195,5 +196,10 @@
             android:textSize="20sp"
             android:background="@drawable/btn_bg" />
 
+        <!-- ✅ EXTRA SAFE SPACE FOR NAV / GESTURE BAR -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="32dp" />
+
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

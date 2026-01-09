@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FDFDFD"
     android:fillViewport="true"
+    android:background="#FDFDFD"
+    android:fitsSystemWindows="true"
     tools:context=".HomeActivity">
 
+    <!-- Container: vertical stack that can scroll on small screens -->
     <LinearLayout
+        android:id="@+id/rootContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- HEADER -->
+        <!-- HEADER: greeting + menu -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -29,22 +33,25 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/greeting_bg"
-                android:padding="12dp">
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <ImageView
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_marginEnd="12dp"
-                    android:layout_gravity="center"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_leaf" />
+                    android:src="@drawable/ic_leaf"
+                    android:contentDescription="leaf" />
 
                 <TextView
                     android:id="@+id/tvGreeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Hi,"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="#000" />
             </LinearLayout>
@@ -53,14 +60,15 @@
                 android:id="@+id/btnMenu"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="12dp"
                 android:background="@drawable/menu_bg"
                 android:padding="12dp"
                 android:scaleType="centerInside"
-                android:src="@drawable/ic_menu" />
+                android:src="@drawable/ic_menu"
+                android:contentDescription="menu" />
         </LinearLayout>
 
-        <!-- =============== MODULES CARD =============== -->
+        <!-- Modules Card: uses an inner vertical LinearLayout so height adapts -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -73,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Header -->
+                <!-- Header banner inside the card -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
@@ -95,21 +103,21 @@
                             android:textSize="18sp"
                             android:textStyle="bold"
                             android:textColor="#000"
-                            android:layout_marginBottom="12dp"/>
+                            android:layout_marginBottom="12dp" />
 
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1"
-                            android:layout_marginTop="8dp"
-                            android:layout_gravity="center"
                             android:adjustViewBounds="true"
-                            android:scaleType="fitCenter"
-                            android:src="@drawable/ic_mindfulness"/>
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_mindfulness"
+                            android:contentDescription="mindfulness image" />
+
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Row 1 -->
+                <!-- Grid of module cards: 2 columns responsive with equal widths -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -117,169 +125,175 @@
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp">
 
-                    <!-- Focused Attention -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cvFocusedAttention"
+                    <!-- Left column -->
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="140dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_margin="8dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        android:backgroundTint="#D1E3F6">
+                        android:orientation="vertical">
 
-                        <LinearLayout
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/cvFocusedAttention"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="12dp">
+                            android:layout_height="140dp"
+                            android:layout_margin="8dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="4dp"
+                            android:backgroundTint="#D1E3F6">
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Focused Attention"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#000"/>
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp">
 
-                            <ImageView
-                                android:layout_width="60dp"
-                                android:layout_height="60dp"
-                                android:layout_marginTop="8dp"
-                                android:layout_gravity="center"
-                                android:adjustViewBounds="true"
-                                android:scaleType="fitCenter"
-                                android:src="@drawable/ic_bukky"/>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Focused Attention"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#000" />
 
-                    <!-- Working Memory -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cvWorkingMemory"
+                                <ImageView
+                                    android:layout_width="60dp"
+                                    android:layout_height="60dp"
+                                    android:layout_marginTop="8dp"
+                                    android:adjustViewBounds="true"
+                                    android:scaleType="fitCenter"
+                                    android:src="@drawable/ic_bukky"
+                                    android:contentDescription="focused" />
+
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- ADDED ID: Present-Moment module card (was missing) -->
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/cvPresentMoment"
+                            android:layout_width="match_parent"
+                            android:layout_height="140dp"
+                            android:layout_margin="8dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="4dp"
+                            android:backgroundTint="#CDEBFF">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Present-Moment Awareness"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#000" />
+
+                                <ImageView
+                                    android:layout_width="60dp"
+                                    android:layout_height="60dp"
+                                    android:layout_marginTop="8dp"
+                                    android:adjustViewBounds="true"
+                                    android:scaleType="fitCenter"
+                                    android:src="@drawable/ic_present_moment"
+                                    android:contentDescription="present moment" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                    </LinearLayout>
+
+                    <!-- Right column -->
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="140dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_margin="8dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        android:backgroundTint="#FFE3EC">
+                        android:orientation="vertical">
 
-                        <LinearLayout
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/cvWorkingMemory"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="12dp">
+                            android:layout_height="140dp"
+                            android:layout_margin="8dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="4dp"
+                            android:backgroundTint="#FFE3EC">
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Working Memory"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#000"/>
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp">
 
-                            <ImageView
-                                android:layout_width="60dp"
-                                android:layout_height="60dp"
-                                android:layout_marginTop="8dp"
-                                android:layout_gravity="center"
-                                android:adjustViewBounds="true"
-                                android:scaleType="fitCenter"
-                                android:src="@drawable/ic_working_memory"/>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Working Memory"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#000" />
+
+                                <ImageView
+                                    android:layout_width="60dp"
+                                    android:layout_height="60dp"
+                                    android:layout_marginTop="8dp"
+                                    android:adjustViewBounds="true"
+                                    android:scaleType="fitCenter"
+                                    android:src="@drawable/ic_working_memory"
+                                    android:contentDescription="working memory" />
+
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/cvCognitiveIntegration"
+                            android:layout_width="match_parent"
+                            android:layout_height="140dp"
+                            android:layout_margin="8dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="4dp"
+                            android:backgroundTint="#E9D1F6">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Cognitive Integration"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#000" />
+
+                                <ImageView
+                                    android:layout_width="98dp"
+                                    android:layout_height="44dp"
+                                    android:layout_marginTop="8dp"
+                                    android:adjustViewBounds="true"
+                                    android:scaleType="fitCenter"
+                                    android:src="@drawable/extracted_image"
+                                    android:contentDescription="cognitive" />
+
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
-                <!-- Row 2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp">
-
-                    <!-- Present Moment -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cvPresentMoment"
-                        android:layout_width="0dp"
-                        android:layout_height="140dp"
-                        android:layout_weight="1"
-                        android:layout_margin="8dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        android:backgroundTint="#CDEBFF">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="12dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Present-Moment Awareness"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#000"/>
-
-                            <ImageView
-                                android:layout_width="60dp"
-                                android:layout_height="60dp"
-                                android:layout_marginTop="8dp"
-                                android:layout_gravity="center"
-                                android:adjustViewBounds="true"
-                                android:scaleType="fitCenter"
-                                android:src="@drawable/ic_present_moment"/>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Cognitive Integration -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/cvCognitiveIntegration"
-                        android:layout_width="0dp"
-                        android:layout_height="140dp"
-                        android:layout_weight="1"
-                        android:layout_margin="8dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        android:backgroundTint="#E9D1F6">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="12dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Cognitive Integration"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#000"/>
-
-                            <ImageView
-                                android:layout_width="98dp"
-                                android:layout_height="44dp"
-                                android:layout_marginTop="8dp"
-                                android:layout_gravity="center"
-                                android:adjustViewBounds="true"
-                                android:scaleType="fitCenter"
-                                android:src="@drawable/extracted_image"/>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
-
-                <!-- Emotional -->
+                <!-- Emotional card spans full width -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cvEmotionalRegulation"
                     android:layout_width="match_parent"
-                    android:layout_height="140dp"
+                    android:layout_height="wrap_content"
                     android:layout_margin="8dp"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
@@ -298,24 +312,25 @@
                             android:text="Emotional Regulation"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="#000"/>
+                            android:textColor="#000" />
 
                         <ImageView
                             android:layout_width="60dp"
                             android:layout_height="60dp"
                             android:layout_marginTop="8dp"
-                            android:layout_gravity="center"
                             android:adjustViewBounds="true"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/ic_er"/>
+                            android:src="@drawable/ic_er"
+                            android:contentDescription="emotional" />
+
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
 
-
-        <!-- ================= TIMETABLE CARD ================= -->
+        <!-- TIMETABLE CARD -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvTimetable"
             android:layout_width="match_parent"
@@ -335,7 +350,6 @@
                 android:padding="18dp"
                 android:gravity="center_vertical">
 
-                <!-- Icon -->
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
@@ -344,7 +358,6 @@
                     android:layout_marginEnd="16dp"
                     app:tint="#5E35B1" />
 
-                <!-- Text -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -368,12 +381,12 @@
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
 
-                <!-- Arrow -->
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_chevron_right"
-                    app:tint="#5E35B1" />
+                    app:tint="#5E35B1"
+                    android:contentDescription="open timetable" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -383,13 +396,11 @@
             android:id="@+id/cvProgressDashboard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="24dp"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="24dp"
             app:cardElevation="6dp"
-            android:backgroundTint="#C2BBFF"
-            android:clickable="false"
-            android:focusable="false">
+            android:backgroundTint="#C2BBFF">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -426,11 +437,12 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+
         <!-- Scores Section -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvMemoryScore"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             app:cardCornerRadius="18dp"
             app:cardElevation="3dp"
@@ -440,7 +452,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:gravity="center"
+                android:padding="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -448,31 +461,30 @@
                     android:text="Memory Score"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#292929"/>
+                    android:textColor="#292929" />
 
                 <ImageView
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_marginTop="8dp"
-                    android:layout_gravity="center"
                     android:adjustViewBounds="true"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_memory"/>
+                    android:src="@drawable/ic_memory"
+                    android:contentDescription="memory" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Row 1 Scores -->
+        <!-- Row of two score cards (uses weights so they stay equal on all screens) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="8dp">
 
-            <!-- Attention -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvAttentionScore"
                 android:layout_width="0dp"
-                android:layout_height="140dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_margin="6dp"
                 app:cardCornerRadius="18dp"
@@ -483,7 +495,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:padding="12dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -491,24 +504,23 @@
                         android:text="Attention Score"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#292929"/>
+                        android:textColor="#292929" />
 
                     <ImageView
                         android:layout_width="34dp"
                         android:layout_height="34dp"
                         android:layout_marginTop="8dp"
-                        android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/target_icon"/>
+                        android:src="@drawable/target_icon"
+                        android:contentDescription="attention" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Emotional -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvEmotionScore"
                 android:layout_width="0dp"
-                android:layout_height="140dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_margin="6dp"
                 app:cardCornerRadius="18dp"
@@ -519,7 +531,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:padding="12dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -527,32 +540,31 @@
                         android:text="Emotional Regulation"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#292929"/>
+                        android:textColor="#292929" />
 
                     <ImageView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:layout_marginTop="8dp"
-                        android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/ic_emotion"/>
+                        android:src="@drawable/ic_emotion"
+                        android:contentDescription="emotion" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <!-- Row 2 Scores -->
+        <!-- Another row of two score cards -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="8dp">
 
-            <!-- Cognitive -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvCognitiveScore"
                 android:layout_width="0dp"
-                android:layout_height="140dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_margin="6dp"
                 app:cardCornerRadius="18dp"
@@ -563,7 +575,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:padding="12dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -571,24 +584,23 @@
                         android:text="Cognitive Score"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#292929"/>
+                        android:textColor="#292929" />
 
                     <ImageView
                         android:layout_width="34dp"
                         android:layout_height="34dp"
                         android:layout_marginTop="8dp"
-                        android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/target_icon"/>
+                        android:src="@drawable/target_icon"
+                        android:contentDescription="cognitive" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Present -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvPresentMomentScore"
                 android:layout_width="0dp"
-                android:layout_height="140dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_margin="6dp"
                 app:cardCornerRadius="18dp"
@@ -599,7 +611,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:padding="12dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -607,22 +620,22 @@
                         android:text="Present Awareness"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#292929"/>
+                        android:textColor="#292929" />
 
                     <ImageView
                         android:layout_width="34dp"
                         android:layout_height="34dp"
                         android:layout_marginTop="8dp"
-                        android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/ic_emotion"/>
+                        android:src="@drawable/ic_emotion"
+                        android:contentDescription="present awareness" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
         </LinearLayout>
 
-        <!-- GRAPH SECTION -->
+        <!-- GRAPH SECTION: keep the chart view; the library will scale it -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvGraphSection"
             android:layout_width="match_parent"
@@ -653,12 +666,10 @@
                     android:layout_height="220dp"
                     android:background="#FAFAFA"
                     android:padding="8dp" />
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- ================= TIMETABLE BUTTON (NEW) ================= -->
-
-
     </LinearLayout>
 
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

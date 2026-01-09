@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +65,9 @@ public class HomeActivity extends AppCompatActivity {
     private Float cognitivePost = null;
     private Float awarenessPost = null;
 
+    // top container so we can add status bar padding
+    private LinearLayout rootContainer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -71,11 +75,12 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Status bar styling
+        // Status bar styling (white background + dark icons where supported)
         getWindow().setStatusBarColor(
                 ContextCompat.getColor(this, android.R.color.white)
         );
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            // Light status bar: dark icons on light background
             getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
@@ -86,6 +91,22 @@ public class HomeActivity extends AppCompatActivity {
         email = sp.getString("email", "");
 
         initViews();
+
+        // ---- STATUS BAR OVERLAP FIX ----
+        // Add top padding equal to status bar height if needed (prevents content from being under status bar)
+        // We guard so we don't double-pad if XML or other code already added padding.
+        if (rootContainer != null && rootContainer.getPaddingTop() == 0) {
+            int statusBarHeight = getStatusBarHeight();
+            if (statusBarHeight > 0) {
+                rootContainer.setPadding(
+                        rootContainer.getPaddingLeft(),
+                        statusBarHeight,
+                        rootContainer.getPaddingRight(),
+                        rootContainer.getPaddingBottom()
+                );
+            }
+        }
+
         setGreeting();
         setClickActions();
 
@@ -130,6 +151,9 @@ public class HomeActivity extends AppCompatActivity {
         cvTimetable = findViewById(R.id.cvTimetable);
 
         lineChart = findViewById(R.id.lineChart);
+
+        // root container inside NestedScrollView (used for status bar padding)
+        rootContainer = findViewById(R.id.rootContainer);
 
         ImageButton btnMenu = findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(v ->
@@ -265,6 +289,7 @@ public class HomeActivity extends AppCompatActivity {
         if (a == 0 && m == 0 && e == 0 && c == 0 && w == 0) {
             lineChart.clear();
             lineChart.setNoDataText("No progress data yet");
+            lineChart.invalidate();
             return;
         }
 
@@ -308,5 +333,15 @@ public class HomeActivity extends AppCompatActivity {
         lineChart.getDescription().setEnabled(false);
         lineChart.animateX(800);
         lineChart.invalidate();
+    }
+
+    // Helper: get status bar height in pixels
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 }

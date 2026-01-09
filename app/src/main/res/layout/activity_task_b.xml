@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:clipToPadding="false"
     android:background="@drawable/background_gradient">
 
     <LinearLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
-
-        <!-- BACK -->
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/circle_bg"
-            android:src="@drawable/ic_chevron_left_white" />
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
         <!-- TITLE -->
         <TextView
@@ -27,8 +26,7 @@
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="#000000"
-            android:gravity="center"
-            android:layout_marginTop="10dp"/>
+            android:gravity="center" />
 
         <TextView
             android:layout_width="match_parent"
@@ -37,7 +35,7 @@
             android:textSize="16sp"
             android:textColor="#000000"
             android:gravity="center"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="8dp" />
 
         <!-- ================= QUESTION 1 ================= -->
         <LinearLayout
@@ -169,7 +167,7 @@
                 android:background="@drawable/edittext_bg"/>
         </LinearLayout>
 
-        <!-- FINISH -->
+        <!-- FINISH BUTTON -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNext"
             android:layout_width="match_parent"
@@ -181,5 +179,10 @@
             android:textColor="#000000"
             android:background="@drawable/btn_bg"/>
 
+        <!-- ✅ SAFE SPACE FOR NAVIGATION / GESTURE BAR -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="32dp"/>
+
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

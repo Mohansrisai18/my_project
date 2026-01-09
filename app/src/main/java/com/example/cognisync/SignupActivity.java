@@ -20,6 +20,9 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
@@ -40,9 +43,45 @@ public class SignupActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        // Hide action bar
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+
+        /* =====================================================
+           ✅ SYSTEM INSETS + KEYBOARD FIX (MISSING EARLIER)
+           Prevents:
+           - Status bar overlap
+           - Keyboard hiding bottom fields
+           - Navigation bar overlap
+        ===================================================== */
+        View container = findViewById(R.id.container);
+        if (container != null) {
+            int left = container.getPaddingLeft();
+            int top = container.getPaddingTop();
+            int right = container.getPaddingRight();
+            int bottom = container.getPaddingBottom();
+
+            ViewCompat.setOnApplyWindowInsetsListener(container, (v, insets) -> {
+                Insets systemBars =
+                        insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                Insets ime =
+                        insets.getInsets(WindowInsetsCompat.Type.ime());
+
+                int bottomInset = Math.max(systemBars.bottom, ime.bottom);
+
+                v.setPadding(
+                        left,
+                        top + systemBars.top,
+                        right,
+                        bottom + bottomInset
+                );
+                return insets;
+            });
+
+            ViewCompat.requestApplyInsets(container);
+        }
+        /* ===================================================== */
 
         // Bind views
         userIdInput = findViewById(R.id.fullNameInput);
@@ -72,11 +111,11 @@ public class SignupActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (view instanceof TextView) {
                     TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.parseColor("#888888"));
-                    } else {
-                        tv.setTextColor(Color.parseColor("#000000"));
-                    }
+                    tv.setTextColor(
+                            position == 0
+                                    ? Color.parseColor("#888888")
+                                    : Color.parseColor("#000000")
+                    );
                     tv.setTextSize(13);
                     tv.setTypeface(Typeface.DEFAULT);
                 }
@@ -86,17 +125,14 @@ public class SignupActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // 👁 PASSWORD SHOW / HIDE TOGGLE (FIXED)
+        // 👁 PASSWORD SHOW / HIDE TOGGLE
         passwordInput.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {
 
-                int drawableRightIndex = 2;
-                if (passwordInput.getCompoundDrawables()[drawableRightIndex] == null) {
-                    return false;
-                }
+                if (passwordInput.getCompoundDrawables()[2] == null) return false;
 
                 int drawableWidth =
-                        passwordInput.getCompoundDrawables()[drawableRightIndex]
+                        passwordInput.getCompoundDrawables()[2]
                                 .getBounds().width();
 
                 if (event.getX() >=
@@ -105,7 +141,8 @@ public class SignupActivity extends AppCompatActivity {
                                 - drawableWidth)) {
 
                     if (passwordInput.getInputType() ==
-                            (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                            (InputType.TYPE_CLASS_TEXT |
+                                    InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
 
                         passwordInput.setInputType(
                                 InputType.TYPE_CLASS_TEXT |
@@ -135,14 +172,19 @@ public class SignupActivity extends AppCompatActivity {
         btnSignup.setOnClickListener(v -> performSignup());
         loginText.setOnClickListener(v -> goToLogin());
 
-        getOnBackPressedDispatcher().addCallback(this,
+        // Back navigation handling
+        getOnBackPressedDispatcher().addCallback(
+                this,
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
                         goToLogin();
                     }
-                });
+                }
+        );
     }
+
+    /* ================= SIGNUP LOGIC ================= */
 
     private void performSignup() {
 
@@ -174,7 +216,7 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔐 PASSWORD VALIDATION (NEW)
+        // Password validation
         if (!password.matches("^[A-Z](?=.*[0-9])(?=.*[@#$%^&+=!]).{7,}$")) {
             passwordInput.setError(
                     "Password must start with a capital letter, be at least 8 characters, " +
@@ -184,7 +226,6 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // Age validation
         int ageValue;
         try {
             ageValue = Integer.parseInt(age);
@@ -222,26 +263,33 @@ public class SignupActivity extends AppCompatActivity {
 
                 if (response.isSuccessful()) {
 
-                    SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                    SharedPreferences sp =
+                            getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor ed = sp.edit();
 
                     ed.putString("user_id", userId);
                     ed.putString("email", email);
                     ed.putString("age", String.valueOf(ageValue));
-                    ed.putString("gender",
-                            genderSpinner.getSelectedItem().toString().toLowerCase());
+                    ed.putString(
+                            "gender",
+                            genderSpinner.getSelectedItem().toString().toLowerCase()
+                    );
                     ed.apply();
 
-                    Toast.makeText(SignupActivity.this,
+                    Toast.makeText(
+                            SignupActivity.this,
                             "Account created!",
-                            Toast.LENGTH_SHORT).show();
+                            Toast.LENGTH_SHORT
+                    ).show();
 
                     navigateToIntroActivity();
 
                 } else {
-                    Toast.makeText(SignupActivity.this,
+                    Toast.makeText(
+                            SignupActivity.this,
                             "Signup failed (" + response.code() + ")",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_LONG
+                    ).show();
                 }
             }
 
@@ -249,9 +297,11 @@ public class SignupActivity extends AppCompatActivity {
             public void onFailure(Call<Void> call, Throwable t) {
                 btnSignup.setEnabled(true);
                 btnSignup.setText("Sign Up");
-                Toast.makeText(SignupActivity.this,
+                Toast.makeText(
+                        SignupActivity.this,
                         "Error: " + t.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                        Toast.LENGTH_LONG
+                ).show();
             }
         });
     }

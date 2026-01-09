@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Updated: handles status bar + nav bar + keyboard insets -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/signupRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/login_bg"
     android:overScrollMode="never"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:clipToPadding="false"
     tools:context=".SignupActivity">
 
     <RelativeLayout
@@ -18,7 +23,8 @@
             android:orientation="vertical"
             android:background="@drawable/rounded_white_bg"
             android:padding="16dp"
-            android:layout_margin="20dp">
+            android:layout_margin="20dp"
+            android:focusableInTouchMode="true">
 
             <!-- Logo -->
             <ImageView
@@ -26,7 +32,7 @@
                 android:layout_height="200dp"
                 android:layout_gravity="center"
                 android:src="@drawable/logo_1"
-                android:contentDescription="@string/logo" />
+                android:contentDescription="logo" />
 
             <!-- Title -->
             <TextView
@@ -34,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="12dp"
-                android:text="@string/create_account"
+                android:text="Create Account"
                 android:textSize="26sp"
                 android:textStyle="bold"
                 android:textColor="#000000" />
@@ -64,7 +70,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@string/age"
+                android:text="Age"
                 android:textSize="20sp"
                 android:textColor="#000000" />
 
@@ -74,7 +80,7 @@
                 android:layout_height="48dp"
                 android:layout_margin="6dp"
                 android:background="@drawable/edittext_bg"
-                android:hint="@string/enter_age"
+                android:hint="Enter age"
                 android:inputType="number"
                 android:textColor="#000000"
                 android:textColorHint="#888888"
@@ -85,7 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@string/gender"
+                android:text="Gender"
                 android:textSize="20sp"
                 android:textColor="#000000" />
 
@@ -103,7 +109,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@string/email"
+                android:text="E-mail"
                 android:textSize="20sp"
                 android:textColor="#000000" />
 
@@ -113,7 +119,7 @@
                 android:layout_height="48dp"
                 android:layout_margin="6dp"
                 android:background="@drawable/edittext_bg"
-                android:hint="@string/enter_mail"
+                android:hint="Enter mail id"
                 android:inputType="textEmailAddress"
                 android:textColor="#000000"
                 android:textColorHint="#888888"
@@ -124,7 +130,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@string/password"
+                android:text="Password"
                 android:textSize="20sp"
                 android:textColor="#000000" />
 
@@ -134,7 +140,7 @@
                 android:layout_height="48dp"
                 android:layout_margin="6dp"
                 android:background="@drawable/edittext_bg"
-                android:hint="@string/enter_password"
+                android:hint="Enter password"
                 android:inputType="textPassword"
                 android:textColor="#000000"
                 android:textColorHint="#888888"
@@ -149,7 +155,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="36dp"
                 android:background="@drawable/btn_bg"
-                android:text="@string/sign_up"
+                android:text="Sign up"
                 android:textStyle="bold" />
 
             <!-- Login -->
@@ -163,7 +169,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/already_have_account"
+                    android:text="Already have an account?"
                     android:textColor="#000000"
                     android:textSize="12sp" />
 
@@ -171,13 +177,18 @@
                     android:id="@+id/loginText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/log_in"
+                    android:text="Log in"
                     android:textColor="#D84315"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:layout_marginStart="4dp" />
             </LinearLayout>
 
+            <!-- extra bottom padding ensures last control is scrollable above nav/IME -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
+
         </LinearLayout>
     </RelativeLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

@@ -52,7 +52,7 @@
             android:src="@drawable/chevron_right"
             android:scaleType="centerInside"
             app:tint="@android:color/black"
-            android:contentDescription="@string/get_started_arrow" />
+            android:contentDescription="Get Started" />
 
         <!-- Label -->
         <TextView

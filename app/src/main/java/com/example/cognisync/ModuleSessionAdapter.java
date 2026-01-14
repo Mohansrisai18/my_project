@@ -42,6 +42,7 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ModuleSessionItem s = list.get(position);
 
+        // Use the title & description provided by ModuleHomeActivity (already normalized)
         holder.title.setText(s.getTitle());
         holder.desc.setText(s.getDescription());
 

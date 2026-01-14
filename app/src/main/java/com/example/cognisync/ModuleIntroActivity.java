@@ -1,6 +1,7 @@
 package com.example.cognisync;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -43,6 +44,17 @@ public class ModuleIntroActivity extends AppCompatActivity {
 
         initViews();
         loadIntroContent();
+
+        // initial server check (will be followed by onResume local check)
+        checkPreAssessmentStatusFromServer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Fast local refresh so UI updates immediately after returning
+        updateUIFromLocal();
+        // Also refresh from server in background to remain authoritative
         checkPreAssessmentStatusFromServer();
     }
 
@@ -53,6 +65,9 @@ public class ModuleIntroActivity extends AppCompatActivity {
         btnStartPre = findViewById(R.id.btnStartPreAssessment);
         btnContinue = findViewById(R.id.btnContinueToModule);
         backButton = findViewById(R.id.backButtonIntro);
+
+        // default state
+        btnContinue.setVisibility(View.GONE);
 
         backButton.setOnClickListener(v -> finish());
     }
@@ -88,6 +103,12 @@ public class ModuleIntroActivity extends AppCompatActivity {
         }
     }
 
+    private void updateUIFromLocal() {
+        SharedPreferences sp = getSharedPreferences("AssessmentStatus", MODE_PRIVATE);
+        boolean preDone = sp.getBoolean(moduleType + "_pre_done", false);
+        applyButtons(preDone);
+    }
+
     private void checkPreAssessmentStatusFromServer() {
 
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE).getString("email", "");
@@ -99,9 +120,8 @@ public class ModuleIntroActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
 
-                if (!response.isSuccessful()) {
-                    Toast.makeText(ModuleIntroActivity.this, "Server error", Toast.LENGTH_SHORT).show();
-                    applyButtons(false);
+                if (!response.isSuccessful() || response.body() == null) {
+                    // don't override good local state — if server fails, keep local UI
                     return;
                 }
 
@@ -114,13 +134,18 @@ public class ModuleIntroActivity extends AppCompatActivity {
                     }
                 }
 
+                // Update local cache (optional but keeps local & server in sync)
+                getSharedPreferences("AssessmentStatus", MODE_PRIVATE)
+                        .edit()
+                        .putBoolean(moduleType + "_pre_done", isPreDone)
+                        .apply();
+
                 applyButtons(isPreDone);
             }
 
             @Override
             public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {
-                Toast.makeText(ModuleIntroActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                applyButtons(false);
+                // keep local UI; network failure should not clear it
             }
         });
     }
@@ -140,7 +165,8 @@ public class ModuleIntroActivity extends AppCompatActivity {
     private void applyButtons(boolean preCompleted) {
 
         if (preCompleted) {
-
+            // Exclusive state: show re-attempt + continue; do not hide or duplicate other controls
+            btnStartPre.setVisibility(View.VISIBLE);
             btnStartPre.setText("Re-Attempt Pre-Assessment");
             btnStartPre.setEnabled(true);
             btnStartPre.setAlpha(1f);
@@ -158,11 +184,11 @@ public class ModuleIntroActivity extends AppCompatActivity {
             });
 
         } else {
-
+            // Exclusive state: show only start pre-assessment
+            btnStartPre.setVisibility(View.VISIBLE);
             btnStartPre.setText("Start Pre-Assessment");
             btnStartPre.setEnabled(true);
             btnStartPre.setAlpha(1f);
-
             btnStartPre.setOnClickListener(v -> {
                 Intent intent = new Intent(this, PreAssessmentActivity.class);
                 intent.putExtra("module_type", moduleType);
@@ -170,6 +196,7 @@ public class ModuleIntroActivity extends AppCompatActivity {
             });
 
             btnContinue.setVisibility(View.GONE);
+            btnContinue.setOnClickListener(null);
         }
     }
 }

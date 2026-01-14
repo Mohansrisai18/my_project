@@ -1,8 +1,7 @@
 package com.example.cognisync;
 
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -177,8 +176,19 @@ public class PreAssessmentActivity extends AppCompatActivity {
 
         call.enqueue(new Callback<Void>() {
             @Override public void onResponse(Call<Void> c, Response<Void> r) {
-                if (!r.isSuccessful())
+                if (!r.isSuccessful()) {
                     Toast.makeText(PreAssessmentActivity.this,"Server "+r.code(),Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                // Persist local completion flag
+                SharedPreferences sp = getSharedPreferences("AssessmentStatus", MODE_PRIVATE);
+                sp.edit()
+                        .putBoolean(moduleType + "_pre_done", true)
+                        .apply();
+
+                // Allow caller to detect success (harmless if not used)
+                setResult(RESULT_OK);
                 finish();
             }
             @Override public void onFailure(Call<Void> c, Throwable t) {

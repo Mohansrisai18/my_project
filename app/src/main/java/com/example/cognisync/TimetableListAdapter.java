@@ -38,9 +38,9 @@ public class TimetableListAdapter
         MLPredictResponse.TimetableItem item = items.get(position);
 
         holder.day.setText("Day " + (position + 1));
-        holder.title.setText(item.title);
+        holder.title.setText(sanitizeTitle(item.title));
         holder.module.setText("Module: " + item.module);
-        holder.description.setText(item.description);
+        holder.description.setText(sanitizeDesc(item.description));
     }
 
     @Override
@@ -59,5 +59,27 @@ public class TimetableListAdapter
             module = v.findViewById(R.id.tvModule);
             description = v.findViewById(R.id.tvDescription);
         }
+    }
+
+    // --------------------------
+    // Small sanitizers for UX
+    // --------------------------
+    private static String sanitizeTitle(String t) {
+        if (t == null) return "";
+        // Replace "Sub-video" or "Sub-video X" with "Audio Session X"
+        String out = t.replaceAll("(?i)sub[- ]?video", "Audio Session");
+        out = out.replaceAll("(?i)sub[- ]?audio", "Audio Session");
+        return out;
+    }
+
+    private static String sanitizeDesc(String d) {
+        if (d == null) return "";
+        // Prefer audio wording
+        String out = d.replaceAll("(?i)video", "audio");
+        // Optional: map generic phrases to the standard audio description
+        if (out.toLowerCase().contains("mindfulness")) {
+            return "Guided mindfulness audio";
+        }
+        return out;
     }
 }

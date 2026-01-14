@@ -60,7 +60,11 @@ public class SessionActivity extends AppCompatActivity {
         String audioTitle = getIntent().getStringExtra("audio_title");
         String audioDesc = getIntent().getStringExtra("audio_desc");
 
-        tvTitle.setText(audioTitle != null ? audioTitle : "Session");
+        // sanitize incoming title/description so "Sub-video" becomes "Audio Session"
+        audioTitle = sanitizeTitle(audioTitle, getIntent().getIntExtra("session_index", -1));
+        audioDesc = sanitizeDesc(audioDesc);
+
+        tvTitle.setText(audioTitle != null ? audioTitle : "Audio Session");
         tvDesc.setText(audioDesc != null ? audioDesc : "");
 
         if (audioUrl == null || audioUrl.isEmpty()) {
@@ -70,6 +74,34 @@ public class SessionActivity extends AppCompatActivity {
 
         setupMedia(audioUrl);
         setupButtons();
+    }
+
+    private String sanitizeTitle(String title, int indexHint) {
+        if (title == null) return null;
+
+        // Replace common backend markers
+        title = title.replaceAll("(?i)sub[- ]?video", "Audio Session");
+        title = title.replaceAll("(?i)sub[- ]?audio", "Audio Session");
+
+        // If backend left numbering like "Audio Session 2" keep it.
+        // If there is no numbering and an index hint was provided, append it.
+        if (!title.matches(".*\\d+$") && indexHint > 0) {
+            title = title + " " + indexHint;
+        }
+
+        return title;
+    }
+
+    private String sanitizeDesc(String desc) {
+        if (desc == null) return null;
+
+        // Replace video wording with audio wording
+        desc = desc.replaceAll("(?i)video", "audio");
+        if (desc.toLowerCase().contains("mindfulness")) {
+            // prefer clearer wording
+            return "Guided mindfulness audio";
+        }
+        return desc;
     }
 
     // --------------------------------------------------

@@ -18,9 +18,9 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
 
-        <!-- App Launch Screen -->
+        <!-- Splash (now the launcher) -->
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashScreenActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,12 +28,17 @@
             </intent-filter>
         </activity>
 
+        <!-- MainActivity kept but not launcher -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
         <!-- Auth Screens -->
         <activity
             android:name=".LoginActivity"
             android:exported="false" />
 
-        <!-- ✅ SIGNUP ACTIVITY WITH KEYBOARD FIX -->
+        <!-- SIGNUP ACTIVITY WITH KEYBOARD FIX -->
         <activity
             android:name=".SignupActivity"
             android:exported="false"
@@ -61,11 +66,6 @@
         <activity android:name=".SARTActivity" android:exported="false" />
         <activity android:name=".TaskAActivity" android:exported="false" />
         <activity android:name=".TaskBActivity" android:exported="false" />
-
-        <!-- Splash -->
-        <activity
-            android:name=".SplashScreenActivity"
-            android:exported="false" />
 
         <!-- Assessment -->
         <activity

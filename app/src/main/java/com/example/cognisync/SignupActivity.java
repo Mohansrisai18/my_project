@@ -50,10 +50,6 @@ public class SignupActivity extends AppCompatActivity {
 
         /* =====================================================
            ✅ SYSTEM INSETS + KEYBOARD FIX (MISSING EARLIER)
-           Prevents:
-           - Status bar overlap
-           - Keyboard hiding bottom fields
-           - Navigation bar overlap
         ===================================================== */
         View container = findViewById(R.id.container);
         if (container != null) {
@@ -267,13 +263,19 @@ public class SignupActivity extends AppCompatActivity {
                             getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor ed = sp.edit();
 
+                    // store profile fields
                     ed.putString("user_id", userId);
+                    ed.putString("username", userId);
                     ed.putString("email", email);
                     ed.putString("age", String.valueOf(ageValue));
                     ed.putString(
                             "gender",
                             genderSpinner.getSelectedItem().toString().toLowerCase()
                     );
+
+                    // IMPORTANT: mark user as logged in so app restarts preserve session
+                    ed.putBoolean("isLoggedIn", true);
+
                     ed.apply();
 
                     Toast.makeText(
@@ -282,6 +284,7 @@ public class SignupActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT
                     ).show();
 
+                    // Keep existing onboarding flow — IntroActivity — but user is already logged in
                     navigateToIntroActivity();
 
                 } else {

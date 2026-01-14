@@ -87,19 +87,27 @@ public class ModuleHomeActivity extends AppCompatActivity {
         call.enqueue(new Callback<List<AudioResponse>>() {
             @Override
             public void onResponse(Call<List<AudioResponse>> call, Response<List<AudioResponse>> response) {
-                if (!response.isSuccessful()) {
+                if (!response.isSuccessful() || response.body() == null) {
                     Toast.makeText(ModuleHomeActivity.this, "Error loading audios", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 audioList.clear();
 
+                int index = 1;
                 for (AudioResponse a : response.body()) {
+                    // Normalize title to "Audio Session X" and description to audio-friendly wording
+                    String title = "Audio Session " + index;
+                    String desc = "Guided mindfulness audio";
+
+                    // If backend title is explicit and useful, you can merge or keep it.
+                    // For now we favor consistent UX names.
                     audioList.add(new ModuleSessionItem(
-                            a.getTitle(),
-                            "Mindfulness Audio Session",
+                            title,
+                            desc,
                             a.getUrl()
                     ));
+                    index++;
                 }
 
                 setupRecycler(audioList);
@@ -140,7 +148,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
         call.enqueue(new Callback<List<ScoreResponse>>() {
             @Override
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
-                if (!response.isSuccessful()) {
+                if (!response.isSuccessful() || response.body() == null) {
                     applyPreUI(false);
                     return;
                 }
@@ -197,7 +205,7 @@ public class ModuleHomeActivity extends AppCompatActivity {
         call.enqueue(new Callback<List<ScoreResponse>>() {
             @Override
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
-                if (!response.isSuccessful()) {
+                if (!response.isSuccessful() || response.body() == null) {
                     applyPostUI(false);
                     return;
                 }

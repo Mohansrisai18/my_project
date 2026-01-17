@@ -27,12 +27,9 @@ public class StroopTaskActivity extends AppCompatActivity {
     private Button btnRed, btnBlue, btnGreen;
     private ImageButton backButton;
 
-    // === WORD MAPPING ===
-    // Emotional → Always RED
+    // === WORD SETS ===
     private final String[] emotionalWords = {"ANGER", "FEAR"};
-
-    // Neutral words use BLUE or GREEN
-    private final String[] neutralWords = {"JOY", "LOVE", "CALM"};
+    private final String[] neutralWords   = {"JOY", "LOVE", "CALM"};
 
     // UI colors → for interference only
     private final int[] colors = {
@@ -74,6 +71,7 @@ public class StroopTaskActivity extends AppCompatActivity {
         btnGreen = findViewById(R.id.btnGreen);
         backButton = findViewById(R.id.backButton);
 
+        // Back button just finishes the activity
         backButton.setOnClickListener(v -> finish());
 
         // Player chooses the button according to the WORD category
@@ -88,7 +86,7 @@ public class StroopTaskActivity extends AppCompatActivity {
 
             int correctColor = getCorrectColor(word);
 
-            // Accuracy
+            // Accuracy bookkeeping
             if (chosen == correctColor) {
                 correct++;
                 storeReaction(rt, word);
@@ -106,20 +104,17 @@ public class StroopTaskActivity extends AppCompatActivity {
         nextTrial();
     }
 
-    // =========================================
-    // WORD → CORRECT BUTTON COLOR
-    // =========================================
+    // WORD -> CORRECT BUTTON COLOR
     private int getCorrectColor(String word) {
-        if (word.equals("ANGER") || word.equals("FEAR"))
-            return 0; // RED button
-        if (word.equals("JOY"))
-            return 2; // GREEN button
-        return 1; // CALM / LOVE → BLUE
+        if (word == null) return 1; // default blue
+        if (word.equalsIgnoreCase("ANGER") || word.equalsIgnoreCase("FEAR"))
+            return 0; // RED button for emotional words
+        if (word.equalsIgnoreCase("JOY"))
+            return 2; // GREEN for joy
+        return 1; // LOVE / CALM -> BLUE
     }
 
-    // =========================================
     // TRIAL FLOW
-    // =========================================
     private void nextTrial() {
         if (trial >= TOTAL_TRIALS) {
             showResult();
@@ -129,10 +124,11 @@ public class StroopTaskActivity extends AppCompatActivity {
         trial++;
 
         boolean emo = random.nextBoolean();
-        String word = emo ? emotionalWords[random.nextInt(emotionalWords.length)]
+        String word = emo
+                ? emotionalWords[random.nextInt(emotionalWords.length)]
                 : neutralWords[random.nextInt(neutralWords.length)];
 
-        // UI color = random (not meaning)
+        // UI color = random (visual interference only)
         int colorIndex = random.nextInt(colors.length);
         tvWord.setText(word);
         tvWord.setTextColor(colors[colorIndex]);
@@ -141,23 +137,22 @@ public class StroopTaskActivity extends AppCompatActivity {
     }
 
     private void storeReaction(long rt, String word) {
-        if (word.equals("ANGER") || word.equals("FEAR"))
+        if (word == null) return;
+        if (word.equalsIgnoreCase("ANGER") || word.equalsIgnoreCase("FEAR"))
             emotionalTimes.add(rt);
         else
             neutralTimes.add(rt);
     }
 
-    // =========================================
     // SCORE CALCULATION
-    // =========================================
     private void showResult() {
 
         int total = correct + wrong;
 
-        // 1️⃣ Accuracy → 70%
+        // 1) Accuracy (70%)
         double accuracy = total == 0 ? 0 : (correct * 100.0 / total);
 
-        // 2️⃣ Speed → AVG RT → 20%
+        // 2) Speed: average RT (20%)
         long avgNeutral = average(neutralTimes);
         long avgEmotional = average(emotionalTimes);
         long avgRT = (avgNeutral + avgEmotional) / 2;
@@ -165,7 +160,7 @@ public class StroopTaskActivity extends AppCompatActivity {
         double speedScore = 100 - (avgRT - 450) / 3.0;
         speedScore = clamp(speedScore);
 
-        // 3️⃣ Interference → delta → 10%
+        // 3) Interference: delta between emotional & neutral RT (10%)
         long delta = Math.abs(avgEmotional - avgNeutral);
         double interferenceScore = 100 - (delta / 5.0);
         interferenceScore = clamp(interferenceScore);
@@ -187,9 +182,7 @@ public class StroopTaskActivity extends AppCompatActivity {
         handler.postDelayed(this::finish, 3000);
     }
 
-    // =========================================
     // BACKEND UPLOAD
-    // =========================================
     private void sendScore(float score) {
 
         String email = getSharedPreferences("UserPrefs", MODE_PRIVATE)
@@ -212,9 +205,7 @@ public class StroopTaskActivity extends AppCompatActivity {
         );
     }
 
-    // =========================================
     // HELPERS
-    // =========================================
     private long average(List<Long> list) {
         if (list.isEmpty()) return 0;
         long sum = 0;

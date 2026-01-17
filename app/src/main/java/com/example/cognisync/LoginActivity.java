@@ -3,7 +3,9 @@ package com.example.cognisync;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -31,16 +33,16 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // keep action bar hidden as before
+        // Hide ActionBar
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         super.onCreate(savedInstanceState);
 
-        // ✅ Keyboard resize fix
+        // Keyboard resize
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         );
 
-        // 🔥 AUTO LOGIN (no change)
+        // AUTO LOGIN
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         if (sp.getBoolean("isLoggedIn", false)) {
             startActivity(new Intent(this, HomeActivity.class));
@@ -50,31 +52,82 @@ public class LoginActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
-        // -------- UI BINDING --------
+        // UI binding
         emailInput = findViewById(R.id.mailInput);
         passwordInput = findViewById(R.id.passwordInput);
         btnLogin = findViewById(R.id.btnLogin);
         signupText = findViewById(R.id.signupText);
         forgotPasswordText = findViewById(R.id.forgotPasswordText);
 
-        // ensure initial button text (defensive)
         btnLogin.setText("Login");
 
-        // -------- LOGIN --------
+        // 👁 Ensure eye icon exists
+        passwordInput.setCompoundDrawablesWithIntrinsicBounds(
+                0, 0, R.drawable.ic_eye_closed, 0
+        );
+
+        // 👁 PASSWORD SHOW / HIDE TOGGLE (CLEAN + SAFE)
+        passwordInput.setOnTouchListener((v, event) -> {
+            if (event.getAction() != MotionEvent.ACTION_UP) return false;
+
+            if (passwordInput.getCompoundDrawables()[2] == null) return false;
+
+            int drawableWidth =
+                    passwordInput.getCompoundDrawables()[2].getBounds().width();
+
+            int touchAreaStart =
+                    passwordInput.getWidth()
+                            - passwordInput.getPaddingRight()
+                            - drawableWidth;
+
+            if (event.getX() >= touchAreaStart) {
+
+                boolean isHidden =
+                        (passwordInput.getInputType()
+                                & InputType.TYPE_TEXT_VARIATION_PASSWORD)
+                                == InputType.TYPE_TEXT_VARIATION_PASSWORD;
+
+                if (isHidden) {
+                    passwordInput.setInputType(
+                            InputType.TYPE_CLASS_TEXT |
+                                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                    );
+                    passwordInput.setCompoundDrawablesWithIntrinsicBounds(
+                            0, 0, R.drawable.ic_eye_open, 0
+                    );
+                } else {
+                    passwordInput.setInputType(
+                            InputType.TYPE_CLASS_TEXT |
+                                    InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    );
+                    passwordInput.setCompoundDrawablesWithIntrinsicBounds(
+                            0, 0, R.drawable.ic_eye_closed, 0
+                    );
+                }
+
+                passwordInput.setSelection(passwordInput.getText().length());
+                passwordInput.performClick(); // accessibility
+                return true;
+            }
+
+            return false;
+        });
+
+        // LOGIN
         btnLogin.setOnClickListener(v -> performLogin());
 
-        // -------- SIGNUP --------
+        // SIGNUP
         signupText.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, SignupActivity.class));
+            startActivity(new Intent(this, SignupActivity.class));
             finish();
         });
 
-        // -------- FORGOT PASSWORD --------
+        // FORGOT PASSWORD
         forgotPasswordText.setOnClickListener(v ->
-                startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class))
+                startActivity(new Intent(this, ForgotPasswordActivity.class))
         );
 
-        // -------- BACK → EXIT APP --------
+        // BACK → EXIT APP
         getOnBackPressedDispatcher().addCallback(this,
                 new OnBackPressedCallback(true) {
                     @Override
@@ -107,8 +160,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     fetchUserProfile(email);
                 } else {
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText("Login");
+                    resetLoginButton();
                     Toast.makeText(LoginActivity.this,
                             "Invalid email or password",
                             Toast.LENGTH_SHORT).show();
@@ -117,10 +169,9 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                btnLogin.setEnabled(true);
-                btnLogin.setText("Login");
+                resetLoginButton();
                 Toast.makeText(LoginActivity.this,
-                        "Network Error: " + t.getMessage(),
+                        "Network error: " + t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
         });
@@ -135,18 +186,15 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Patient> call, Response<Patient> response) {
 
-                btnLogin.setEnabled(true);
-                btnLogin.setText("Login");
+                resetLoginButton();
 
                 if (response.isSuccessful() && response.body() != null) {
 
                     Patient user = response.body();
 
-                    SharedPreferences sp =
-                            getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sp.edit();
+                    SharedPreferences.Editor editor =
+                            getSharedPreferences("UserPrefs", MODE_PRIVATE).edit();
 
-                    // store profile fields
                     editor.putString("user_id", user.getUserId());
                     editor.putString("username", user.getUserId());
                     editor.putString("email", user.getEmail());
@@ -171,12 +219,16 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Patient> call, Throwable t) {
-                btnLogin.setEnabled(true);
-                btnLogin.setText("Login");
+                resetLoginButton();
                 Toast.makeText(LoginActivity.this,
                         "Profile fetch error: " + t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void resetLoginButton() {
+        btnLogin.setEnabled(true);
+        btnLogin.setText("Login");
     }
 }

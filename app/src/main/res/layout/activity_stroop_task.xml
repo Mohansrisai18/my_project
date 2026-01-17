@@ -7,18 +7,17 @@
     android:background="@drawable/background_gradient"
     android:padding="24dp">
 
-    <!-- 🔙 Back Button -->
+    <!-- Back Button -->
     <ImageButton
         android:id="@+id/backButton"
         android:layout_width="44dp"
         android:layout_height="44dp"
         android:background="@android:color/transparent"
-        android:src="@android:drawable/ic_menu_revert"
-        android:contentDescription="Back"
-        android:layout_gravity="start"
-        android:layout_marginBottom="32dp" />
+        android:rotation="180"
+        android:src="@drawable/chevron_right"
+        android:contentDescription="Back" />
 
-    <!-- WORD DISPLAY -->
+    <!-- Word Display -->
     <TextView
         android:id="@+id/tvWord"
         android:layout_width="wrap_content"
@@ -28,9 +27,9 @@
         android:textStyle="bold"
         android:textColor="#111111"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="48dp" />
+        android:layout_marginBottom="36dp" />
 
-    <!-- COLOR BUTTONS -->
+    <!-- Color Buttons (user chooses color corresponding to word category) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -43,7 +42,6 @@
             android:layout_height="52dp"
             android:layout_weight="1"
             android:text="RED"
-            android:textAllCaps="true"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:layout_margin="8dp"
@@ -55,7 +53,6 @@
             android:layout_height="52dp"
             android:layout_weight="1"
             android:text="BLUE"
-            android:textAllCaps="true"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:layout_margin="8dp"
@@ -67,14 +64,13 @@
             android:layout_height="52dp"
             android:layout_weight="1"
             android:text="GREEN"
-            android:textAllCaps="true"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:layout_margin="8dp"
             android:backgroundTint="#4CAF50" />
     </LinearLayout>
 
-    <!-- RESULT / FEEDBACK -->
+    <!-- Result / Feedback -->
     <TextView
         android:id="@+id/tvResult"
         android:layout_width="wrap_content"

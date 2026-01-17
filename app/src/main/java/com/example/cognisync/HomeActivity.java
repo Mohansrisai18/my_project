@@ -58,7 +58,11 @@ public class HomeActivity extends AppCompatActivity {
     // 🔒 Prevent score API spam
     private boolean scoresLoaded = false;
 
-    // TASK scores only
+    // track pending requests so we mark scoresLoaded only after all responses
+    private int pendingScoreRequests = 0;
+    private final String[] SCORE_DOMAINS = {"srt", "nback", "stroop", "task_switch", "sart"};
+
+    // TASK scores only (Float wrappers so we can test null)
     private Float attentionPost = null;
     private Float memoryPost = null;
     private Float emotionPost = null;
@@ -110,22 +114,23 @@ public class HomeActivity extends AppCompatActivity {
         setGreeting();
         setClickActions();
 
-        if (!email.isEmpty()) {
-            fetchPostScoresFromBackend();
-            scoresLoaded = true; // ✅ mark loaded on first fetch
-        } else {
+        if (email.isEmpty()) {
             Toast.makeText(this, "Email missing!", Toast.LENGTH_SHORT).show();
         }
+
+        // NOTE: We do NOT trigger fetch here to avoid double-fetch (onCreate -> onResume).
+        // Fetch will be handled in onResume if needed.
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // ✅ Prevent repeated /user/scores API calls
+        // fetch fresh scores when needed (scoresLoaded will be set to true only after all requests finish)
         if (!scoresLoaded) {
-            fetchPostScoresFromBackend();
-            scoresLoaded = true;
+            if (!email.isEmpty()) {
+                fetchPostScoresFromBackend();
+            }
         }
     }
 
@@ -209,6 +214,10 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void openModule(String type) {
+        // When opening a module the user may complete assessments and post-scores will change.
+        // Mark scoresLoaded=false so that when HomeActivity resumes we fetch fresh results.
+        scoresLoaded = false;
+
         Intent i = new Intent(this, ModuleIntroActivity.class);
         i.putExtra("module_type", type);
         startActivity(i);
@@ -224,11 +233,19 @@ public class HomeActivity extends AppCompatActivity {
     // FETCH TASK SCORES
     // ----------------------------------------------------
     private void fetchPostScoresFromBackend() {
-        fetchScoreForDomain("srt");
-        fetchScoreForDomain("nback");
-        fetchScoreForDomain("stroop");
-        fetchScoreForDomain("task_switch");
-        fetchScoreForDomain("sart");
+        // reset posts so drawGraph sees "no data" until responses arrive (optional)
+        attentionPost = null;
+        memoryPost = null;
+        emotionPost = null;
+        cognitivePost = null;
+        awarenessPost = null;
+
+        // set pending counter and call each domain
+        pendingScoreRequests = SCORE_DOMAINS.length;
+
+        for (String domain : SCORE_DOMAINS) {
+            fetchScoreForDomain(domain);
+        }
     }
 
     private void fetchScoreForDomain(String domain) {
@@ -238,37 +255,74 @@ public class HomeActivity extends AppCompatActivity {
             public void onResponse(Call<List<ScoreResponse>> call,
                                    Response<List<ScoreResponse>> response) {
 
-                if (!response.isSuccessful() || response.body() == null) return;
+                try {
+                    if (response != null && response.isSuccessful() && response.body() != null
+                            && !response.body().isEmpty()) {
 
-                for (ScoreResponse s : response.body()) {
+                        List<ScoreResponse> list = response.body();
 
-                    if ("task".equalsIgnoreCase(s.getScore_type())) {
+                        // Try to find the most recent "task" score:
+                        // iterate through list and pick the LAST element that has score_type == "task"
+                        // (this ensures we pick the most recent task entry if list is ordered older->newer or vice-versa)
+                        Float latestTaskScore = null;
+                        ScoreResponse fallback = null;
 
-                        switch (domain) {
-                            case "srt":
-                                attentionPost = s.getScore();
-                                break;
-                            case "nback":
-                                memoryPost = s.getScore();
-                                break;
-                            case "stroop":
-                                emotionPost = s.getScore();
-                                break;
-                            case "task_switch":
-                                cognitivePost = s.getScore();
-                                break;
-                            case "sart":
-                                awarenessPost = s.getScore();
-                                break;
+                        for (ScoreResponse s : list) {
+                            if (s == null) continue;
+                            // keep fallback as last non-null element
+                            fallback = s;
+                            String st = s.getScore_type();
+                            if (st != null && st.equalsIgnoreCase("task")) {
+                                // assign/overwrite so final value is the last 'task' seen
+                                latestTaskScore = Float.valueOf(s.getScore());
+                            }
                         }
-                        break;
+
+                        // If we found a task score, use it; otherwise use fallback's score (most recent)
+                        Float chosenScore = latestTaskScore;
+                        if (chosenScore == null && fallback != null) {
+                            chosenScore = Float.valueOf(fallback.getScore());
+                        }
+
+                        if (chosenScore != null) {
+                            switch (domain) {
+                                case "srt":
+                                    attentionPost = chosenScore;
+                                    break;
+                                case "nback":
+                                    memoryPost = chosenScore;
+                                    break;
+                                case "stroop":
+                                    emotionPost = chosenScore;
+                                    break;
+                                case "task_switch":
+                                    cognitivePost = chosenScore;
+                                    break;
+                                case "sart":
+                                    awarenessPost = chosenScore;
+                                    break;
+                            }
+                        }
+
+                        // redraw graph after processing the domain response
+                        drawGraph();
+                    }
+                } finally {
+                    // Always decrement pending and mark loaded if finished
+                    pendingScoreRequests = Math.max(0, pendingScoreRequests - 1);
+                    if (pendingScoreRequests == 0) {
+                        scoresLoaded = true;
                     }
                 }
-                drawGraph();
             }
 
             @Override
             public void onFailure(Call<List<ScoreResponse>> call, Throwable t) {
+                // Even on failure we decrement the pending counter to avoid locking state.
+                pendingScoreRequests = Math.max(0, pendingScoreRequests - 1);
+                if (pendingScoreRequests == 0) {
+                    scoresLoaded = true;
+                }
             }
         });
     }
@@ -286,6 +340,7 @@ public class HomeActivity extends AppCompatActivity {
         float c = cognitivePost == null ? 0 : cognitivePost;
         float w = awarenessPost == null ? 0 : awarenessPost;
 
+        // If everything is zero (no data) show no-data text
         if (a == 0 && m == 0 && e == 0 && c == 0 && w == 0) {
             lineChart.clear();
             lineChart.setNoDataText("No progress data yet");

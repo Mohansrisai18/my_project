@@ -2,6 +2,7 @@ package com.example.cognisync;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,12 +29,12 @@ public class SARTActivity extends AppCompatActivity {
     private ApiService api;
 
     // ===============================
-    // CONFIG
+    // CONFIG (USER-FRIENDLY)
     // ===============================
-    private static final int TOTAL_TRIALS = 50;
+    private static final int TOTAL_TRIALS = 30;   // ⬅ reduced
     private int currentTrial = 0;
 
-    // two forbidden numbers
+    // forbidden numbers
     private int noGo1;
     private int noGo2;
 
@@ -44,15 +45,15 @@ public class SARTActivity extends AppCompatActivity {
     private final Random random = new Random();
 
     // METRICS
-    private int commissionErrors = 0; // tapped forbidden
-    private int omissionErrors = 0;   // failed to tap allowed
+    private int commissionErrors = 0;
+    private int omissionErrors = 0;
     private int correctResponses = 0;
     private long rtSum = 0;
     private int streak = 0;
+    private int maxStreak = 0;
 
     private List<Integer> sequence = new ArrayList<>();
-    private List<Long> reactionTimes = new ArrayList<>();
-
+    private Runnable currentTrialRunnable = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +69,9 @@ public class SARTActivity extends AppCompatActivity {
         tvProgress = findViewById(R.id.tvProgress);
         btnStart = findViewById(R.id.btnStart);
 
-        btnStart.setOnClickListener(v -> startTask());
+        tvNumber.setClickable(true);
         tvNumber.setOnClickListener(v -> handleTap());
+        btnStart.setOnClickListener(v -> startTask());
     }
 
     // ============================================================
@@ -77,11 +79,8 @@ public class SARTActivity extends AppCompatActivity {
     // ============================================================
     private void startTask() {
 
-        btnStart.setVisibility(Button.GONE);
+        btnStart.setVisibility(View.GONE);
 
-        // ------------------------
-        // Generate random forbidden numbers
-        // ------------------------
         noGo1 = random.nextInt(10);
         do {
             noGo2 = random.nextInt(10);
@@ -95,28 +94,25 @@ public class SARTActivity extends AppCompatActivity {
         rtSum = 0;
         currentTrial = 0;
         streak = 0;
-        reactionTimes.clear();
+        maxStreak = 0;
 
         generateSequence();
         nextTrial();
     }
 
     // ============================================================
-    // GENERATE SEQUENCE
-    // (Higher % of go trials for difficulty)
+    // GENERATE SEQUENCE (EASIER)
     // ============================================================
     private void generateSequence() {
         sequence.clear();
 
-        int noGoTarget = TOTAL_TRIALS / 5;  // 20% forbidden trials
+        int noGoTarget = TOTAL_TRIALS / 7; // ~14% no-go
 
-        // Insert forbidden
         for (int i = 0; i < noGoTarget; i++) {
             sequence.add(noGo1);
             sequence.add(noGo2);
         }
 
-        // Insert allowed digits
         while (sequence.size() < TOTAL_TRIALS) {
             int n = random.nextInt(10);
             if (n == noGo1 || n == noGo2) continue;
@@ -130,6 +126,11 @@ public class SARTActivity extends AppCompatActivity {
     // RUN TRIAL
     // ============================================================
     private void nextTrial() {
+
+        if (currentTrialRunnable != null) {
+            handler.removeCallbacks(currentTrialRunnable);
+            currentTrialRunnable = null;
+        }
 
         if (currentTrial >= TOTAL_TRIALS) {
             endTask();
@@ -145,22 +146,20 @@ public class SARTActivity extends AppCompatActivity {
         lastTime = System.currentTimeMillis();
         canTap = true;
 
-        // HARDER: variable presentation
-        int delay = 600 + random.nextInt(500);
+        // ⬅ More time to react
+        int delay = 1000 + random.nextInt(500);
 
-        handler.postDelayed(() -> {
-
-            if (canTap) {
-                if (number != noGo1 && number != noGo2) {
-                    // should tap
-                    omissionErrors++;
-                    streak = 0;
-                }
+        currentTrialRunnable = () -> {
+            if (canTap && number != noGo1 && number != noGo2) {
+                omissionErrors++;
+                streak = 0;
             }
-
             canTap = false;
-            nextTrial();
-        }, delay);
+            currentTrialRunnable = null;
+            handler.postDelayed(this::nextTrial, 200);
+        };
+
+        handler.postDelayed(currentTrialRunnable, delay);
     }
 
     // ============================================================
@@ -172,60 +171,66 @@ public class SARTActivity extends AppCompatActivity {
         long rt = System.currentTimeMillis() - lastTime;
         int number = Integer.parseInt(tvNumber.getText().toString());
 
+        if (currentTrialRunnable != null) {
+            handler.removeCallbacks(currentTrialRunnable);
+            currentTrialRunnable = null;
+        }
+
         if (number == noGo1 || number == noGo2) {
             commissionErrors++;
             streak = 0;
         } else {
             correctResponses++;
             rtSum += rt;
-            reactionTimes.add(rt);
             streak++;
+            if (streak > maxStreak) maxStreak = streak;
         }
 
         canTap = false;
+        handler.postDelayed(this::nextTrial, 150);
     }
 
     // ============================================================
-    // END — SCORE
+    // END — SCORE (GENEROUS)
     // ============================================================
     private void endTask() {
+
+        handler.removeCallbacksAndMessages(null);
 
         tvNumber.setText("-");
         tvProgress.setText("");
         tvInstruction.setText("Task complete ✓");
 
-        long avgRT = (correctResponses == 0) ? 0 : rtSum / correctResponses;
+        long avgRT = correctResponses == 0 ? 0 : rtSum / correctResponses;
 
-        int totalResp = correctResponses + omissionErrors + commissionErrors;
-        double accuracy = totalResp == 0 ? 0 : (correctResponses * 100.0 / totalResp);
+        double accuracy = correctResponses * 100.0 / TOTAL_TRIALS;
 
-        // PENALTIES — stronger
-        double penalty = commissionErrors * 15 + omissionErrors * 4;
+        // ⬅ Much lighter penalties
+        double penalty = commissionErrors * 5 + omissionErrors * 2;
 
-        // SPEED BONUS
-        double speedBonus = Math.max(0, (350 - avgRT) / 3);
+        // ⬅ Friendly speed bonus
+        double speedBonus = avgRT == 0 ? 0 : Math.max(0, (500 - avgRT) / 5);
 
-        // STREAK BONUS
-        double streakBonus = 0;
-        if (streak >= 4) streakBonus += 5;
-        if (streak >= 7) streakBonus += 12;
-        if (streak >= 10) streakBonus += 20;
+        double streakBonus = maxStreak * 2.5;
 
-        double finalScore = (accuracy * 0.55) + speedBonus + streakBonus - penalty;
-        if (finalScore < 0) finalScore = 0;
-        if (finalScore > 100) finalScore = 100;
+        double finalScore =
+                (accuracy * 0.65) +
+                        speedBonus +
+                        streakBonus -
+                        penalty;
+
+        finalScore = Math.max(0, Math.min(100, finalScore));
 
         Toast.makeText(this,
                 String.format(Locale.getDefault(),
-                        "NoGo: %d & %d\nCorrect: %d\nOmissions: %d\nCommissions: %d\nAvgRT: %dms\nScore: %.1f /100",
-                        noGo1, noGo2,
+                        "Correct: %d\nOmissions: %d\nCommissions: %d\nAvgRT: %dms\nMaxStreak: %d\nScore: %.1f /100",
                         correctResponses, omissionErrors, commissionErrors,
-                        avgRT, finalScore),
+                        avgRT, maxStreak, finalScore),
                 Toast.LENGTH_LONG).show();
 
         sendScore((float) finalScore);
 
-        handler.postDelayed(this::finish, 3000);
+        handler.postDelayed(this::finish, 1800);
     }
 
     // ============================================================
@@ -243,4 +248,9 @@ public class SARTActivity extends AppCompatActivity {
         ScoreUploader.uploadScore(this, email, score, "SART Post", call);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
+    }
 }

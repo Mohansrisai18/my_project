@@ -2,6 +2,8 @@ package com.example.cognisync;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -88,44 +90,41 @@ public class PreAssessmentActivity extends AppCompatActivity {
     }
 
     //==============================================================
-    // 2️⃣ ----- DYNAMIC UI -----
+    // 2️⃣ ----- DYNAMIC UI (inflate card + styled spinner) -----
     //==============================================================
     private void displayQuestions() {
         questionContainer.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(this);
 
         for (int i = 0; i < questions.size(); i++) {
             QuestionItem q = questions.get(i);
 
-            LinearLayout box = new LinearLayout(this);
-            box.setOrientation(LinearLayout.VERTICAL);
-            box.setBackgroundResource(R.drawable.rounded_grey_bg);
-            box.setPadding(24, 24, 24, 24);
+            // Inflate the card layout (rounded grey outer + inner spinner box)
+            View card = inflater.inflate(
+                    R.layout.item_question_spinner,
+                    questionContainer,
+                    false
+            );
 
-            LinearLayout.LayoutParams params =
-                    new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                    );
-            params.setMargins(0, 20, 0, 0);
-            box.setLayoutParams(params);
+            TextView tv = card.findViewById(R.id.tvQuestion);
+            Spinner sp = card.findViewById(R.id.spinnerAnswer);
 
-            TextView t = new TextView(this);
-            t.setText((i + 1) + ". " + q.question);
-            t.setTextSize(18);
-            box.addView(t);
+            tv.setText((i + 1) + ". " + q.question);
 
-            Spinner sp = new Spinner(this);
+            // Adapter using your custom spinner row layouts
             ArrayAdapter<String> adapter = new ArrayAdapter<>(
                     this,
-                    android.R.layout.simple_spinner_item,
+                    R.layout.spinner_selected_item,
                     q.options()
             );
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
             sp.setAdapter(adapter);
 
-            box.addView(sp);
+            // remember spinner for later scoring
             q.spinner = sp;
-            questionContainer.addView(box);
+
+            // add to container
+            questionContainer.addView(card);
         }
     }
 

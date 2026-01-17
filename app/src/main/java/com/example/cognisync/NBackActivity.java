@@ -1,9 +1,7 @@
 package com.example.cognisync;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,18 +27,81 @@ public class NBackActivity extends AppCompatActivity {
     private final String[] letters = {"A","B","C","D","E","F","G","H"};
 
     private final List<String> shown = new ArrayList<>();
-    private int hits = 0;            // taps when match
-    private int totalTaps = 0;       // total button presses
-    private int totalTrials = 0;     // number of letters shown
+    private int hits = 0;
+    private int totalTaps = 0;
+    private int totalTrials = 0;
 
     private final Handler handler = new Handler();
     private final Random random = new Random();
 
+    private boolean respondedThisStimulus = false;
     private boolean canRespond = false;
-    private static final int MAX_TRIALS = 24;  // you can reduce/increase
+
+    // ⬇️ EASIER CONFIG
+    private static final int MAX_TRIALS = 18;
+    private static final int STIMULUS_DURATION = 2000; // ms
+    private static final int TRIAL_INTERVAL = 2500;    // ms
+
+    // probability of intentionally creating a 2-back match when possible
+    private static final float MATCH_PROBABILITY = 0.35f;
 
     private ApiService api;
     private String email;
+
+    // runnable reference so we can cancel on destroy
+    private final Runnable sequenceRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (totalTrials >= MAX_TRIALS) {
+                showResult();
+                return;
+            }
+
+            String letter;
+
+            // If we have at least two previous letters (needed for 2-back) we may force a match.
+            if (shown.size() >= 2 && random.nextFloat() < MATCH_PROBABILITY) {
+                // Intentionally create a 2-back match by repeating the letter from two steps ago
+                letter = shown.get(shown.size() - 2);
+            } else {
+                // Pick a letter that is DIFFERENT from:
+                // - the immediate previous letter (avoid accidental 1-back)
+                // - the letter two steps back (avoid accidental 2-back)
+                if (shown.size() >= 2) {
+                    String prev = shown.get(shown.size() - 1);
+                    String twoBack = shown.get(shown.size() - 2);
+                    do {
+                        letter = letters[random.nextInt(letters.length)];
+                        // regenerate while accidentally matching immediate prev or two-back
+                    } while (letter.equals(prev) || letter.equals(twoBack));
+                } else if (shown.size() == 1) {
+                    // only avoid immediate repeat
+                    String prev = shown.get(shown.size() - 1);
+                    do {
+                        letter = letters[random.nextInt(letters.length)];
+                    } while (letter.equals(prev));
+                } else {
+                    // first letter: any
+                    letter = letters[random.nextInt(letters.length)];
+                }
+            }
+
+            shown.add(letter);
+            totalTrials++;
+
+            tvLetter.setText(letter);
+            tvInfo.setText("Tap MATCH if same as the letter shown two steps earlier (one in between).");
+
+            canRespond = true;
+            respondedThisStimulus = false;
+
+            // response window
+            handler.postDelayed(() -> canRespond = false, STIMULUS_DURATION);
+
+            // schedule next trial
+            handler.postDelayed(this, TRIAL_INTERVAL);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,112 +115,86 @@ public class NBackActivity extends AppCompatActivity {
                 .getString("email", "");
 
         tvLetter = findViewById(R.id.tvLetter);
-        tvScore = findViewById(R.id.tvScore);
-        tvInfo  = findViewById(R.id.tvInfo);
+        tvScore  = findViewById(R.id.tvScore);
+        tvInfo   = findViewById(R.id.tvInfo);
         btnMatch = findViewById(R.id.btnMatch);
 
-        tvScore.setVisibility(View.INVISIBLE);
+        tvScore.setVisibility(TextView.GONE);
 
-        btnMatch.setOnClickListener(v -> {
-            if (canRespond) {
-                totalTaps++;
+        btnMatch.setOnClickListener(v -> handleMatchTap());
 
-                if (shown.size() >= 3) {
-                    String cur  = shown.get(shown.size()-1);
-                    String prev = shown.get(shown.size()-3);
-
-                    if (cur.equals(prev)) {
-                        hits++;
-                    }
-                }
-            }
-        });
-
-        startSequence();
+        // start sequence (delayed start)
+        handler.postDelayed(sequenceRunnable, 1200);
     }
 
     // ===============================================================
-    // MAIN SEQUENCE
+    // TAP HANDLER (2-BACK)
     // ===============================================================
-    private void startSequence() {
+    private void handleMatchTap() {
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+        if (!canRespond || respondedThisStimulus) return;
 
-                if (totalTrials >= MAX_TRIALS) {
-                    showResult();
-                    return;
-                }
+        totalTaps++;
+        respondedThisStimulus = true;
 
-                String letter = letters[random.nextInt(letters.length)];
-                shown.add(letter);
-                totalTrials++;
+        // For 2-back we need at least 3 shown items (indexes 0..n-1, current index is n-1,
+        // compare current (n-1) to twoBack (n-3) BEFORE adding? But we add then check,
+        // so current = shown.get(size-1), two-back is shown.get(size-3)
+        if (shown.size() >= 3) {
+            String cur = shown.get(shown.size() - 1);
+            String twoBack = shown.get(shown.size() - 3);
 
-                tvLetter.setText(letter);
-                canRespond = true;
-
-                handler.postDelayed(this, 1500);
+            if (cur.equals(twoBack)) {
+                hits++;
             }
-        }, 1000);
+        }
     }
 
     // ===============================================================
-    // SCORING
+    // SCORING (2-BACK friendly, friendly weights)
     // ===============================================================
     private void showResult() {
+
         canRespond = false;
 
         int totalMatches = 0;
-        int misses = 0;
-        int falseAlarms = 0;
-
-        // count real matches
+        // count real 2-back matches: positions where item equals item two steps earlier
         for (int i = 2; i < shown.size(); i++) {
             if (shown.get(i).equals(shown.get(i - 2))) {
                 totalMatches++;
             }
         }
 
-        // false alarms = taps that were wrong
-        falseAlarms = Math.max(0, totalTaps - hits);
+        int falseAlarms = Math.max(0, totalTaps - hits);
+        int misses = Math.max(0, totalMatches - hits);
 
-        // misses = match position but no tap
-        misses = Math.max(0, totalMatches - hits);
-
-        // ----------------------------
-        // EASY FAIR SCORE
-        // ----------------------------
+        // Friendly scoring weights (kept similar to previous tuning)
         double rawScore =
-                (hits * 5)       // good!
-                        - (misses * 2)   // forgot / low WM
-                        - (falseAlarms * 3);  // impulsive taps
+                (hits * 6)
+                        - (misses * 1.5)
+                        - (falseAlarms * 2);
 
         if (rawScore < 0) rawScore = 0;
 
-        double maxScore = totalMatches * 5.0;
-        double normalizedScore =
-                (maxScore == 0) ? 0 : (rawScore / maxScore) * 100;
+        double maxScore = totalMatches * 6.0;
+        double score = maxScore == 0 ? 0 : (rawScore / maxScore) * 100;
 
-        // clamp to 0–100
-        if (normalizedScore > 100) normalizedScore = 100;
-        if (normalizedScore < 0) normalizedScore = 0;
+        score = Math.max(0, Math.min(100, score));
 
-        // UI
-        tvScore.setVisibility(View.VISIBLE);
+        tvScore.setVisibility(TextView.VISIBLE);
         tvScore.setText(String.format(Locale.getDefault(),
-                "Score: %.1f /100\nHits=%d  Miss=%d  False=%d",
-                normalizedScore, hits, misses, falseAlarms));
+                "Score: %.1f /100\nHits: %d  Misses: %d  False: %d",
+                score, hits, misses, falseAlarms));
 
-        tvInfo.setText("Task completed ✓");
+        tvInfo.setText("2-Back task completed ✓");
 
-        sendScore((float) normalizedScore);
+        sendScore((float) score);
 
-        handler.postDelayed(this::finish, 2500);
+        handler.postDelayed(this::finish, 3000);
     }
 
     // ===============================================================
-    // API CALL
+    // API
     // ===============================================================
     private void sendScore(float score) {
 
@@ -169,7 +204,7 @@ public class NBackActivity extends AppCompatActivity {
         }
 
         ScoreRequest req = new ScoreRequest(email, score);
-        Call<Void> call  = api.saveNbackPost(req);
+        Call<Void> call = api.saveNbackPost(req);
 
         ScoreUploader.uploadScore(
                 this,
@@ -178,5 +213,13 @@ public class NBackActivity extends AppCompatActivity {
                 "N-Back Post",
                 call
         );
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // cancel pending runnables
+        handler.removeCallbacks(sequenceRunnable);
+        handler.removeCallbacksAndMessages(null);
     }
 }

@@ -13,7 +13,7 @@
         android:id="@+id/tvInstruction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tap when the current letter matches the one two before."
+        android:text="Tap when the current letter matches the letter shown two steps earlier (one in between)."
         android:textColor="#000"
         android:textSize="18sp"
         android:gravity="center"
@@ -32,7 +32,9 @@
         android:gravity="center"
         android:includeFontPadding="false"
         android:layout_marginBottom="40dp"
-        android:contentDescription="Current letter" />
+        android:contentDescription="Current letter"
+        android:clickable="true"
+        android:focusable="true" />
 
     <!-- Match Button -->
     <Button
@@ -45,7 +47,7 @@
         android:textColor="#FFFFFF"
         android:background="@drawable/btn_bg" />
 
-    <!-- Score -->
+    <!-- Score (hidden until shown by activity) -->
     <TextView
         android:id="@+id/tvScore"
         android:layout_width="wrap_content"
@@ -53,7 +55,8 @@
         android:text="Score: --%"
         android:textColor="#444"
         android:textSize="16sp"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="30dp"
+        android:visibility="gone" />
 
     <!-- Info -->
     <TextView

@@ -33,8 +33,9 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // inflate the timetable-like card for module sessions
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_session, parent, false);
+                .inflate(R.layout.item_module_card, parent, false);
         return new ViewHolder(v);
     }
 
@@ -42,11 +43,15 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ModuleSessionItem s = list.get(position);
 
-        // Use the title & description provided by ModuleHomeActivity (already normalized)
+        holder.day.setText("Session " + (position + 1));
         holder.title.setText(s.getTitle());
-        holder.desc.setText(s.getDescription());
+        // put module short id or leave blank — module not provided per session. Hide if empty.
+        holder.module.setText(""); // not applicable for module list; left blank
+        holder.description.setText(s.getDescription());
 
-        holder.card.setOnClickListener(v -> listener.onSessionClick(s));
+        holder.card.setOnClickListener(v -> {
+            if (listener != null) listener.onSessionClick(s);
+        });
     }
 
     @Override
@@ -56,14 +61,15 @@ public class ModuleSessionAdapter extends RecyclerView.Adapter<ModuleSessionAdap
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView card;
-        TextView title, desc;
+        TextView day, title, module, description;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            card = itemView.findViewById(R.id.cardSession);
-            title = itemView.findViewById(R.id.tvSessionTitle);
-            desc = itemView.findViewById(R.id.tvSessionDesc);
+            card = itemView.findViewById(R.id.cardView); // card id inside item_module_card.xml
+            day = itemView.findViewById(R.id.tvDay);
+            title = itemView.findViewById(R.id.tvTitle);
+            module = itemView.findViewById(R.id.tvModule);
+            description = itemView.findViewById(R.id.tvDescription);
         }
     }
 }

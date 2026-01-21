@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Patterns;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -59,10 +60,8 @@ public class SignupActivity extends AppCompatActivity {
             int bottom = container.getPaddingBottom();
 
             ViewCompat.setOnApplyWindowInsetsListener(container, (v, insets) -> {
-                Insets systemBars =
-                        insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                Insets ime =
-                        insets.getInsets(WindowInsetsCompat.Type.ime());
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
 
                 int bottomInset = Math.max(systemBars.bottom, ime.bottom);
 
@@ -184,31 +183,82 @@ public class SignupActivity extends AppCompatActivity {
 
     private void performSignup() {
 
-        String userId = userIdInput.getText().toString().trim();
+        String userIdRaw = userIdInput.getText().toString().trim();
         String age = ageInput.getText().toString().trim();
-        String email = mailInput.getText().toString().trim();
+        String emailRaw = mailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
+
+        // normalize email (trim only — case is not critical for validation but we'll use lowercase for storage)
+        String email = emailRaw.toLowerCase();
 
         if (genderSpinner.getSelectedItemPosition() == 0) {
             Toast.makeText(this, "Please select gender", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (TextUtils.isEmpty(userId) ||
+        if (TextUtils.isEmpty(userIdRaw) ||
                 TextUtils.isEmpty(age) ||
-                TextUtils.isEmpty(email) ||
+                TextUtils.isEmpty(emailRaw) ||
                 TextUtils.isEmpty(password)) {
 
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // User ID validation
-        if (!userId.matches("^[A-Za-z][A-Za-z0-9_]*$")) {
+        /* ---------------- EMAIL VALIDATION ---------------- */
+        // No spaces
+        if (emailRaw.contains(" ")) {
+            mailInput.setError("Email must not contain spaces");
+            mailInput.requestFocus();
+            return;
+        }
+
+        // Use Android built-in pattern (robust for real-world addresses)
+        if (!Patterns.EMAIL_ADDRESS.matcher(emailRaw).matches()) {
+            mailInput.setError("Enter a valid email address");
+            mailInput.requestFocus();
+            return;
+        }
+
+        // No consecutive dots
+        if (emailRaw.contains("..")) {
+            mailInput.setError("Email format is invalid");
+            mailInput.requestFocus();
+            return;
+        }
+
+        // Domain must have a dot (e.g. example.com or dept.university.ac.in)
+        int atIndex = emailRaw.indexOf("@");
+        if (atIndex < 0 || atIndex >= emailRaw.length() - 1) {
+            mailInput.setError("Email is invalid");
+            mailInput.requestFocus();
+            return;
+        }
+        String domain = emailRaw.substring(atIndex + 1);
+        if (!domain.contains(".")) {
+            mailInput.setError("Email domain is invalid");
+            mailInput.requestFocus();
+            return;
+        }
+        /* -------------------------------------------------- */
+
+        // Normalize userId to lowercase for validation & storage
+        String userId = userIdRaw.toLowerCase();
+
+        // STRICT User ID validation (5-15 chars, starts with letter, only a-z0-9_, no double underscores, no reserved words)
+        String USER_ID_REGEX = "^(?!.*__)(?!(?:admin|support|root|system|null|user)$)[a-z][a-z0-9_]{4,14}$";
+
+        if (!userId.matches(USER_ID_REGEX)) {
             userIdInput.setError(
-                    "User ID must start with a letter and contain only letters, numbers, or _"
+                    "User ID rules:\n" +
+                            "• 5–15 chars\n" +
+                            "• start with a letter\n" +
+                            "• letters, numbers, underscore only\n" +
+                            "• no spaces, no consecutive '_' \n" +
+                            "• cannot be admin/support/root/system/null/user"
             );
             userIdInput.requestFocus();
+            userIdInput.setSelection(Math.min(userIdInput.length(), userIdInput.getText().length()));
             return;
         }
 
@@ -240,6 +290,7 @@ public class SignupActivity extends AppCompatActivity {
         btnSignup.setEnabled(false);
         btnSignup.setText("Creating account…");
 
+        // use normalized userId (lowercase) when creating the patient and storing locally
         Patient patient = new Patient(
                 userId,
                 ageValue,
@@ -263,7 +314,7 @@ public class SignupActivity extends AppCompatActivity {
                             getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor ed = sp.edit();
 
-                    // store profile fields
+                    // store profile fields in lowercase where appropriate
                     ed.putString("user_id", userId);
                     ed.putString("username", userId);
                     ed.putString("email", email);
@@ -291,8 +342,7 @@ public class SignupActivity extends AppCompatActivity {
                     Toast.makeText(
                             SignupActivity.this,
                             "Signup failed (" + response.code() + ")",
-                            Toast.LENGTH_LONG
-                    ).show();
+                            Toast.LENGTH_LONG).show();
                 }
             }
 

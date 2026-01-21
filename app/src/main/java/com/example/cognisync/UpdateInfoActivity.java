@@ -2,15 +2,16 @@ package com.example.cognisync;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
@@ -27,11 +28,11 @@ public class UpdateInfoActivity extends AppCompatActivity {
     private EditText editName, editAge;
     private Spinner genderSpinner;
     private Button updateBtn;
+    private ImageButton backButton;
 
-    // SharedPreferences keys
     private static final String PREFS_NAME = "UserPrefs";
-    private static final String KEY_USER_ID = "user_id";   // backend field
-    private static final String KEY_NAME = "userName";     // legacy/local
+    private static final String KEY_USER_ID = "user_id";
+    private static final String KEY_NAME = "userName";
     private static final String KEY_AGE = "age";
     private static final String KEY_GENDER = "gender";
     private static final String KEY_EMAIL = "email";
@@ -41,37 +42,90 @@ public class UpdateInfoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        // keep action bar hidden like before
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_account_settings);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            getWindow().getDecorView()
-                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        // ---------------- SAFE INSETS (status bar + keyboard) ----------------
+        View container = findViewById(R.id.container);
+        if (container != null) {
+            int l = container.getPaddingLeft();
+            int t = container.getPaddingTop();
+            int r = container.getPaddingRight();
+            int b = container.getPaddingBottom();
+
+            ViewCompat.setOnApplyWindowInsetsListener(container, (v, insets) -> {
+                Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+
+                v.setPadding(
+                        l,
+                        t + sys.top,
+                        r,
+                        b + Math.max(sys.bottom, ime.bottom)
+                );
+                return insets;
+            });
+            ViewCompat.requestApplyInsets(container);
         }
+        // --------------------------------------------------------------------
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
+        backButton = findViewById(R.id.backButton);
         editName = findViewById(R.id.editName);
         editAge = findViewById(R.id.editAge);
         genderSpinner = findViewById(R.id.genderSpinner);
         updateBtn = findViewById(R.id.updateInfoButton);
 
+        // Ensure back chevron tint is applied programmatically (covers older devices)
+        try {
+            backButton.setImageTintList(ColorStateList.valueOf(Color.BLACK));
+        } catch (Exception ignored) {}
+
         setupGenderSpinner();
         loadLocalData();
 
+        // style the displayed selected text (ensure selected entry is visible/black)
+        genderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // If the selected view is a TextView (most adapter item layouts are), style it
+                if (view instanceof TextView) {
+                    ((TextView) view).setTextColor(Color.BLACK);
+                }
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
+        backButton.setOnClickListener(v -> finish());
         updateBtn.setOnClickListener(v -> updateProfile());
     }
 
     // ---------------- GENDER SPINNER ----------------
     private void setupGenderSpinner() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                R.layout.spinner_selected_item,
-                new String[]{"Male", "Female", "Other"}
-        );
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        // Use custom row layouts if you already have them to control colors.
+        // Fallback to platform simple layouts (they are safe and readable).
+        ArrayAdapter<String> adapter;
+        try {
+            // If you have custom layouts (spinner_selected_item & spinner_dropdown_item) in res/layout, use them:
+            adapter = new ArrayAdapter<>(
+                    this,
+                    R.layout.spinner_selected_item,
+                    new String[]{"Select gender", "Male", "Female", "Other"}
+            );
+            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        } catch (Exception e) {
+            // fallback
+            adapter = new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    new String[]{"Select gender", "Male", "Female", "Other"}
+            );
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        }
+
         genderSpinner.setAdapter(adapter);
+        genderSpinner.setSelection(0, false);
     }
 
     // ---------------- LOAD LOCAL DATA ----------------
@@ -81,26 +135,28 @@ public class UpdateInfoActivity extends AppCompatActivity {
         if (name.isEmpty()) {
             name = sharedPreferences.getString(KEY_NAME, "");
         }
-
         editName.setText(name);
+
         editAge.setText(sharedPreferences.getString(KEY_AGE, ""));
 
         String gender = sharedPreferences.getString(KEY_GENDER, "");
-        if (!gender.isEmpty()) {
-            String normalized =
-                    gender.substring(0, 1).toUpperCase() + gender.substring(1);
+        if (gender != null && !gender.isEmpty()) {
+            String normalized = gender.substring(0, 1).toUpperCase() + gender.substring(1).toLowerCase();
             ArrayAdapter adapter = (ArrayAdapter) genderSpinner.getAdapter();
             int pos = adapter.getPosition(normalized);
-            if (pos >= 0) genderSpinner.setSelection(pos);
+            if (pos >= 0) {
+                // Post selection to ensure the Spinner's internal view updates properly
+                genderSpinner.post(() -> genderSpinner.setSelection(pos));
+            }
         }
     }
 
-    // ---------------- BACKEND-FIRST UPDATE ----------------
+    // ---------------- UPDATE PROFILE ----------------
     private void updateProfile() {
 
         String userId = editName.getText().toString().trim();
         String age = editAge.getText().toString().trim();
-        String gender = genderSpinner.getSelectedItem().toString();
+        String gender = genderSpinner.getSelectedItem() == null ? "" : genderSpinner.getSelectedItem().toString();
         String email = sharedPreferences.getString(KEY_EMAIL, "");
 
         if (userId.isEmpty()) {
@@ -113,6 +169,11 @@ public class UpdateInfoActivity extends AppCompatActivity {
             return;
         }
 
+        if (genderSpinner.getSelectedItemPosition() == 0) {
+            Toast.makeText(this, "Please select gender", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (email.isEmpty()) {
             Toast.makeText(this,
                     "Email missing. Please login again.",
@@ -122,17 +183,16 @@ public class UpdateInfoActivity extends AppCompatActivity {
 
         updateBtn.setEnabled(false);
 
-        // ✅ PAYLOAD MUST MATCH DJANGO MODEL
+        // -------- BACKEND PAYLOAD --------
         Map<String, String> body = new HashMap<>();
         body.put("email", email);
-        body.put("user_id", userId);   // 🔥 FIXED
+        body.put("user_id", userId);
         body.put("age", age);
         body.put("gender", gender);
 
         ApiService api = ApiClient.getClient().create(ApiService.class);
 
         api.updateUserProfile(body).enqueue(new Callback<Void>() {
-
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 updateBtn.setEnabled(true);
@@ -144,25 +204,21 @@ public class UpdateInfoActivity extends AppCompatActivity {
                     return;
                 }
 
-                // ✅ SAVE LOCALLY ONLY AFTER BACKEND SUCCESS
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString(KEY_USER_ID, userId);
-                editor.putString(KEY_NAME, userId);
-                editor.putString(KEY_AGE, age);
-                editor.putString(KEY_GENDER, gender);
-                editor.apply();
+                // SAVE LOCALLY ONLY AFTER SERVER SUCCESS
+                sharedPreferences.edit()
+                        .putString(KEY_USER_ID, userId)
+                        .putString(KEY_NAME, userId)
+                        .putString(KEY_AGE, age)
+                        .putString(KEY_GENDER, gender)
+                        .apply();
 
                 Toast.makeText(UpdateInfoActivity.this,
                         "Account updated successfully",
                         Toast.LENGTH_SHORT).show();
 
-                Intent intent =
-                        new Intent(UpdateInfoActivity.this, ProfileActivity.class);
-                intent.setFlags(
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                                Intent.FLAG_ACTIVITY_SINGLE_TOP
-                );
-                startActivity(intent);
+                Intent i = new Intent(UpdateInfoActivity.this, ProfileActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(i);
                 finish();
             }
 

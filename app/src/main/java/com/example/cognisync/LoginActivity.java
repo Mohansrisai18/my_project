@@ -1,7 +1,9 @@
 package com.example.cognisync;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -30,6 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     private AppCompatButton btnLogin;
     private TextView signupText, forgotPasswordText;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -61,55 +64,59 @@ public class LoginActivity extends AppCompatActivity {
 
         btnLogin.setText("Login");
 
-        // 👁 Ensure eye icon exists
+        // Ensure inputType is password type for proper keyboard behavior (same as Signup)
+        passwordInput.setInputType(
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD
+        );
+
+        // Ensure closed-eye icon exists by default
         passwordInput.setCompoundDrawablesWithIntrinsicBounds(
                 0, 0, R.drawable.ic_eye_closed, 0
         );
 
-        // 👁 PASSWORD SHOW / HIDE TOGGLE (CLEAN + SAFE)
+        // 👁 PASSWORD SHOW / HIDE TOGGLE — use same working logic as SignupActivity
         passwordInput.setOnTouchListener((v, event) -> {
-            if (event.getAction() != MotionEvent.ACTION_UP) return false;
+            if (event.getAction() == MotionEvent.ACTION_UP) {
 
-            if (passwordInput.getCompoundDrawables()[2] == null) return false;
+                Drawable drawable = passwordInput.getCompoundDrawables()[2];
+                if (drawable == null) return false;
 
-            int drawableWidth =
-                    passwordInput.getCompoundDrawables()[2].getBounds().width();
+                int drawableWidth = drawable.getBounds().width();
 
-            int touchAreaStart =
-                    passwordInput.getWidth()
-                            - passwordInput.getPaddingRight()
-                            - drawableWidth;
+                // use paddingEnd like Signup (handles RTL correctly)
+                if (event.getX() >= (passwordInput.getWidth()
+                        - passwordInput.getPaddingEnd()
+                        - drawableWidth)) {
 
-            if (event.getX() >= touchAreaStart) {
+                    // Toggle by checking exact inputType like Signup does
+                    if (passwordInput.getInputType() ==
+                            (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
 
-                boolean isHidden =
-                        (passwordInput.getInputType()
-                                & InputType.TYPE_TEXT_VARIATION_PASSWORD)
-                                == InputType.TYPE_TEXT_VARIATION_PASSWORD;
+                        // currently hidden -> make visible
+                        passwordInput.setInputType(
+                                InputType.TYPE_CLASS_TEXT |
+                                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        );
+                        passwordInput.setCompoundDrawablesWithIntrinsicBounds(
+                                0, 0, R.drawable.ic_eye_open, 0
+                        );
+                    } else {
+                        // currently visible -> mask again
+                        passwordInput.setInputType(
+                                InputType.TYPE_CLASS_TEXT |
+                                        InputType.TYPE_TEXT_VARIATION_PASSWORD
+                        );
+                        passwordInput.setCompoundDrawablesWithIntrinsicBounds(
+                                0, 0, R.drawable.ic_eye_closed, 0
+                        );
+                    }
 
-                if (isHidden) {
-                    passwordInput.setInputType(
-                            InputType.TYPE_CLASS_TEXT |
-                                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    );
-                    passwordInput.setCompoundDrawablesWithIntrinsicBounds(
-                            0, 0, R.drawable.ic_eye_open, 0
-                    );
-                } else {
-                    passwordInput.setInputType(
-                            InputType.TYPE_CLASS_TEXT |
-                                    InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    );
-                    passwordInput.setCompoundDrawablesWithIntrinsicBounds(
-                            0, 0, R.drawable.ic_eye_closed, 0
-                    );
+                    // move cursor to end and notify accessibility
+                    passwordInput.setSelection(passwordInput.getText().length());
+                    passwordInput.performClick();
+                    return true;
                 }
-
-                passwordInput.setSelection(passwordInput.getText().length());
-                passwordInput.performClick(); // accessibility
-                return true;
             }
-
             return false;
         });
 

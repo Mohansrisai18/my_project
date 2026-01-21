@@ -1,9 +1,7 @@
 package com.example.cognisync;
 
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,14 +16,13 @@ import com.example.cognisync.model.ScoreResponse;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 import retrofit2.Call;
@@ -42,8 +39,8 @@ public class ProgressDashboardActivity extends AppCompatActivity {
     private ApiService api;
     private String email;
 
-    // Merged PRE + POST scores
-    private final List<ScoreResponse> allScores = new ArrayList<>();
+    // temporary store for merged responses (may be appended multiple times)
+    private final List<ScoreResponse> incoming = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,34 +64,40 @@ public class ProgressDashboardActivity extends AppCompatActivity {
         SharedPreferences sp = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         email = sp.getString("email", "");
 
-        if (email.isEmpty()) {
+        if (email == null || email.isEmpty()) {
             Toast.makeText(this, "No email found!", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
+        // Load PRE + POST-like endpoints in parallel
         loadBothPreAndPost();
+
         backButton.setOnClickListener(v -> finish());
     }
 
-    // Load PRE + POST based on module
+    // ---------------- load both domains ----------------
     private void loadBothPreAndPost() {
         String[] domains = getDomainsForScoreType(scoreType);
-
-        loadScoreFromServer(domains[0]); // PRE
-        loadScoreFromServer(domains[1]); // POST
+        loadScoreFromServer(domains[0]); // PRE domain
+        loadScoreFromServer(domains[1]); // POST domain
     }
 
     private void loadScoreFromServer(String domain) {
         Call<List<ScoreResponse>> call = api.getScoreHistory(email, domain);
-
         call.enqueue(new Callback<List<ScoreResponse>>() {
             @Override
             public void onResponse(Call<List<ScoreResponse>> call, Response<List<ScoreResponse>> response) {
-                if (!response.isSuccessful() || response.body() == null) return;
+                if (!response.isSuccessful() || response.body() == null) {
+                    // keep UI unchanged
+                    return;
+                }
 
-                allScores.addAll(response.body());
-                updateMergedUI();
+                // Append new responses then rebuild unique merged list + UI
+                synchronized (incoming) {
+                    incoming.addAll(response.body());
+                }
+                rebuildAndShow();
             }
 
             @Override
@@ -104,67 +107,151 @@ public class ProgressDashboardActivity extends AppCompatActivity {
         });
     }
 
-    private void updateMergedUI() {
+    // ---------------- merge, dedupe, sort, and update UI ----------------
+    private void rebuildAndShow() {
+        List<ScoreResponse> merged;
+        synchronized (incoming) {
+            // Deduplicate by (created_at | score | score_type) key to avoid duplicates on repeated loads
+            Map<String, ScoreResponse> map = new LinkedHashMap<>();
+            for (ScoreResponse s : incoming) {
+                if (s == null) continue;
+                String key = safe(s.getCreated_at()) + "|" + s.getScore() + "|" + safe(s.getScore_type());
+                map.put(key, s);
+            }
+            merged = new ArrayList<>(map.values());
+        }
 
-        if (allScores.isEmpty()) {
-            tvLatestScore.setText("--");
-            tvSummary.setText("No assessment data yet.");
+        if (merged.isEmpty()) {
+            runOnUiThread(() -> {
+                tvLatestScore.setText("--");
+                tvSummary.setText("No assessment data yet.");
+                recyclerScoreHistory.setAdapter(null);
+            });
             return;
         }
 
-        // Sort newest -> oldest
-        allScores.sort((a, b) -> safe(b.getCreated_at()).compareTo(safe(a.getCreated_at())));
+        // Sort newest -> oldest by ISO timestamp string (lexicographic for ISO works)
+        Collections.sort(merged, (a, b) -> safe(b.getCreated_at()).compareTo(safe(a.getCreated_at())));
 
+        // Determine earliest PRE and latest POST-like values
+        Float earliestPre = findEarliestPre(merged);
+        Float latestPostLike = findLatestPostLike(merged);
+
+        // Build ScoreHistoryItem list (with baseline / latestPost flags)
         List<ScoreHistoryItem> items = new ArrayList<>();
-
-        for (ScoreResponse s : allScores) {
+        for (ScoreResponse s : merged) {
             String[] local = convertToLocal(s.getCreated_at());
+            boolean isBaseline = false;
+            boolean isLatestPost = false;
+
+            String t = safe(s.getScore_type()).toLowerCase(Locale.ROOT);
+
+            if (isPreLike(t) && earliestPre != null) {
+                if (Math.abs(s.getScore() - earliestPre) < 0.001f) isBaseline = true;
+            }
+
+            if (isPostLike(t) && latestPostLike != null) {
+                if (Math.abs(s.getScore() - latestPostLike) < 0.001f) isLatestPost = true;
+            }
+
             items.add(new ScoreHistoryItem(
                     s.getScore(),
                     local[0],
                     local[1],
-                    s.getScore_type()   // 🔥 add this
+                    s.getScore_type(),
+                    isBaseline,
+                    isLatestPost
             ));
         }
 
-        recyclerScoreHistory.setLayoutManager(new LinearLayoutManager(this));
-        recyclerScoreHistory.setAdapter(new ScoreHistoryAdapter(items));
+        // Update UI on main thread
+        runOnUiThread(() -> {
+            recyclerScoreHistory.setLayoutManager(new LinearLayoutManager(ProgressDashboardActivity.this));
+            recyclerScoreHistory.setAdapter(new ScoreHistoryAdapter(items));
 
-        tvLatestScore.setText(String.format(Locale.getDefault(), "%.1f", allScores.get(0).getScore()));
+            // Latest overall score is the first entry (newest)
+            tvLatestScore.setText(String.format(Locale.getDefault(), "%.1f", merged.get(0).getScore()));
 
-        computeProgress(allScores);
+            // Update summary text using earliestPre and latestPostLike
+            updateSummaryText(earliestPre, latestPostLike, merged);
+        });
     }
 
-    private void computeProgress(List<ScoreResponse> list) {
-        Float pre = null, post = null;
-
-        for (ScoreResponse s : list) {
-            if ("pre".equalsIgnoreCase(s.getScore_type()) && pre == null)
-                pre = s.getScore();
-
-            if ("post".equalsIgnoreCase(s.getScore_type()) && post == null)
-                post = s.getScore();
-        }
-
-        if (pre == null && post == null) {
+    private void updateSummaryText(Float earliestPre, Float latestPostLike, List<ScoreResponse> merged) {
+        if (earliestPre == null && latestPostLike == null) {
             tvSummary.setText("No assessment data yet.");
             return;
         }
 
-        if (pre == null) pre = 0f;
-        if (post == null) post = 0f;
-
-        float delta = post - pre;
+        float preVal = earliestPre == null ? 0f : earliestPre;
+        float postVal = latestPostLike == null ? 0f : latestPostLike;
+        float delta = postVal - preVal;
 
         String status;
-        if (delta > 3) status = "↑ Improved";
-        else if (delta < -3) status = "↓ Declined";
-        else status = "→ Stable";
+        if (earliestPre == null) {
+            status = "No baseline (PRE) found";
+        } else if (latestPostLike == null) {
+            status = "No POST found yet";
+        } else {
+            if (delta > 3) status = "↑ Improved";
+            else if (delta < -3) status = "↓ Declined";
+            else status = "→ Stable";
+        }
 
-        tvSummary.setText(String.format(
-                "%s Progress\nBaseline: %.1f   |   Post: %.1f   |   Δ: %.1f   %s",
-                scoreType, pre, post, delta, status
+        String baselineText = earliestPre == null ? "--" : String.format(Locale.getDefault(), "%.1f", earliestPre);
+        String postText = latestPostLike == null ? "--" : String.format(Locale.getDefault(), "%.1f", latestPostLike);
+        String deltaText = String.format(Locale.getDefault(), "%.1f", delta);
+
+        tvSummary.setText(String.format(Locale.getDefault(),
+                "%s Progress\nBaseline: %s   |   Post: %s   |   Δ: %s   %s",
+                scoreType, baselineText, postText, deltaText, status
         ));
+    }
+
+    // Find earliest (oldest) PRE-like score
+    private Float findEarliestPre(List<ScoreResponse> list) {
+        String earliestIso = null;
+        Float val = null;
+        for (ScoreResponse s : list) {
+            String t = safe(s.getScore_type()).toLowerCase(Locale.ROOT);
+            if (!isPreLike(t)) continue;
+            String iso = safe(s.getCreated_at());
+            if (iso.isEmpty()) continue;
+            if (earliestIso == null || iso.compareTo(earliestIso) < 0) {
+                earliestIso = iso;
+                val = s.getScore();
+            }
+        }
+        return val;
+    }
+
+    // Find newest POST-like score
+    private Float findLatestPostLike(List<ScoreResponse> list) {
+        String latestIso = null;
+        Float val = null;
+        for (ScoreResponse s : list) {
+            String t = safe(s.getScore_type()).toLowerCase(Locale.ROOT);
+            if (!isPostLike(t)) continue;
+            String iso = safe(s.getCreated_at());
+            if (iso.isEmpty()) continue;
+            if (latestIso == null || iso.compareTo(latestIso) > 0) {
+                latestIso = iso;
+                val = s.getScore();
+            }
+        }
+        return val;
+    }
+
+    // --------- heuristics to accept different server score_type names ----------
+    private boolean isPreLike(String typeLower) {
+        if (typeLower == null) return false;
+        return typeLower.contains("pre");
+    }
+
+    private boolean isPostLike(String typeLower) {
+        if (typeLower == null) return false;
+        // accept "post" explicitly, and also "task" because your screenshots show TASK as the immediate result.
+        return typeLower.contains("post") || typeLower.contains("task");
     }
 
     private String safe(String s) {
@@ -172,7 +259,7 @@ public class ProgressDashboardActivity extends AppCompatActivity {
     }
 
     // -----------------------------
-    // Convert backend ISO → local timezone
+    // Convert backend ISO → local timezone (keeps your existing logic)
     // -----------------------------
     private String[] convertToLocal(String iso) {
         String date = "--";
@@ -180,20 +267,6 @@ public class ProgressDashboardActivity extends AppCompatActivity {
 
         if (iso == null || iso.isEmpty()) return new String[]{date, time};
 
-        // ---- Modern java.time for API 26+ ----
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                Instant instant = Instant.parse(iso);
-                ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
-
-                date = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                time = zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
-
-                return new String[]{date, time};
-            } catch (Exception ignore) {}
-        }
-
-        // ---- Fallback for older devices ----
         try {
             SimpleDateFormat parser1 =
                     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
@@ -225,16 +298,14 @@ public class ProgressDashboardActivity extends AppCompatActivity {
         return new String[]{date, time};
     }
 
-    // PRE & POST domain mapping
+    // PRE & POST domain mapping (unchanged)
     private String[] getDomainsForScoreType(String type) {
-        type = type.toLowerCase();
-
+        type = type.toLowerCase(Locale.ROOT);
         if (type.contains("attention")) return new String[]{"maas", "srt"};
         if (type.contains("memory")) return new String[]{"cfq", "nback"};
         if (type.contains("emotion")) return new String[]{"panas", "stroop"};
         if (type.contains("awareness")) return new String[]{"phlms", "sart"};
         if (type.contains("cognitive")) return new String[]{"dass", "task_switch"};
-
         return new String[]{"maas", "srt"};
     }
 }

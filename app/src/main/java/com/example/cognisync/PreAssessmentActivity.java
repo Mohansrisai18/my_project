@@ -7,6 +7,9 @@ import android.view.View;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
@@ -34,6 +37,35 @@ public class PreAssessmentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_assessment);
 
+        // -------------------------
+        // SAFE: adjust top padding for status bar / keyboard
+        // -------------------------
+        View container = findViewById(R.id.container); // ensure your XML has id="container"
+        if (container != null) {
+            final int left = container.getPaddingLeft();
+            final int top = container.getPaddingTop();
+            final int right = container.getPaddingRight();
+            final int bottom = container.getPaddingBottom();
+
+            ViewCompat.setOnApplyWindowInsetsListener(container, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+
+                int topInset = systemBars.top;
+                int bottomInset = Math.max(systemBars.bottom, ime.bottom);
+
+                v.setPadding(
+                        left,
+                        top + topInset,
+                        right,
+                        bottom + bottomInset
+                );
+                return insets;
+            });
+            ViewCompat.requestApplyInsets(container);
+        }
+        // -------------------------
+
         titleText       = findViewById(R.id.titleText);
         instructionText = findViewById(R.id.instructionText);
         backButton      = findViewById(R.id.backButton);
@@ -59,6 +91,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
     // 1️⃣ LOAD QUESTIONS (POOL + RANDOM)
     //==============================================================
     private void loadQuestions(String type) {
+        questions.clear();
         switch (type) {
 
             case "focused_attention":

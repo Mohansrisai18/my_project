@@ -1,6 +1,7 @@
 package com.example.cognisync;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,17 +52,33 @@ public class ScoreHistoryAdapter extends RecyclerView.Adapter<ScoreHistoryAdapte
         holder.scoreText.setText(String.format("%.1f", item.getScore()));
         holder.dateText.setText(item.getDate() + " • " + item.getTime());
 
-        // PRE or POST label
-        if (item.getType() != null) {
-            holder.typeText.setText(item.getType().toUpperCase());
-
-            if (item.getType().equalsIgnoreCase("pre")) {
+        String type = item.getType();
+        if (type != null) {
+            holder.typeText.setText(type.toUpperCase());
+            if (type.equalsIgnoreCase("pre")) {
                 holder.typeText.setTextColor(Color.parseColor("#6C63FF")); // purple
             } else {
                 holder.typeText.setTextColor(Color.parseColor("#00A878")); // green
             }
         } else {
-            holder.typeText.setText(""); // hidden if unknown
+            holder.typeText.setText("");
+        }
+
+        // Visual emphasis for baseline & latest-post
+        if (item.isBaseline()) {
+            // baseline: highlight softly and append label
+            holder.itemView.setBackgroundColor(Color.parseColor("#FFF7E0")); // pale yellow
+            holder.scoreText.setTypeface(Typeface.DEFAULT_BOLD);
+            holder.typeText.setText(holder.typeText.getText() + " • BASELINE");
+        } else if (item.isLatestPost()) {
+            // latest post: pale green highlight
+            holder.itemView.setBackgroundColor(Color.parseColor("#E8FFF0"));
+            holder.scoreText.setTypeface(Typeface.DEFAULT_BOLD);
+            holder.typeText.setText(holder.typeText.getText() + " • LATEST");
+        } else {
+            // default appearance
+            holder.itemView.setBackgroundColor(Color.WHITE);
+            holder.scoreText.setTypeface(Typeface.DEFAULT);
         }
     }
 

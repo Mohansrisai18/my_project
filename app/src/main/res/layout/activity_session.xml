@@ -72,6 +72,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <!-- Controls: only Play/Pause centered -->
             <LinearLayout
                 android:id="@+id/controlsLayout"
                 android:layout_width="wrap_content"
@@ -82,14 +83,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ivLogo">
-
-                <ImageButton
-                    android:id="@+id/btnPrev"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_skip_previous"
-                    app:tint="#444E59" />
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/playPauseButton"
@@ -102,14 +95,6 @@
                     app:fabCustomSize="72dp"
                     app:maxImageSize="36dp"
                     app:tint="#2D3436" />
-
-                <ImageButton
-                    android:id="@+id/btnNext"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_skip_next"
-                    app:tint="#444E59" />
             </LinearLayout>
 
             <SeekBar
@@ -130,8 +115,9 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Bottom back button (replaces Finish & Save) -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnFinishSave"
+        android:id="@+id/btnBack"
         style="@style/Widget.Material3.Button"
         android:layout_width="match_parent"
         android:layout_height="64dp"
@@ -139,7 +125,7 @@
         android:fontFamily="sans-serif-medium"
         android:insetTop="0dp"
         android:insetBottom="0dp"
-        android:text="Finish &amp; Save"
+        android:text="Back"
         android:textAllCaps="false"
         android:textSize="16sp"
         app:backgroundTint="#2E7D32"

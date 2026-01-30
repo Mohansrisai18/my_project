@@ -88,38 +88,110 @@ public class PreAssessmentActivity extends AppCompatActivity {
     }
 
     //==============================================================
-    // 1️⃣ LOAD QUESTIONS (POOL + RANDOM)
+    // 1️⃣ LOAD QUESTIONS (POOL + RANDOM 4-5)
     //==============================================================
     private void loadQuestions(String type) {
         questions.clear();
         switch (type) {
 
             case "focused_attention":
-                questions.addAll(getRandomQuestions(getMAAS(), 7));
+                questions.addAll(getRandomQuestions(getMAAS()));
                 break;
 
             case "emotional_regulation":
-                questions.addAll(getRandomQuestions(getPANAS(), 7));
+                questions.addAll(getRandomPanasQuestions(getPANAS()));
                 break;
 
             case "present_moment":
             case "present_moment_awareness":
-                questions.addAll(getRandomQuestions(getPHLMS(), 7));
+                questions.addAll(getRandomQuestions(getPHLMS()));
                 break;
 
             case "working_memory":
-                questions.addAll(getRandomQuestions(getCFQ(), 5));
+                questions.addAll(getRandomQuestions(getCFQ()));
                 break;
 
             case "cognitive_flexibility":
-                questions.addAll(getRandomQuestions(getDASS(), 5));
+                questions.addAll(getRandomQuestions(getDASS()));
                 break;
         }
     }
 
-    private List<QuestionItem> getRandomQuestions(List<QuestionItem> pool, int count) {
-        Collections.shuffle(pool);
-        return new ArrayList<>(pool.subList(0, Math.min(count, pool.size())));
+    /**
+     * Generic random selector: choose 4 or 5 items (randomly) from the pool
+     * but never more than the pool size.
+     */
+    private List<QuestionItem> getRandomQuestions(List<QuestionItem> pool) {
+        if (pool == null || pool.isEmpty()) return Collections.emptyList();
+        List<QuestionItem> copy = new ArrayList<>(pool);
+        Collections.shuffle(copy);
+        int desired = chooseFourOrFive(copy.size()); // result in [1..size], usually 4 or 5
+        return new ArrayList<>(copy.subList(0, desired));
+    }
+
+    /**
+     * PANAS needs at least one positive and one negative item so scoring is meaningful.
+     * We'll pick a total of 4 or 5 items with at least 1 positive and 1 negative.
+     */
+    private List<QuestionItem> getRandomPanasQuestions(List<QuestionItem> pool) {
+        if (pool == null || pool.isEmpty()) return Collections.emptyList();
+
+        List<QuestionItem> positives = new ArrayList<>();
+        List<QuestionItem> negatives = new ArrayList<>();
+        for (QuestionItem q : pool) {
+            if (q.positive) positives.add(q);
+            else negatives.add(q);
+        }
+
+        Collections.shuffle(positives);
+        Collections.shuffle(negatives);
+
+        int total = chooseFourOrFive(pool.size());
+        // Ensure at least one from each side if possible
+        int takePos = 0, takeNeg = 0;
+
+        if (positives.size() == 0) {
+            takeNeg = Math.min(total, negatives.size());
+        } else if (negatives.size() == 0) {
+            takePos = Math.min(total, positives.size());
+        } else {
+            // balanced split: attempt 50/50 rounding
+            takePos = Math.max(1, total / 2);
+            takeNeg = total - takePos;
+
+            // adjust if one side doesn't have enough
+            if (takePos > positives.size()) {
+                takePos = positives.size();
+                takeNeg = Math.min(total - takePos, negatives.size());
+            }
+            if (takeNeg > negatives.size()) {
+                takeNeg = negatives.size();
+                takePos = Math.min(total - takeNeg, positives.size());
+            }
+
+            // final guard: ensure at least one from each if both available
+            if (takePos == 0 && positives.size() > 0) { takePos = 1; takeNeg = Math.max(0, total - 1); }
+            if (takeNeg == 0 && negatives.size() > 0) { takeNeg = 1; takePos = Math.max(0, total - 1); }
+        }
+
+        List<QuestionItem> result = new ArrayList<>();
+        result.addAll(positives.subList(0, Math.min(takePos, positives.size())));
+        result.addAll(negatives.subList(0, Math.min(takeNeg, negatives.size())));
+        // shuffle combined to randomize order presented
+        Collections.shuffle(result);
+        return result;
+    }
+
+    /**
+     * Choose either 4 or 5 questions randomly, but never exceed poolSize.
+     * If poolSize < 4, return poolSize.
+     */
+    private int chooseFourOrFive(int poolSize) {
+        if (poolSize <= 0) return 0;
+        if (poolSize <= 4) return poolSize;
+        // poolSize >= 5: choose randomly 4 or 5
+        Random r = new Random();
+        return 4 + r.nextInt(2); // 4 or 5
     }
 
     //==============================================================
@@ -236,6 +308,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
 
     //==============================================================
     // 5️⃣ ----- NORMALIZED SCORE LOGIC (0–100 for ALL) -----
+    // (UNCHANGED)
     //==============================================================
     private float computeScore(String type) {
 
@@ -347,7 +420,7 @@ public class PreAssessmentActivity extends AppCompatActivity {
     }
 
     //==============================================================
-    // 7️⃣ QUESTION POOLS — same as before (no logic lost)
+    // 7️⃣ QUESTION POOLS — SAME AS BEFORE (UNCHANGED)
     //==============================================================
     private List<QuestionItem> getMAAS(){
         return Arrays.asList(

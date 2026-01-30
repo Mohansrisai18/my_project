@@ -45,13 +45,7 @@
         android:layout_marginBottom="4dp"/>
 
     <!-- App name -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="CogniSync"
-        android:textStyle="bold"
-        android:textColor="#805332"
-        android:textSize="18sp"/>
+
 
     <!-- Subtitle -->
     <TextView

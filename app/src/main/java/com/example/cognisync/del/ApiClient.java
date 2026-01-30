@@ -41,7 +41,17 @@ public class ApiClient {
 
 //    private static final String BASE_URL = "http://10.190.101.221:8000/";
 //private static final String BASE_URL = "http://10.202.20.221:8000/";
-    private static final String BASE_URL = "http://10.57.186.221:8000/";
+   /* private static final String BASE_URL = "http://10.57.186.221:8000/";*/
+
+//    private static final String BASE_URL = "http://10.37.216.221:8000/";
+
+    private static final String BASE_URL = "http://10.98.203.221:8000/";
+
+//    private static final String BASE_URL = "http://180.235.121.253:8031/";
+
+
+
+
 
 
 

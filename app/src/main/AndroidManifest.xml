@@ -49,7 +49,7 @@
         <activity android:name=".IntroActivity" android:exported="false" />
         <activity android:name=".ProfileActivity" android:exported="false" />
         <activity android:name=".UpdateInfoActivity" android:exported="false" />
-        <activity android:name=".FeedbackActivity" android:exported="false" />
+
         <activity android:name=".ResetAccountActivity" android:exported="false" />
         <activity android:name=".ProgressDashboardActivity" android:exported="false" />
 

@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,27 +16,28 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.slider.Slider;
 
 import java.io.IOException;
 
 public class SessionActivity extends AppCompatActivity {
 
     private MediaPlayer mediaPlayer;
-    private SeekBar progressBar;
+    private Slider progressBar;
     private FloatingActionButton playPause;
     private MaterialButton btnBack;
     private ImageButton topBack;
     private TextView tvTitle, tvDesc;
 
     private final Handler handler = new Handler();
-    private Runnable updateSeekBar;
+    private Runnable updateSlider;
 
     private boolean isReleased = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // keep the fullscreen behavior you previously used (optional)
+        // Fullscreen (as you had)
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -49,51 +49,51 @@ public class SessionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_session);
 
         // -----------------------
-        // view bindings (match your XML)
+        // View bindings (MATCH XML)
         // -----------------------
         progressBar = findViewById(R.id.progressBar);
-        playPause = findViewById(R.id.playPauseButton);
-        btnBack = findViewById(R.id.btnBack);
-        topBack = findViewById(R.id.backButton);
-        tvTitle = findViewById(R.id.tvAudioTitle);
-        tvDesc = findViewById(R.id.tvAudioDesc);
+        playPause   = findViewById(R.id.playPauseButton);
+        btnBack     = findViewById(R.id.btnBack);
+        topBack     = findViewById(R.id.backButton);
+        tvTitle     = findViewById(R.id.tvAudioTitle);
+        tvDesc      = findViewById(R.id.tvAudioDesc);
 
-        // top and bottom back behave the same
+        // Back buttons
         topBack.setOnClickListener(v -> finishWithPercent());
         btnBack.setOnClickListener(v -> finishWithPercent());
 
-        // read intent extras
-        String audioUrl = getIntent().getStringExtra("audio_url");
+        // Intent data
+        String audioUrl   = getIntent().getStringExtra("audio_url");
         String audioTitle = getIntent().getStringExtra("audio_title");
-        String audioDesc = getIntent().getStringExtra("audio_desc");
+        String audioDesc  = getIntent().getStringExtra("audio_desc");
 
-        // sanitize incoming title/description (keeps your previous logic)
-        audioTitle = sanitizeTitle(audioTitle, getIntent().getIntExtra("session_index", -1));
+        audioTitle = sanitizeTitle(audioTitle,
+                getIntent().getIntExtra("session_index", -1));
         audioDesc = sanitizeDesc(audioDesc);
 
         tvTitle.setText(audioTitle != null ? audioTitle : "Audio Session");
         tvDesc.setText(audioDesc != null ? audioDesc : "");
 
         if (audioUrl == null || audioUrl.isEmpty()) {
-            // no audio — still keep back buttons active
             return;
         }
 
         setupMedia(audioUrl);
-        setupButtons();
+        setupControls();
     }
 
-    // keep your sanitize logic (unchanged)
+    // --------------------------------------------------
+    // SANITIZE HELPERS (unchanged)
+    // --------------------------------------------------
     private String sanitizeTitle(String title, int indexHint) {
         if (title == null) return null;
 
-        title = title.replaceAll("(?i)sub[- ]?video", "Audio Session");
-        title = title.replaceAll("(?i)sub[- ]?audio", "Audio Session");
+        title = title.replaceAll("(?i)sub[- ]?video", "Session");
+        title = title.replaceAll("(?i)sub[- ]?audio", "Session");
 
         if (!title.matches(".*\\d+$") && indexHint > 0) {
             title = title + " " + indexHint;
         }
-
         return title;
     }
 
@@ -118,24 +118,28 @@ public class SessionActivity extends AppCompatActivity {
             mediaPlayer.prepareAsync();
 
             mediaPlayer.setOnPreparedListener(mp -> {
-                progressBar.setMax(mp.getDuration());
+                progressBar.setValueFrom(0f);
+                progressBar.setValueTo(mp.getDuration());
+                progressBar.setValue(0f);
+
                 mp.start();
                 playPause.setImageResource(R.drawable.ic_pause);
-                startSeekBarUpdate();
+                startProgressUpdates();
             });
 
             mediaPlayer.setOnCompletionListener(mp ->
-                    playPause.setImageResource(R.drawable.ic_play));
+                    playPause.setImageResource(R.drawable.ic_play)
+            );
 
         } catch (IOException e) {
-            Toast.makeText(this, "Audio error", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Audio playback error", Toast.LENGTH_SHORT).show();
         }
     }
 
     // --------------------------------------------------
-    // BUTTON CONTROLS (play/pause + progress)
+    // CONTROLS
     // --------------------------------------------------
-    private void setupButtons() {
+    private void setupControls() {
 
         playPause.setOnClickListener(v -> {
             if (mediaPlayer == null || isReleased) return;
@@ -149,38 +153,28 @@ public class SessionActivity extends AppCompatActivity {
             }
         });
 
-        progressBar.setOnSeekBarChangeListener(
-                new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(
-                            SeekBar seekBar,
-                            int progress,
-                            boolean fromUser
-                    ) {
-                        if (fromUser && mediaPlayer != null && !isReleased) {
-                            mediaPlayer.seekTo(progress);
-                        }
-                    }
-                    @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-                    @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-                }
-        );
+        // Slider listener (Material Slider)
+        progressBar.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser && mediaPlayer != null && !isReleased) {
+                mediaPlayer.seekTo((int) value);
+            }
+        });
     }
 
     // --------------------------------------------------
-    // SEEK BAR UPDATES
+    // PROGRESS UPDATE LOOP
     // --------------------------------------------------
-    private void startSeekBarUpdate() {
-        updateSeekBar = new Runnable() {
+    private void startProgressUpdates() {
+        updateSlider = new Runnable() {
             @Override
             public void run() {
                 if (mediaPlayer != null && mediaPlayer.isPlaying() && !isReleased) {
-                    progressBar.setProgress(mediaPlayer.getCurrentPosition());
+                    progressBar.setValue(mediaPlayer.getCurrentPosition());
                     handler.postDelayed(this, 400);
                 }
             }
         };
-        handler.post(updateSeekBar);
+        handler.post(updateSlider);
     }
 
     // --------------------------------------------------
@@ -216,8 +210,8 @@ public class SessionActivity extends AppCompatActivity {
         if (isReleased) return;
         isReleased = true;
 
-        if (updateSeekBar != null) {
-            handler.removeCallbacks(updateSeekBar);
+        if (updateSlider != null) {
+            handler.removeCallbacks(updateSlider);
         }
 
         try {

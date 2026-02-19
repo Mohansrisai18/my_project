@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat;
 import com.example.cognisync.del.ApiClient;
 import com.example.cognisync.del.ApiService;
 import com.example.cognisync.model.ScoreResponse;
-import com.example.cognisync.util.TimetableStore;
+// Removed TimetableStore import as requested
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -46,8 +46,7 @@ public class HomeActivity extends AppCompatActivity {
     private CardView cvAttentionScore, cvMemoryScore,
             cvEmotionScore, cvCognitiveScore, cvPresentMomentScore;
 
-    // Timetable card
-    private CardView cvTimetable;
+    // (Timetable removed)
 
     // Graph
     private LineChart lineChart;
@@ -153,7 +152,8 @@ public class HomeActivity extends AppCompatActivity {
         cvCognitiveScore = findViewById(R.id.cvCognitiveScore);
         cvPresentMomentScore = findViewById(R.id.cvPresentMomentScore);
 
-        cvTimetable = findViewById(R.id.cvTimetable);
+        // timetable view binding removed:
+        // cvTimetable = findViewById(R.id.cvTimetable);
 
         lineChart = findViewById(R.id.lineChart);
 
@@ -199,18 +199,7 @@ public class HomeActivity extends AppCompatActivity {
         cvCognitiveScore.setOnClickListener(v -> openScore("Cognitive"));
         cvPresentMomentScore.setOnClickListener(v -> openScore("Awareness"));
 
-        // Timetable
-        cvTimetable.setOnClickListener(v -> {
-            if (TimetableStore.exists(this)) {
-                startActivity(new Intent(this, TimetableActivity.class));
-            } else {
-                Toast.makeText(
-                        this,
-                        "Complete assessment to generate your timetable",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
+        // Timetable click handler removed (XML no longer contains timetable)
     }
 
     private void openModule(String type) {

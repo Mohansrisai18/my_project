@@ -64,8 +64,8 @@
         <activity android:name=".StroopTaskActivity" android:exported="false" />
         <activity android:name=".TaskSwitchActivity" android:exported="false" />
         <activity android:name=".SARTActivity" android:exported="false" />
-        <activity android:name=".TaskAActivity" android:exported="false" />
-        <activity android:name=".TaskBActivity" android:exported="false" />
+<!--        <activity android:name=".TaskAActivity" android:exported="false" />-->
+<!--        <activity android:name=".TaskBActivity" android:exported="false" />-->
 
         <!-- Assessment -->
         <activity
@@ -87,10 +87,10 @@
             android:name=".ResetPasswordActivity"
             android:exported="false" />
 
-        <!-- Timetable -->
-        <activity
-            android:name=".TimetableActivity"
-            android:exported="false" />
+<!--        &lt;!&ndash; Timetable &ndash;&gt;-->
+<!--        <activity-->
+<!--            android:name=".TimetableActivity"-->
+<!--            android:exported="false" />-->
 
     </application>
 

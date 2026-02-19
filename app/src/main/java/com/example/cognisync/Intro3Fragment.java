@@ -1,6 +1,7 @@
 package com.example.cognisync;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 
@@ -27,13 +28,27 @@ public class Intro3Fragment extends Fragment {
 
         ViewPager2 pager = requireActivity().findViewById(R.id.viewPager);
 
+        // Back button → go to Intro2
         view.findViewById(R.id.btnBack).setOnClickListener(v ->
                 pager.setCurrentItem(1, true)
         );
 
+        // Finish button → Go to HomeActivity
         view.findViewById(R.id.btnFinish).setOnClickListener(v -> {
-            // ✅ START TASK FLOW (NOT HOME)
-            startActivity(new Intent(requireActivity(), TaskAActivity.class));
+
+            // Optional: Save intro completed flag
+            SharedPreferences sp = requireActivity()
+                    .getSharedPreferences("UserPrefs", requireActivity().MODE_PRIVATE);
+
+            sp.edit().putBoolean("intro_completed", true).apply();
+
+            // Navigate to HomeActivity
+            Intent intent = new Intent(requireActivity(), HomeActivity.class);
+
+            // Clear intro from back stack
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+            startActivity(intent);
             requireActivity().finish();
         });
     }
